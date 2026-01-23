@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceFormat {
+  ZUGFERD
+  XRECHNUNG
+  UNKNOWN
+}
+
+enum UploadStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum ExportFormat {
+  CSV
+  DATEV
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  invoices Invoice[]
+  exports  Export[]
+  uploads  Upload[]
+
+  @@index([name])
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  name           String?
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+}
+
+model Upload {
+  id             String       @id @default(cuid())
+  organizationId String?
+  filename       String
+  contentType    String?
+  sizeBytes      Int?
+  storageKey     String
+  status         UploadStatus @default(PENDING)
+  errorMessage   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  invoice      Invoice?
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String?
+  uploadId       String?       @unique
+
+  format         InvoiceFormat @default(UNKNOWN)
+  number         String?
+  supplierName   String?
+  customerName   String?
+  issueDate      DateTime?
+  dueDate        DateTime?
+  currency       String?       @default("EUR")
+  netAmount      Decimal?      @db.Decimal(18, 2)
+  taxAmount      Decimal?      @db.Decimal(18, 2)
+  grossAmount    Decimal?      @db.Decimal(18, 2)
+
+  rawJson        Json?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  upload       Upload?        @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+
+  exports ExportInvoice[]
+
+  @@index([organizationId])
+  @@index([format])
+  @@index([issueDate])
+}
+
+model Export {
+  id             String       @id @default(cuid())
+  organizationId String?
+  format         ExportFormat
+  filename       String
+  storageKey     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  invoices     ExportInvoice[]
+
+  @@index([organizationId])
+  @@index([format])
+}
+
+model ExportInvoice {
+  exportId  String
+  invoiceId String
+
+  export  Export  @relation(fields: [exportId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@id([exportId, invoiceId])
+  @@index([invoiceId])
+}
+
