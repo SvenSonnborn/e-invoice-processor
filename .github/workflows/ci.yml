@@ -63,3 +63,47 @@ jobs:
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
       - name: Build
         run: bun run build
+      - name: Debug build output
+        run: |
+          echo "Current directory:"
+          pwd
+          echo ""
+          echo "Listing all files and directories:"
+          ls -la
+          echo ""
+          echo "Checking for .next directory:"
+          if [ -d ".next" ]; then
+            echo "✓ .next directory exists"
+            ls -la .next
+          else
+            echo "✗ .next directory NOT found"
+          fi
+          echo ""
+          echo "Checking for out directory:"
+          if [ -d "out" ]; then
+            echo "✓ out directory exists"
+          else
+            echo "✗ out directory NOT found"
+          fi
+      - name: Verify build output
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "Error: .next directory not found after build. The build may have failed."
+            exit 1
+          fi
+          echo "Build output verified: .next directory exists"
+      - name: List .next contents before upload
+        run: |
+          find .next -type f | head -10
+          echo "Total files in .next:"
+          find .next -type f | wc -l
+      - name: Copy .next to next-build for artifact upload
+        run: |
+          cp -r .next next-build
+          ls -la next-build | head -10
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: next-build
+          if-no-files-found: error
