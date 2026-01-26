@@ -1,0 +1,17 @@
+# Code Owners
+# This file defines ownership of different parts of the codebase
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+* @your-username
+
+# Core infrastructure
+/prisma/ @your-username
+/src/lib/ @your-username
+/src/server/ @your-username
+
+# Documentation
+/docs/ @your-username
+
+# CI/CD
+/.github/ @your-username
