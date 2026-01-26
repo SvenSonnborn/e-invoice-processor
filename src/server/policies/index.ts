@@ -1,0 +1,2 @@
+// Authorization policies entrypoint (placeholder)
+
