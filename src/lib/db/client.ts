@@ -4,7 +4,6 @@ import { Pool } from "pg";
 import { env } from "@/src/lib/config/env";
 
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 

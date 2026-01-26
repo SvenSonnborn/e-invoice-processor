@@ -3,14 +3,14 @@
  * Hashing, encryption, and security helpers
  */
 
-export async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(_password: string): Promise<string> {
   // TODO: Implement password hashing (bcrypt, argon2, etc.)
   throw new Error("Not implemented");
 }
 
 export async function verifyPassword(
-  password: string,
-  hash: string
+  _password: string,
+  _hash: string
 ): Promise<boolean> {
   // TODO: Implement password verification
   throw new Error("Not implemented");

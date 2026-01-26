@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
  * Handles authentication, rate limiting, and other cross-cutting concerns
  */
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // TODO: Implement middleware logic
   // - Authentication checks
   // - Rate limiting

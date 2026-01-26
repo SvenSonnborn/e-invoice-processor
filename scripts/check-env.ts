@@ -33,14 +33,10 @@ function checkEnv() {
 
   console.log("\n✅ All required environment variables are set!");
   
-  // Try to validate with zod schema
-  try {
-    env;
-    console.log("✅ Environment configuration is valid");
-  } catch (error) {
-    console.error("❌ Environment configuration validation failed:", error);
-    process.exit(1);
-  }
+  // Validate with zod schema (env is already parsed at import time)
+  // If env parsing fails, it will throw during import, so we just reference it
+  void env;
+  console.log("✅ Environment configuration is valid");
 }
 
 checkEnv();
