@@ -1,30 +1,57 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 /**
  * Next.js Middleware
- * Handles authentication, rate limiting, and other cross-cutting concerns
+ *
+ * Keeps the Supabase auth session fresh on each request by validating and
+ * refreshing JWTs via `auth.getClaims()`. This makes SSR-safe access to the
+ * current user possible in Server Components, Server Actions and API routes.
  */
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-export function middleware(_request: NextRequest) {
-  // TODO: Implement middleware logic
-  // - Authentication checks
-  // - Rate limiting
-  // - Request logging
-  // - CORS headers
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+        },
+      },
+    }
+  );
 
-  return NextResponse.next();
+  // Validate and refresh the JWT. This must be called for the middleware to
+  // keep cookies in sync with Supabase auth.
+  await supabase.auth.getClaims();
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
+    // Match all request paths except for API routes and static assets.
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
+
