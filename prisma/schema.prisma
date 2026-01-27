@@ -131,6 +131,7 @@ model Invoice {
   upload       Upload?            @relation(fields: [uploadId], references: [id], onDelete: SetNull)
   exports      ExportInvoice[]
   revisions    InvoiceRevision[]  // Revision history
+  lineItems    InvoiceLineItem[]  // Invoice line items (positions)
 
   @@index([organizationId])
   @@index([format])
@@ -150,6 +151,27 @@ model InvoiceRevision {
   @@index([invoiceId])
   @@index([createdAt])
   @@index([processorVersion])
+}
+
+model InvoiceLineItem {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  positionIndex Int      // Reihenfolge der Position (1, 2, 3, ...)
+  description   String?  @db.Text
+  quantity      Decimal? @db.Decimal(18, 4)
+  unitPrice     Decimal? @db.Decimal(18, 4)
+  taxRate       Decimal? @db.Decimal(5, 2) // z.B. 19.00 für 19%
+  netAmount     Decimal? @db.Decimal(18, 2)
+  taxAmount     Decimal? @db.Decimal(18, 2)
+  grossAmount   Decimal? @db.Decimal(18, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, positionIndex]) // Keine doppelten Positionen
+  @@index([invoiceId])
+  @@index([positionIndex])
 }
 
 model Export {
