@@ -10,6 +10,10 @@ import { env } from "@/src/lib/config/env";
 // Required environment variables (must be set for the app to work)
 const requiredEnvVars = [
   "DATABASE_URL",
+  "DIRECT_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
 ] as const;
 
 // Optional environment variables with defaults (nice to have, but not required)
