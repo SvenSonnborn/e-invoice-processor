@@ -13,6 +13,14 @@ enum InvoiceFormat {
   UNKNOWN
 }
 
+enum InvoiceStatus {
+  CREATED    // Invoice-Datensatz existiert, noch nicht verarbeitet
+  PARSED     // Rohdaten erfolgreich extrahiert
+  VALIDATED  // Fachlich validiert (Summen, Pflichtfelder)
+  EXPORTED   // Mindestens ein Export erfolgreich erstellt
+  FAILED     // Verarbeitung fehlgeschlagen
+}
+
 enum UploadStatus {
   PENDING
   PROCESSED
@@ -97,6 +105,7 @@ model Invoice {
   organizationId String?
   uploadId       String?       @unique
 
+  // Invoice data
   format         InvoiceFormat @default(UNKNOWN)
   number         String?
   supplierName   String?
@@ -110,17 +119,37 @@ model Invoice {
 
   rawJson        Json?
 
+  // Processing tracking
+  status            InvoiceStatus @default(CREATED)
+  lastProcessedAt   DateTime?
+  processingVersion Int           @default(1)
+
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  upload       Upload?        @relation(fields: [uploadId], references: [id], onDelete: SetNull)
-
-  exports ExportInvoice[]
+  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  upload       Upload?            @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  exports      ExportInvoice[]
+  revisions    InvoiceRevision[]  // Revision history
 
   @@index([organizationId])
   @@index([format])
   @@index([issueDate])
+  @@index([status])
+}
+
+model InvoiceRevision {
+  id               String   @id @default(cuid())
+  invoiceId        String
+  rawJson          Json
+  processorVersion String
+  createdAt        DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@index([processorVersion])
 }
 
 model Export {
