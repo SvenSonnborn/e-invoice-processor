@@ -1,6 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
 import type { InvoiceLineItem } from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
 
 /**
  * Invoice Line Items Utilities
@@ -47,26 +46,28 @@ export async function createLineItems(
     throw new Error('Duplicate position indices found')
   }
 
-  // Create all line items
-  const created = await Promise.all(
-    items.map((item) =>
-      prisma.invoiceLineItem.create({
-        data: {
-          invoiceId,
-          positionIndex: item.positionIndex,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          taxRate: item.taxRate,
-          netAmount: item.netAmount,
-          taxAmount: item.taxAmount,
-          grossAmount: item.grossAmount,
-        },
-      })
+  // Create all line items in a transaction
+  return await prisma.$transaction(async (tx) => {
+    const created = await Promise.all(
+      items.map((item) =>
+        tx.invoiceLineItem.create({
+          data: {
+            invoiceId,
+            positionIndex: item.positionIndex,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            taxRate: item.taxRate,
+            netAmount: item.netAmount,
+            taxAmount: item.taxAmount,
+            grossAmount: item.grossAmount,
+          },
+        })
+      )
     )
-  )
 
-  return created
+    return created
+  })
 }
 
 /**
@@ -80,6 +81,14 @@ export async function replaceLineItems(
   invoiceId: string,
   items: LineItemInput[]
 ): Promise<InvoiceLineItem[]> {
+  // Validate unique position indices
+  const indices = items.map((item) => item.positionIndex)
+  const uniqueIndices = new Set(indices)
+
+  if (indices.length !== uniqueIndices.size) {
+    throw new Error('Duplicate position indices found')
+  }
+
   return await prisma.$transaction(async (tx) => {
     // Delete existing line items
     await tx.invoiceLineItem.deleteMany({

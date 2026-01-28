@@ -53,7 +53,7 @@ export function isTerminalStatus(status: InvoiceStatus): boolean {
  * Check if an invoice can be processed
  */
 export function canProcess(status: InvoiceStatus): boolean {
-  return !isTerminalStatus(status) || status === 'FAILED'
+  return !isTerminalStatus(status) || status === 'FAILED' || status === 'EXPORTED'
 }
 
 /**

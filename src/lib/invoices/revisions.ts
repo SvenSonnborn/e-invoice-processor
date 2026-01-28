@@ -1,5 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
-import type { InvoiceRevision } from '@prisma/client'
+import type { InvoiceRevision, Prisma } from '@prisma/client'
 
 /**
  * Invoice Revision Management
@@ -16,7 +16,7 @@ export const CURRENT_PROCESSOR_VERSION = '1.0.0'
 
 export interface CreateRevisionParams {
   invoiceId: string
-  rawJson: unknown
+  rawJson: Prisma.InputJsonValue
   processorVersion?: string
 }
 
@@ -41,7 +41,7 @@ export async function createRevision({
     const revision = await tx.invoiceRevision.create({
       data: {
         invoiceId,
-        rawJson: rawJson as any,
+        rawJson,
         processorVersion,
       },
     })
@@ -50,7 +50,7 @@ export async function createRevision({
     await tx.invoice.update({
       where: { id: invoiceId },
       data: {
-        rawJson: rawJson as any,
+        rawJson,
         lastProcessedAt: new Date(),
         processingVersion: { increment: 1 },
       },
@@ -75,25 +75,33 @@ export async function getRevisions(
     processorVersion?: string
   } = {}
 ): Promise<RevisionWithMetadata[]> {
-  const { limit, offset, processorVersion } = options
+  const { limit, offset = 0, processorVersion } = options
 
-  const revisions = await prisma.invoiceRevision.findMany({
-    where: {
-      invoiceId,
-      ...(processorVersion && { processorVersion }),
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    take: limit,
-    skip: offset,
-  })
+  const [revisions, totalCount] = await Promise.all([
+    prisma.invoiceRevision.findMany({
+      where: {
+        invoiceId,
+        ...(processorVersion && { processorVersion }),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+      skip: offset,
+    }),
+    prisma.invoiceRevision.count({
+      where: {
+        invoiceId,
+        ...(processorVersion && { processorVersion }),
+      },
+    }),
+  ])
 
-  // Enrich with metadata
+  // Enrich with metadata relative to overall dataset
   return revisions.map((revision, index) => ({
     ...revision,
-    isLatest: index === 0,
-    revisionNumber: revisions.length - index,
+    isLatest: offset === 0 && index === 0,
+    revisionNumber: totalCount - (offset + index),
   }))
 }
 
@@ -164,7 +172,7 @@ export async function revertToRevision(
   // Create a new revision from the old data
   return await createRevision({
     invoiceId,
-    rawJson: revision.rawJson,
+    rawJson: revision.rawJson as Prisma.InputJsonValue,
     processorVersion: `${revision.processorVersion}-reverted`,
   })
 }
@@ -318,7 +326,9 @@ export async function getInvoicesNeedingReprocessing(
   // Filter invoices where latest revision has old processor version
   return invoices.filter((invoice) => {
     const latestRevision = invoice.revisions[0]
-    return latestRevision?.processorVersion !== currentVersion
+    // Only include invoices that have been processed (have revisions)
+    // AND were processed with an old version
+    return latestRevision && latestRevision.processorVersion !== currentVersion
   })
 }
 
@@ -331,7 +341,7 @@ export async function getInvoicesNeedingReprocessing(
  */
 export async function reprocessInvoice(
   invoiceId: string,
-  rawData: unknown
+  rawData: Prisma.InputJsonValue
 ): Promise<InvoiceRevision> {
   return await createRevision({
     invoiceId,

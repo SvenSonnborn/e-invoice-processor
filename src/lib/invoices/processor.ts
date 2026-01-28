@@ -1,7 +1,7 @@
 import { prisma } from '@/src/lib/db/client'
-import type { InvoiceStatus } from '@prisma/client'
+import type { InvoiceStatus, Prisma } from '@prisma/client'
 import { isValidStatusTransition } from './status'
-import { createRevision, CURRENT_PROCESSOR_VERSION } from './revisions'
+import { CURRENT_PROCESSOR_VERSION } from './revisions'
 
 /**
  * Invoice Processor Utilities
@@ -13,7 +13,7 @@ import { createRevision, CURRENT_PROCESSOR_VERSION } from './revisions'
 export interface UpdateStatusParams {
   invoiceId: string
   newStatus: InvoiceStatus
-  error?: string
+  _error?: string
 }
 
 /**
@@ -24,12 +24,12 @@ export interface UpdateStatusParams {
 export async function updateInvoiceStatus({
   invoiceId,
   newStatus,
-  error,
+  _error,
 }: UpdateStatusParams) {
   // Get current invoice
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
-    select: { status: true, processingVersion: true },
+    select: { status: true },
   })
 
   if (!invoice) {
@@ -49,7 +49,7 @@ export async function updateInvoiceStatus({
     data: {
       status: newStatus,
       lastProcessedAt: new Date(),
-      processingVersion: invoice.processingVersion + 1,
+      processingVersion: { increment: 1 },
       // If failed, store error in a separate error log (you might add an errors relation)
     },
   })
@@ -61,15 +61,32 @@ export async function updateInvoiceStatus({
  */
 export async function markAsParsed(
   invoiceId: string,
-  rawData: unknown,
+  rawData: Prisma.InputJsonValue,
   processorVersion: string = CURRENT_PROCESSOR_VERSION
 ) {
   return await prisma.$transaction(async (tx) => {
+    // Get current invoice status
+    const invoice = await tx.invoice.findUnique({
+      where: { id: invoiceId },
+      select: { status: true },
+    })
+
+    if (!invoice) {
+      throw new Error(`Invoice ${invoiceId} not found`)
+    }
+
+    // Validate status transition
+    if (!isValidStatusTransition(invoice.status, 'PARSED')) {
+      throw new Error(
+        `Invalid status transition: ${invoice.status} -> PARSED`
+      )
+    }
+
     // Create revision
     await tx.invoiceRevision.create({
       data: {
         invoiceId,
-        rawJson: rawData as any,
+        rawJson: rawData,
         processorVersion,
       },
     })
@@ -79,7 +96,7 @@ export async function markAsParsed(
       where: { id: invoiceId },
       data: {
         status: 'PARSED',
-        rawJson: rawData as any,
+        rawJson: rawData,
         lastProcessedAt: new Date(),
         processingVersion: { increment: 1 },
       },
@@ -103,6 +120,23 @@ export async function markAsValidated(
     grossAmount?: number
   }
 ) {
+  // Get current invoice status
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { status: true },
+  })
+
+  if (!invoice) {
+    throw new Error(`Invoice ${invoiceId} not found`)
+  }
+
+  // Validate status transition
+  if (!isValidStatusTransition(invoice.status, 'VALIDATED')) {
+    throw new Error(
+      `Invalid status transition: ${invoice.status} -> VALIDATED`
+    )
+  }
+
   return await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
@@ -118,6 +152,23 @@ export async function markAsValidated(
  * Mark invoice as exported (step 3)
  */
 export async function markAsExported(invoiceId: string) {
+  // Get current invoice status
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { status: true },
+  })
+
+  if (!invoice) {
+    throw new Error(`Invoice ${invoiceId} not found`)
+  }
+
+  // Validate status transition
+  if (!isValidStatusTransition(invoice.status, 'EXPORTED')) {
+    throw new Error(
+      `Invalid status transition: ${invoice.status} -> EXPORTED`
+    )
+  }
+
   return await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
@@ -131,7 +182,24 @@ export async function markAsExported(invoiceId: string) {
 /**
  * Mark invoice as failed
  */
-export async function markAsFailed(invoiceId: string, errorMessage: string) {
+export async function markAsFailed(invoiceId: string, _errorMessage: string) {
+  // Get current invoice status
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { status: true },
+  })
+
+  if (!invoice) {
+    throw new Error(`Invoice ${invoiceId} not found`)
+  }
+
+  // Validate status transition
+  if (!isValidStatusTransition(invoice.status, 'FAILED')) {
+    throw new Error(
+      `Invalid status transition: ${invoice.status} -> FAILED`
+    )
+  }
+
   return await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
@@ -152,8 +220,12 @@ export async function retryFailedInvoice(invoiceId: string) {
     select: { status: true },
   })
 
-  if (invoice?.status !== 'FAILED') {
-    throw new Error('Can only retry failed invoices')
+  if (!invoice) {
+    throw new Error(`Invoice ${invoiceId} not found`)
+  }
+
+  if (invoice.status !== 'FAILED') {
+    throw new Error('Invoice must be in FAILED status to retry')
   }
 
   return await prisma.invoice.update({

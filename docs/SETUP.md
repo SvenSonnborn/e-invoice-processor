@@ -303,6 +303,15 @@ SELECT * FROM "User" WHERE "supabaseUserId" = 'SUPABASE_USER_ID';
 
 ## Weitere Dokumentation
 
+### Supabase & Database
 - [Supabase RLS Runbook](./runbooks/supabase-rls.md) - Detaillierte Erklärung der RLS Policies
 - [Prisma Schema](../prisma/schema.prisma) - Datenbank-Schema
-- [API Routes](../src/app/api/) - API-Endpunkte
+
+### Invoice Processing
+- [Invoice Processing](./invoice-processing.md) - Status-Tracking und Workflow
+- [Invoice Revisions](./invoice-revisions.md) - Versionierung und Re-Processing
+- [Invoice Line Items](./invoice-line-items.md) - Strukturierte Rechnungspositionen
+
+### Export System
+- [Export Processing](./export-processing.md) - Export Status-Tracking und Fehlerbehandlung
+- [Audit Trail](./audit-trail.md) - Actor Tracking und Nachverfolgbarkeit
