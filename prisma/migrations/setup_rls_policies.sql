@@ -17,6 +17,8 @@ ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "OrganizationMember" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Upload" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Invoice" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "InvoiceLineItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "InvoiceRevision" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Export" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ExportInvoice" ENABLE ROW LEVEL SECURITY;
 
@@ -246,7 +248,111 @@ USING (
 );
 
 -- ============================================================================
--- 7. EXPORT POLICIES
+-- 7. INVOICE LINE ITEM POLICIES
+-- ============================================================================
+
+CREATE POLICY "invoice_line_items_select_member"
+ON "InvoiceLineItem" FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceLineItem"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_line_items_insert_member"
+ON "InvoiceLineItem" FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceLineItem"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_line_items_update_member"
+ON "InvoiceLineItem" FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceLineItem"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_line_items_delete_member"
+ON "InvoiceLineItem" FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceLineItem"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+-- ============================================================================
+-- 8. INVOICE REVISION POLICIES
+-- ============================================================================
+
+CREATE POLICY "invoice_revisions_select_member"
+ON "InvoiceRevision" FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceRevision"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_revisions_insert_member"
+ON "InvoiceRevision" FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceRevision"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_revisions_update_member"
+ON "InvoiceRevision" FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceRevision"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+CREATE POLICY "invoice_revisions_delete_member"
+ON "InvoiceRevision" FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 FROM "Invoice" i
+    JOIN "OrganizationMember" om ON om."organizationId" = i."organizationId"
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE i."id" = "InvoiceRevision"."invoiceId"
+    AND u."supabaseUserId"::text = auth.uid()::text
+  )
+);
+
+-- ============================================================================
+-- 9. EXPORT POLICIES
 -- ============================================================================
 
 CREATE POLICY "exports_select_member"
@@ -294,7 +400,7 @@ USING (
 );
 
 -- ============================================================================
--- 8. EXPORT INVOICE POLICIES (Junction Table)
+-- 10. EXPORT INVOICE POLICIES (Junction Table)
 -- ============================================================================
 
 CREATE POLICY "export_invoices_via_export"
@@ -310,7 +416,7 @@ USING (
 );
 
 -- ============================================================================
--- 9. STORAGE POLICIES (for buckets: documents, exports)
+-- 11. STORAGE POLICIES (for buckets: documents, exports)
 -- ============================================================================
 -- NOTE: These policies assume the file path structure:
 --       {bucket}/{organizationId}/...
