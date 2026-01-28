@@ -6,7 +6,6 @@
  * Run with: bun scripts/create-storage-buckets.ts
  */
 
-import { readFileSync } from 'fs';
 import { Pool } from 'pg';
 
 const DATABASE_URL = process.env.DIRECT_URL || process.env.DATABASE_URL;

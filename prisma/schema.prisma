@@ -13,6 +13,14 @@ enum InvoiceFormat {
   UNKNOWN
 }
 
+enum InvoiceStatus {
+  CREATED    // Invoice-Datensatz existiert, noch nicht verarbeitet
+  PARSED     // Rohdaten erfolgreich extrahiert
+  VALIDATED  // Fachlich validiert (Summen, Pflichtfelder)
+  EXPORTED   // Mindestens ein Export erfolgreich erstellt
+  FAILED     // Verarbeitung fehlgeschlagen
+}
+
 enum UploadStatus {
   PENDING
   PROCESSED
@@ -22,6 +30,13 @@ enum UploadStatus {
 enum ExportFormat {
   CSV
   DATEV
+}
+
+enum ExportStatus {
+  CREATED     // Export-Datensatz erstellt, noch nicht generiert
+  GENERATING  // Export wird gerade generiert
+  READY       // Export erfolgreich erstellt
+  FAILED      // Generierung fehlgeschlagen
 }
 
 enum MemberRole {
@@ -52,7 +67,9 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  memberships OrganizationMember[]
+  memberships     OrganizationMember[]
+  createdInvoices Invoice[]            // Invoices created by this user
+  createdExports  Export[]             // Exports created by this user
 
   @@index([supabaseUserId])
 }
@@ -96,7 +113,9 @@ model Invoice {
   id             String        @id @default(cuid())
   organizationId String?
   uploadId       String?       @unique
+  createdBy      String?       // FK to User (who created this invoice)
 
+  // Invoice data
   format         InvoiceFormat @default(UNKNOWN)
   number         String?
   supplierName   String?
@@ -110,33 +129,86 @@ model Invoice {
 
   rawJson        Json?
 
+  // Processing tracking
+  status            InvoiceStatus @default(CREATED)
+  lastProcessedAt   DateTime?
+  processingVersion Int           @default(1)
+
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  upload       Upload?        @relation(fields: [uploadId], references: [id], onDelete: SetNull)
-
-  exports ExportInvoice[]
+  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  upload       Upload?            @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  creator      User?              @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  exports      ExportInvoice[]
+  revisions    InvoiceRevision[]  // Revision history
+  lineItems    InvoiceLineItem[]  // Invoice line items (positions)
 
   @@index([organizationId])
   @@index([format])
   @@index([issueDate])
+  @@index([status])
+  @@index([createdBy])
+}
+
+model InvoiceRevision {
+  id               String   @id @default(cuid())
+  invoiceId        String
+  rawJson          Json
+  processorVersion String
+  createdAt        DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@index([processorVersion])
+}
+
+model InvoiceLineItem {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  positionIndex Int      // Reihenfolge der Position (1, 2, 3, ...)
+  description   String?  @db.Text
+  quantity      Decimal? @db.Decimal(18, 4)
+  unitPrice     Decimal? @db.Decimal(18, 4)
+  taxRate       Decimal? @db.Decimal(5, 2) // z.B. 19.00 für 19%
+  netAmount     Decimal? @db.Decimal(18, 2)
+  taxAmount     Decimal? @db.Decimal(18, 2)
+  grossAmount   Decimal? @db.Decimal(18, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceId, positionIndex]) // Keine doppelten Positionen
+  @@index([invoiceId])
+  @@index([positionIndex])
 }
 
 model Export {
   id             String       @id @default(cuid())
   organizationId String?
+  createdBy      String?      // FK to User (who created this export)
   format         ExportFormat
   filename       String
   storageKey     String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  // Export status tracking
+  status       ExportStatus @default(CREATED)
+  errorMessage String?      @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  creator      User?          @relation(fields: [createdBy], references: [id], onDelete: SetNull)
   invoices     ExportInvoice[]
 
   @@index([organizationId])
   @@index([format])
+  @@index([status])
+  @@index([createdBy])
 }
 
 model ExportInvoice {
