@@ -2,6 +2,7 @@
 
 import { requireAuth } from '@/src/lib/auth/session'
 import { prisma } from '@/src/lib/db/client'
+import { Prisma } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
@@ -54,7 +55,7 @@ export async function createOrganization(
     }
 
     // Create organization and membership in a transaction
-    const org = await prisma.$transaction(async (tx) => {
+    const org = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Create organization
       const newOrg = await tx.organization.create({
         data: { name: validation.data.name },
