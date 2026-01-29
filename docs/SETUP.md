@@ -263,6 +263,26 @@ In Supabase Dashboard → Authentication → URL Configuration:
 bun run build
 ```
 
+## GitHub Actions / Deployment
+
+Der Deploy-Workflow (`.github/workflows/deploy.yml`) läuft nach erfolgreicher CI auf `main` und nutzt das GitHub Environment **production**.
+
+### Environment einrichten
+
+1. Im Repository: **Settings** → **Environments** → Environment **production** anlegen (falls noch nicht vorhanden).
+2. Unter **Environment secrets** folgende Secrets anlegen (Werte wie in `.env.local`, aber für die Production-Umgebung):
+
+| Secret-Name | Beschreibung |
+|-------------|--------------|
+| `DATABASE_URL` | Connection-Pooling-URL (Supabase → Settings → Database) |
+| `DIRECT_URL` | Direct-Connection-URL für Migrations |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable/Anon Key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service Role Key (geheim) |
+| `NEXT_PUBLIC_SITE_URL` | Production-URL der App (z.B. `https://yourdomain.com`) |
+
+Die CI-Workflow-Datei (`.github/workflows/ci.yml`) verwendet weiterhin Dummy-Werte und benötigt keine GitHub Secrets.
+
 ## Troubleshooting
 
 ### Problem: "Email not confirmed"
