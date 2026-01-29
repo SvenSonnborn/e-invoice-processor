@@ -14,7 +14,13 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "bun run scripts/seed-local.ts",
-    "check-env": "bun run scripts/check-env.ts"
+    "check-env": "bun run scripts/check-env.ts",
+    "supabase:setup": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; bun run scripts/supabase/setup-test-data.ts",
+    "supabase:test-01": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; bun run scripts/supabase/test-01-upload-user-a.ts",
+    "supabase:test-02": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; bun run scripts/supabase/test-02-download-user-a.ts",
+    "supabase:test-03": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; bun run scripts/supabase/test-03-download-user-b-forbidden.ts",
+    "supabase:test-04": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; bun run scripts/supabase/test-04-invoice-rls-user-b.ts",
+    "supabase:test": "bun run supabase:test-01 && bun run supabase:test-02 && bun run supabase:test-03 && bun run supabase:test-04"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
