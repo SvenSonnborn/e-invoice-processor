@@ -1,0 +1,9 @@
+export { DocsPreviewSection } from './docs-preview-section';
+export { FeaturesSection } from './features-section';
+export { FinalCTASection } from './final-cta-section';
+export { HeroSection } from './hero-section';
+export { HowItWorksSection } from './how-it-works-section';
+export { PricingSection } from './pricing-section';
+export { ProblemSection } from './problem-section';
+export { SolutionSection } from './solution-section';
+export { TrustSection } from './trust-section';

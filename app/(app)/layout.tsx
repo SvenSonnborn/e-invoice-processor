@@ -3,6 +3,7 @@ import { requireAuth } from '@/src/lib/auth/session';
 import { prisma } from '@/src/lib/db/client';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import Image from 'next/image';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -65,7 +66,14 @@ export default async function AppLayout({
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/assets/logo-icon.png"
+                alt="E-Rechnung Logo"
+                width={32}
+                height={32}
+                className="rounded"
+              />
               <h1 className="text-xl font-bold text-gray-900">E-Rechnung</h1>
             </div>
             <div className="flex items-center space-x-4">
