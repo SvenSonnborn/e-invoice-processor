@@ -2,6 +2,31 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2025-01-29: Static Assets & Branding
+
+### ✨ Neue Features
+
+#### Static Assets
+
+- **`public/assets/`** – Ordner für App-Bilder (Logos, Illustrationen, Favicon)
+- Bilder aus Cursor-Assets nach `public/assets/` übernommen und sinnvoll benannt:
+  - `logo-icon.png` – E-Rechnung Icon („e“ in abgerundetem Quadrat)
+  - `logo-full.png` – Smart e-Rechnung Logo (Icon + Text)
+  - `favicon.png` – Favicon
+  - `login-illustration.png` – Illustration für Auth-Seiten
+  - `hero-illustration.png` – Hero „Digitale Rechnungen. Einfach. Schnell. Effizient.“
+
+#### Nutzung in der App
+
+- **Auth-Layout** – Logo-Icon statt FileText, Login-Illustration statt SVG
+- **App-Nav** – Logo-Icon neben „E-Rechnung“
+- **Marketing-Page** – Hero mit `hero-illustration`, `logo-full`, Claim „Digitale Rechnungen. Einfach. Schnell. Effizient.“
+- **Favicon** – `app/icon.png` aus Favicon-Asset, Next.js bindet es automatisch ein
+
+### 📚 Dokumentation
+
+- **`docs/architecture.md`** – Abschnitt „Static Assets“ ergänzt (`public/`, `public/assets/`, Nutzung via `/assets/...`)
+
 ## 2024-01-27: Export Status Tracking & Audit Trail
 
 ### ✨ Neue Features

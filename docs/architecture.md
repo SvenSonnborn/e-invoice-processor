@@ -14,6 +14,11 @@ The application follows a layered architecture with clear separation of concerns
 - **`src/types/`** - TypeScript type definitions
 - **`src/styles/`** - Global styles
 
+### Static Assets
+
+- **`public/`** - Static files (SVGs, images, etc.) served by Next.js from the root URL
+- **`public/assets/`** - App images (logos, illustrations, favicon). Use root-relative paths e.g. `/assets/logo-icon.png` in pages via `next/image` or `<img>`
+
 ## Key Components
 
 ### Database Layer
