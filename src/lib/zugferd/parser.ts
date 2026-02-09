@@ -26,56 +26,97 @@ export interface InvoiceParseResult {
 }
 
 export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint8Array): Promise<InvoiceParseResult> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
   try {
-    if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings: [] };
-    const xmlContent = await extractXMLFromPDF(pdfBuffer);
+    if (!isPDF(pdfBuffer)) {
+      return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file: File does not have PDF header'], warnings };
+    }
+
+    let xmlContent: string;
+    try {
+      xmlContent = await extractXMLFromPDF(pdfBuffer);
+    } catch (error) {
+      const errorMsg = error instanceof ZUGFeRDParserError ? error.message : 'Unknown error';
+      return { success: false, validation: { valid: false, errors: [`XML extraction failed: ${errorMsg}`], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [`Failed to extract XML from PDF: ${errorMsg}`], warnings };
+    }
+
     return parseInvoiceFromXML(xmlContent);
   } catch (error) {
-    const errorMsg = error instanceof ZUGFeRDParserError ? error.message : 'Unknown error';
-    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [errorMsg], warnings: [] };
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'Unknown' }, errors: [`PDF parsing failed: ${errorMsg}`], warnings };
   }
 }
 
-export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoiceParseResult> {
-  const errors: string[] = [], warnings: string[] = [];
+export function parseInvoiceFromXML(xmlContent: string): InvoiceParseResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
   try {
     const detection = detectInvoiceFlavor(xmlContent);
     let parseResult: ParsedInvoiceResult;
+
     if (detection.flavor === 'Unknown') {
       parseResult = parseCII(xmlContent);
-      if (!parseResult.success) { const ublResult = parseUBL(xmlContent); if (ublResult.success) { parseResult = ublResult; detection.flavor = 'ZUGFeRD'; } }
-      else detection.flavor = 'ZUGFeRD';
-    } else if (detection.flavor === 'XRechnung') { parseResult = parseCII(xmlContent); if (!parseResult.success) parseResult = parseUBL(xmlContent); }
-    else parseResult = parseCII(xmlContent);
+      if (!parseResult.success) {
+        const ublResult = parseUBL(xmlContent);
+        if (ublResult.success) { parseResult = ublResult; detection.flavor = 'ZUGFeRD'; }
+      } else { detection.flavor = 'ZUGFeRD'; }
+    } else if (detection.flavor === 'XRechnung') {
+      parseResult = parseCII(xmlContent);
+      if (!parseResult.success) parseResult = parseUBL(xmlContent);
+    } else {
+      parseResult = parseCII(xmlContent);
+    }
 
-    if (!parseResult.success || !parseResult.invoice) return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
+    if (!parseResult.success || !parseResult.invoice) {
+      return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
+    }
 
-    const validation = await validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
-    let invoice: Invoice | undefined, extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
-    try { invoice = mapToInvoiceModel(parseResult.invoice); extendedData = mapToExtendedInvoiceData(parseResult.invoice); } catch (error) { errors.push(`Mapping error: ${error instanceof Error ? error.message : 'Unknown'}`); }
+    const validation = validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
+
+    let invoice: Invoice | undefined;
+    let extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
+
+    try {
+      invoice = mapToInvoiceModel(parseResult.invoice);
+      extendedData = mapToExtendedInvoiceData(parseResult.invoice);
+    } catch (error) {
+      const errorMsg = error instanceof MapperError ? error.message : 'Mapping failed';
+      errors.push(`Mapping error: ${errorMsg}`);
+    }
 
     errors.push(...parseResult.errors, ...validation.errors);
     warnings.push(...parseResult.warnings, ...validation.warnings);
+
     return { success: errors.length === 0 && !!invoice, invoice, extendedData, rawData: parseResult.invoice, validation, detection, errors, warnings };
   } catch (error) {
-    return { success: false, validation: { valid: false, errors: [String(error)], warnings: [] }, detection: { flavor: 'Unknown' }, errors: [String(error)], warnings };
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'Unknown' }, errors: [`XML parsing failed: ${errorMsg}`], warnings };
   }
 }
 
 export async function parseInvoice(buffer: Buffer | ArrayBuffer | Uint8Array, mimeType?: string): Promise<InvoiceParseResult> {
-  if (isPDF(buffer) || mimeType === 'application/pdf') return parseInvoiceFromPDF(buffer);
+  const isPdfFile = isPDF(buffer);
+  if (isPdfFile || mimeType === 'application/pdf') return parseInvoiceFromPDF(buffer);
+
   let xmlContent: string;
   if (Buffer.isBuffer(buffer)) xmlContent = buffer.toString('utf-8');
   else if (buffer instanceof ArrayBuffer) xmlContent = new TextDecoder('utf-8').decode(buffer);
-  else xmlContent = new TextDecoder('utf-8').decode(buffer);
+  else if (buffer instanceof Uint8Array) xmlContent = new TextDecoder('utf-8').decode(buffer);
+  else return { success: false, validation: { valid: false, errors: ['Invalid buffer type'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid buffer type provided'], warnings: [] };
+
   return parseInvoiceFromXML(xmlContent);
 }
 
 export async function isValidEInvoice(buffer: Buffer | ArrayBuffer | Uint8Array): Promise<{ valid: boolean; flavor?: InvoiceFlavor; error?: string }> {
   try {
     const result = await parseInvoice(buffer);
-    return { valid: result.success, flavor: result.detection.flavor, error: result.errors[0] };
-  } catch (error) { return { valid: false, error: String(error) }; }
+    return { valid: result.success, flavor: result.detection.flavor, error: result.errors.length > 0 ? result.errors[0] : undefined };
+  } catch (error) {
+    return { valid: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 const DEFAULT_BATCH_CONCURRENCY = 5;
@@ -86,15 +127,21 @@ async function runWithConcurrency<T, R>(
   fn: (item: T) => Promise<R>
 ): Promise<R[]> {
   const results: R[] = [];
-  let index = 0;
-  async function worker(): Promise<void> {
-    while (index < items.length) {
-      const i = index++;
-      results[i] = await fn(items[i]);
+  const executing: Promise<void>[] = [];
+
+  for (const item of items) {
+    const p = fn(item).then((result) => {
+      results.push(result);
+    });
+    executing.push(p);
+
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+      executing.splice(0, executing.findIndex((e) => e === p) + 1);
     }
   }
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
-  await Promise.all(workers);
+
+  await Promise.all(executing);
   return results;
 }
 
