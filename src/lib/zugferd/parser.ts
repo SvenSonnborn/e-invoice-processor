@@ -51,8 +51,7 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
     if (!parseResult.success || !parseResult.invoice) return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
 
     const validation = await validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
-    let invoice: Invoice | undefined;
-    let extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
+    let invoice: Invoice | undefined, extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
     try { invoice = mapToInvoiceModel(parseResult.invoice); extendedData = mapToExtendedInvoiceData(parseResult.invoice); } catch (error) { errors.push(`Mapping error: ${error instanceof Error ? error.message : 'Unknown'}`); }
 
     errors.push(...parseResult.errors, ...validation.errors);

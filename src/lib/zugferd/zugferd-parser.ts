@@ -52,10 +52,7 @@ async function findZUGFeRDXML(pdfDoc: PDFDocument, namesArray: PDFArray): Promis
       if (efDict) {
         const fStreamRef = efDict.get(PDFName.of('F')) as PDFRef | PDFStream;
         const fStream = fStreamRef instanceof PDFRef ? pdfDoc.context.lookup(fStreamRef) as PDFStream : fStreamRef;
-        if (fStream) {
-          const bytes = await (fStream as unknown as { bytesAsync: () => Promise<Uint8Array> }).bytesAsync();
-          return new TextDecoder('utf-8').decode(bytes);
-        }
+        if (fStream) { const bytes = await (fStream as unknown as { getBytesAsync(): Promise<Uint8Array> }).getBytesAsync(); return new TextDecoder('utf-8').decode(bytes); }
       }
     }
   }
@@ -63,10 +60,9 @@ async function findZUGFeRDXML(pdfDoc: PDFDocument, namesArray: PDFArray): Promis
 }
 
 export function isPDF(buffer: Buffer | ArrayBuffer | Uint8Array): boolean {
-  const headerBytes = Buffer.isBuffer(buffer)
-    ? buffer.subarray(0, 5)
-    : buffer instanceof ArrayBuffer
-      ? new Uint8Array(buffer.slice(0, 5))
-      : buffer.subarray(0, 5);
-  return Buffer.from(headerBytes).toString() === '%PDF-';
+  let header: Uint8Array;
+  if (Buffer.isBuffer(buffer)) header = new Uint8Array(buffer.slice(0, 5));
+  else if (buffer instanceof ArrayBuffer) header = new Uint8Array(buffer.slice(0, 5));
+  else header = buffer.slice(0, 5);
+  return new TextDecoder('utf-8').decode(header) === '%PDF-';
 }

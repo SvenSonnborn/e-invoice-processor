@@ -49,14 +49,23 @@ function parseCIIStructure(cii: Record<string, unknown>, supplyChainTrade: Recor
   const settlement = asRecord(supplyChainTrade['ram:ApplicableHeaderTradeSettlement'] || supplyChainTrade.ApplicableHeaderTradeSettlement);
   const metadata: ZUGFeRDMetaData = { xmlVersion: '2.3', profile: 'EXTENDED', flavor: 'EXTENDED' };
   const invoice: ZUGFeRDInvoice = { metadata, lineItems: [], taxes: [], monetarySummation: {} };
-  if (header) { invoice.documentId = getTextContent(header['ram:ID'] || header.ID); invoice.documentDate = getDateContent(header['ram:IssueDateTime'] || header.IssueDateTime); }
-  if (agreement) { invoice.seller = parseCIIParty(agreement['ram:SellerTradeParty'] || agreement.SellerTradeParty); invoice.buyer = parseCIIParty(agreement['ram:BuyerTradeParty'] || agreement.BuyerTradeParty); }
+  if (header) { 
+    const headerRecord = header as Record<string, unknown>;
+    invoice.documentId = getTextContent(headerRecord['ram:ID'] || headerRecord.ID); 
+    invoice.documentDate = getDateContent(headerRecord['ram:IssueDateTime'] || headerRecord.IssueDateTime); 
+  }
+  if (agreement) { 
+    const agreementRecord = agreement as Record<string, unknown>;
+    invoice.seller = parseCIIParty(agreementRecord['ram:SellerTradeParty'] || agreementRecord.SellerTradeParty); 
+    invoice.buyer = parseCIIParty(agreementRecord['ram:BuyerTradeParty'] || agreementRecord.BuyerTradeParty); 
+  }
   if (settlement) {
-    invoice.currency = getTextContent(settlement['ram:InvoiceCurrencyCode'] || settlement.InvoiceCurrencyCode);
-    invoice.monetarySummation = parseMonetarySummation(settlement['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlement.SpecifiedTradeSettlementHeaderMonetarySummation);
+    const settlementRecord = settlement as Record<string, unknown>;
+    invoice.currency = getTextContent(settlementRecord['ram:InvoiceCurrencyCode'] || settlementRecord.InvoiceCurrencyCode);
+    invoice.monetarySummation = parseMonetarySummation(settlementRecord['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlementRecord.SpecifiedTradeSettlementHeaderMonetarySummation);
     const lineItems = supplyChainTrade['ram:IncludedSupplyChainTradeLineItem'] || supplyChainTrade.IncludedSupplyChainTradeLineItem;
     if (lineItems) invoice.lineItems = parseArray(lineItems).map(parseCIILineItem);
-    const taxBreakdown = settlement['ram:ApplicableTradeTax'] || settlement.ApplicableTradeTax;
+    const taxBreakdown = settlementRecord['ram:ApplicableTradeTax'] || settlementRecord.ApplicableTradeTax;
     if (taxBreakdown) invoice.taxes = parseArray(taxBreakdown).map(parseCIITax);
   }
   return invoice;
@@ -133,7 +142,10 @@ function getTextContent(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
-  if (typeof value === 'object') return (value as Record<string, string>)['#text'] || (value as Record<string, string>).text || String(value);
+  if (typeof value === 'object') {
+    const record = value as Record<string, string>;
+    return record['#text'] || record.text || String(value);
+  }
   return undefined;
 }
 

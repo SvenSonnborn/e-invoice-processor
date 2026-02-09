@@ -33,8 +33,8 @@ async function handleJSONBody(request: NextRequest): Promise<NextResponse> {
     const { xml, format } = body;
     if (!xml || typeof xml !== 'string') return NextResponse.json({ success: false, error: 'Missing or invalid "xml" field' }, { status: 400 });
     let result;
-    if (format === 'pdf') { result = await parseInvoiceFromPDF(Buffer.from(xml, 'base64')); }
-    else { result = await parseInvoiceFromXML(xml); }
+    if (format === 'pdf') result = await parseInvoiceFromPDF(Buffer.from(xml, 'base64'));
+    else result = await parseInvoiceFromXML(xml);
     if (!result.success) return NextResponse.json({ success: false, errors: result.errors, warnings: result.warnings, detection: result.detection }, { status: 400 });
     return NextResponse.json({ success: true, invoice: result.invoice, extendedData: result.extendedData, rawData: result.rawData, validation: result.validation, detection: result.detection, warnings: result.warnings });
   } catch (error) {

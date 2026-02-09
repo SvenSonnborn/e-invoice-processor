@@ -38,8 +38,9 @@ export function parseCiiXml(parsedXml: unknown): RawInvoiceData {
   
   // Parse delivery info
   const delivery = transaction.ApplicableHeaderTradeDelivery as Record<string, unknown> | undefined;
-  if (delivery?.ActualDeliverySupplyChainEvent?.OccurrenceDateTime) {
-    data.deliveryDate = extractCiiDate(delivery.ActualDeliverySupplyChainEvent.OccurrenceDateTime);
+  const deliveryEvent = delivery?.ActualDeliverySupplyChainEvent as Record<string, unknown> | undefined;
+  if (deliveryEvent?.OccurrenceDateTime) {
+    data.deliveryDate = extractCiiDate(deliveryEvent.OccurrenceDateTime);
   }
   
   // Parse settlement (payment and totals)
@@ -50,8 +51,9 @@ export function parseCiiXml(parsedXml: unknown): RawInvoiceData {
     data.payment = parsePaymentTerms(settlement);
     
     // Due date from payment terms
-    if (settlement.SpecifiedTradePaymentTerms?.DueDateDateTime) {
-      data.dueDate = extractCiiDate(settlement.SpecifiedTradePaymentTerms.DueDateDateTime);
+    const paymentTerms = settlement.SpecifiedTradePaymentTerms as Record<string, unknown> | undefined;
+    if (paymentTerms?.DueDateDateTime) {
+      data.dueDate = extractCiiDate(paymentTerms.DueDateDateTime);
     }
   }
   
