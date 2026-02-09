@@ -103,13 +103,14 @@ function parseCIILineItem(item: unknown): ZUGFeRDTradeLineItem {
   const assocDoc = asRecord(i['ram:AssociatedDocumentLineDocument'] || i.AssociatedDocumentLineDocument);
   const lineSettlement = asRecord(i['ram:SpecifiedLineTradeSettlement'] || i.SpecifiedLineTradeSettlement);
   const lineSummary = asRecord(lineSettlement?.['ram:SpecifiedTradeSettlementLineMonetarySummation'] || lineSettlement?.SpecifiedTradeSettlementLineMonetarySummation);
-  return { id: getTextContent(assocDoc?.['ram:LineID'] || assocDoc?.LineID), name: getTextContent(product?.['ram:Name'] || product?.Name), lineTotalAmount: getTextContent(lineSummary?.['ram:LineTotalAmount'] || lineSummary?.LineTotalAmount) };
+  const delivery = asRecord(i['ram:SpecifiedLineTradeDelivery'] || i.SpecifiedLineTradeDelivery);
+  return { id: getTextContent(assocDoc?.['ram:LineID'] || assocDoc?.LineID), name: getTextContent(product?.['ram:Name'] || product?.Name), billedQuantity: getTextContent(delivery?.['ram:BilledQuantity']), lineTotalAmount: getTextContent(lineSummary?.['ram:LineTotalAmount'] || lineSummary?.LineTotalAmount) };
 }
 
 function parseUBLLineItem(item: unknown): ZUGFeRDTradeLineItem {
   const i = item as Record<string, unknown>;
   const itemData = asRecord(i['cac:Item'] || i.Item);
-  return { id: getTextContent(i['cbc:ID'] || i.ID), name: getTextContent(itemData?.['cbc:Name'] || itemData?.Name), lineTotalAmount: getTextContent(i['cbc:LineExtensionAmount'] || i.LineExtensionAmount) };
+  return { id: getTextContent(i['cbc:ID'] || i.ID), name: getTextContent(itemData?.['cbc:Name'] || itemData?.Name), billedQuantity: getTextContent(i['cbc:InvoicedQuantity'] || i.InvoicedQuantity), lineTotalAmount: getTextContent(i['cbc:LineExtensionAmount'] || i.LineExtensionAmount) };
 }
 
 function parseCIITax(tax: unknown): ZUGFeRDTax {

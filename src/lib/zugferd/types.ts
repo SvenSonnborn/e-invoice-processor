@@ -79,6 +79,8 @@ export interface ZUGFeRDInvoice {
   currency?: string;
   paymentTerms?: ZUGFeRDPaymentTerms;
   paymentMeansCode?: string;
+  paymentMeansInformation?: string;
+  payeeAccountName?: string;
   payeeIban?: string;
   payeeBic?: string;
   monetarySummation: ZUGFeRDMonetarySummation;
