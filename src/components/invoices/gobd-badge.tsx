@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { ShieldCheck, ShieldAlert, ShieldX, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 type Status = 'compliant' | 'non-compliant' | 'warning';
 interface Props { status: Status; violations?: Array<{ message: string }>; warnings?: Array<{ message: string }>; showDetails?: boolean; className?: string; size?: 'sm' | 'md' | 'lg'; }
 const config: Record<Status, { icon: typeof ShieldCheck; label: string; shortLabel: string; bg: string; text: string; border: string; iconColor: string }> = {

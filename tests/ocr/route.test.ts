@@ -65,7 +65,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -83,7 +83,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(response.status).toBe(415);
@@ -101,7 +101,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -120,7 +120,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -137,7 +137,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(data.data.invoice).toBeDefined();
@@ -156,7 +156,7 @@ describe("POST /api/ocr", () => {
       body: formData
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as Request);
     const data = await response.json();
 
     expect(data.data.metadata).toBeDefined();

@@ -26,7 +26,7 @@ function createWarning(code: string, field?: string, details?: Record<string, un
 }
 
 export function validateRequiredFields(ctx: ValidationContext): RuleResult {
-  const { invoice } = ctx; const violations = []; const warnings = [];
+  const { invoice } = ctx; const violations: RuleResult['violations'] = []; const warnings: RuleResult['warnings'] = [];
   if (!invoice.number?.trim()) violations.push(createViolation(GOB_ERROR_CODES.MISSING_INVOICE_NUMBER, 'number'));
   if (!invoice.issueDate) violations.push(createViolation(GOB_ERROR_CODES.MISSING_ISSUE_DATE, 'issueDate'));
   if (invoice.netAmount == null) violations.push(createViolation(GOB_ERROR_CODES.MISSING_NET_AMOUNT, 'netAmount'));
@@ -39,7 +39,7 @@ export function validateRequiredFields(ctx: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 export function validateDateConstraints(ctx: ValidationContext): RuleResult {
-  const { invoice } = ctx; const violations = []; const warnings = [];
+  const { invoice } = ctx; const violations: RuleResult['violations'] = []; const warnings: RuleResult['warnings'] = [];
   if (invoice.issueDate) {
     if (!isValidDate(invoice.issueDate)) violations.push(createViolation(GOB_ERROR_CODES.INVALID_DATE_FORMAT, 'issueDate'));
     else if (isFutureDate(invoice.issueDate)) violations.push(createViolation(GOB_ERROR_CODES.FUTURE_DATE, 'issueDate'));
@@ -47,7 +47,7 @@ export function validateDateConstraints(ctx: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 export function validateSumCalculation(ctx: ValidationContext): RuleResult {
-  const { invoice, tolerance = 0.01 } = ctx; const violations = []; const warnings = [];
+  const { invoice, tolerance = 0.01 } = ctx; const violations: RuleResult['violations'] = []; const warnings: RuleResult['warnings'] = [];
   const net = toNumber(invoice.netAmount); const tax = toNumber(invoice.taxAmount); const gross = toNumber(invoice.grossAmount);
   if (net !== null && tax !== null && gross !== null) {
     const diff = Math.abs(net + tax - gross);
@@ -56,7 +56,7 @@ export function validateSumCalculation(ctx: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 export function validateTaxRates(ctx: ValidationContext): RuleResult {
-  const { invoice, tolerance = 0.01 } = ctx; const violations = []; const warnings = [];
+  const { invoice, tolerance = 0.01 } = ctx; const violations: RuleResult['violations'] = []; const warnings: RuleResult['warnings'] = [];
   if (invoice.lineItems?.length) {
     for (const item of invoice.lineItems) {
       const taxRate = toNumber(item.taxRate);
@@ -72,7 +72,7 @@ export function validateTaxRates(ctx: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 export function validateCurrency(ctx: ValidationContext): RuleResult {
-  const { invoice } = ctx; const violations = []; const warnings = [];
+  const { invoice } = ctx; const violations: RuleResult['violations'] = []; const warnings: RuleResult['warnings'] = [];
   if (invoice.currency) {
     const currency = invoice.currency.toUpperCase();
     if (currency.length !== 3) violations.push(createViolation(GOB_ERROR_CODES.INVALID_CURRENCY, 'currency'));
@@ -81,7 +81,7 @@ export function validateCurrency(ctx: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 export function validateLineItems(ctx: ValidationContext): RuleResult {
-  const { invoice, tolerance = 0.01 } = ctx; const violations = [];
+  const { invoice, tolerance = 0.01 } = ctx; const violations: RuleResult['violations'] = [];
   if (!invoice.lineItems?.length) return { passed: true, violations, warnings: [] };
   let totalNet = 0;
   for (const item of invoice.lineItems) {
