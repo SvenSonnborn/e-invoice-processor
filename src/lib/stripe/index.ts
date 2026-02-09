@@ -1,4 +1,4 @@
-export { stripe } from './client';
+export { getStripe } from './client';
 export { 
   STRIPE_CONFIG, 
   getPlanByPriceId, 

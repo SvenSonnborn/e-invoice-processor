@@ -6,7 +6,6 @@ import { SubscriptionManagement } from '@/src/components/subscription/subscripti
 import { PaymentHistory } from '@/src/components/subscription/payment-history';
 import type { PaymentItem } from '@/src/components/subscription/payment-history';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Separator } from '@/src/components/ui/separator';
 import { User, Mail, Building2 } from 'lucide-react';
 
 export const metadata: Metadata = {

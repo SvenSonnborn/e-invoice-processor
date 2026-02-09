@@ -12,8 +12,8 @@ import {
   validateLineItems,
   GOB_ERROR_CODES,
   GOB_WARNING_CODES,
-} from '@/lib/gobd';
-import type { InvoiceData, ValidationContext } from '@/lib/gobd';
+} from '@/src/lib/gobd';
+import type { InvoiceData, ValidationContext } from '@/src/lib/gobd';
 
 describe('GoBD Rules', () => {
   const baseInvoice: InvoiceData = {
@@ -140,7 +140,7 @@ describe('GoBD Rules', () => {
     it('should pass for valid tax rate 7%', () => {
       const invoice = {
         ...baseInvoice,
-        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 7 }],
+        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 7, taxAmount: 7.0, grossAmount: 107.0 }],
       };
       const result = validateTaxRates(createContext(invoice));
       expect(result.passed).toBe(true);
@@ -149,7 +149,7 @@ describe('GoBD Rules', () => {
     it('should pass for valid tax rate 0%', () => {
       const invoice = {
         ...baseInvoice,
-        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 0 }],
+        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 0, taxAmount: 0, grossAmount: 100.0 }],
       };
       const result = validateTaxRates(createContext(invoice));
       expect(result.passed).toBe(true);

@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
-import { createClient } from '@/src/lib/supabase/server';
-import { PrismaClient } from '@prisma/client';
+import { getCurrentUser } from '@/src/lib/auth/session';
 import { Pricing } from '@/src/components/marketing/pricing';
 import { Button } from '@/src/components/ui/button';
 import { ArrowLeft, HelpCircle, Shield } from 'lucide-react';
 import Link from 'next/link';
+import type { PlanId } from '@/src/lib/stripe/config';
 
 export const metadata: Metadata = {
   title: 'Preise | E-Invoice Hub',
@@ -31,25 +31,11 @@ const faqs = [
 ];
 
 export default async function PricingPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
-  let currentPlan = undefined;
-
-  if (user) {
-    const prisma = new PrismaClient();
-    try {
-      const userData = await prisma.user.findUnique({
-        where: { supabaseUserId: user.id },
-      });
-      
-      if (userData?.subscriptionTier) {
-        currentPlan = userData.subscriptionTier;
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
-  }
+  const currentPlan = user?.subscriptionTier !== 'FREE'
+    ? (user?.subscriptionTier as PlanId | undefined)
+    : undefined;
 
   return (
     <div className="min-h-screen bg-neutral-50">

@@ -11,8 +11,8 @@ import {
   type DatevExportConfig,
   type DatevInvoiceMapping,
   type DatevInvoice,
-} from "@/lib/export/datev";
-import { prisma } from "@/lib/db";
+} from "@/src/lib/export/datev";
+import { prisma } from "@/src/lib/db/client";
 
 /**
  * Export request body
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       steuerschluesselErmäßigt: body.mapping?.steuerschluesselErmäßigt || "8",
       steuerschluesselSteuerfrei: body.mapping?.steuerschluesselSteuerfrei || "0",
       defaultKostenstelle: body.mapping?.defaultKostenstelle,
-      defaultKostentraeger: body.mapping?.defaultKostentraeger,
+      defaultKostenträger: body.mapping?.defaultKostenträger,
     };
 
     // Generate DATEV export
@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate preview data
-    const { previewExport, getExportSummary } = await import("@/lib/export/datev");
+    const { previewExport, getExportSummary } = await import("@/src/lib/export/datev");
 
     const preview = previewExport(validInvoices);
     const summary = getExportSummary(validInvoices);

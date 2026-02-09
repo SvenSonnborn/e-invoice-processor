@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import { joinSchema } from './waitlist-schema';
 
 describe('Waitlist Form Validation', () => {
@@ -7,7 +7,7 @@ describe('Waitlist Form Validation', () => {
       name: 'John Doe',
       email: 'john@example.com',
       company: 'Acme Inc',
-      tier: 'pro' as const,
+      tier: 'business' as const,
     };
 
     const result = joinSchema.safeParse(validData);
@@ -18,7 +18,7 @@ describe('Waitlist Form Validation', () => {
     const validData = {
       name: 'Jane Doe',
       email: 'jane@example.com',
-      tier: 'basic' as const,
+      tier: 'pro' as const,
     };
 
     const result = joinSchema.safeParse(validData);
@@ -52,6 +52,17 @@ describe('Waitlist Form Validation', () => {
       name: 'John Doe',
       email: 'john@example.com',
       tier: 'enterprise',
+    };
+
+    const result = joinSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject old basic tier name', () => {
+    const invalidData = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      tier: 'basic',
     };
 
     const result = joinSchema.safeParse(invalidData);

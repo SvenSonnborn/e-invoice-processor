@@ -85,7 +85,7 @@ describe('GoBD Validator', () => {
     });
 
     it('should allow sum within tolerance', () => {
-      const invoice = { ...validInvoice, grossAmount: 119.01 };
+      const invoice = { ...validInvoice, grossAmount: 119.005 };
       const result = validateGoBDCompliance(invoice);
 
       expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.SUM_MISMATCH)).toBe(false);

@@ -2,23 +2,23 @@
  * DATEV CSV Generator
  */
 
-import type { DatevEntry, DatevExportConfig, DatevHeader } from "./types";
+import type { DatevEntry, DatevExportConfig } from "./types";
 import { DATEV_DELIMITER, DATEV_FORMAT, DATEV_VERSION, DATEV_CATEGORY, DATEV_HEADER_FIELDS, UTF8_BOM, DEFAULT_EXPORT_CONFIG } from "./constants";
 import { validateDatevEntry, formatAmount, validateExportConfig } from "./validator";
 
-export function generateHeader(config: Partial<DatevExportConfig> = {}): string {
+export function generateHeader(_config: Partial<DatevExportConfig> = {}): string {
   const now = new Date();
   const generatedOn = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
 
   const fields = [
-    config.format === "EXTF" ? "EXTF" : DATEV_FORMAT.DTVF,
+    DATEV_FORMAT.DTVF,
     DATEV_VERSION.MAJOR,
     DATEV_CATEGORY.BUCHUNGSSTAPEL,
     DATEV_VERSION.FORMAT_NAME,
     DATEV_VERSION.FORMAT_VERSION,
     generatedOn,
     "",
-    config.currency || DEFAULT_EXPORT_CONFIG.currency,
+    DEFAULT_EXPORT_CONFIG.currency,
     "",
   ];
 

@@ -147,6 +147,8 @@ export function validateSumCalculation(context: ValidationContext): RuleResult {
         expected: calculatedGross.toFixed(2),
         actual: gross.toFixed(2),
         difference: difference.toFixed(2),
+        net: net.toFixed(2),
+        tax: tax.toFixed(2),
       })
     );
   }

@@ -1,8 +1,7 @@
 'use client';
 
 import { Button } from '@/src/components/ui/button';
-import { ArrowRight, Check, CreditCard, HelpCircle, Sparkles, X, Zap, Users, Clock } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, Check, HelpCircle, Sparkles, X, Zap, Users, Clock } from 'lucide-react';
 import { WaitlistForm } from '../waitlist-form';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
@@ -23,16 +22,16 @@ type PricingPlan = {
 
 const plans: PricingPlan[] = [
   {
-    name: 'Basic',
-    regularPrice: 9.9,
-    earlyBirdPrice: 4.95,
+    name: 'Pro',
+    regularPrice: 29,
+    earlyBirdPrice: 14.5,
     period: 'month',
     description: 'Perfect for freelancers and small businesses.',
     features: [
-      { text: '50 invoices per month', included: true },
+      { text: '100 invoices per month', included: true },
       { text: 'ZUGFeRD & XRechnung support', included: true },
       { text: 'CSV & DATEV export', included: true },
-      { text: 'Email support', included: true },
+      { text: 'Priority processing', included: true },
       { text: 'API access', included: false },
       { text: 'Team features', included: false },
     ],
@@ -40,9 +39,9 @@ const plans: PricingPlan[] = [
     href: '#waitlist',
   },
   {
-    name: 'Pro',
-    regularPrice: 14.9,
-    earlyBirdPrice: 7.45,
+    name: 'Business',
+    regularPrice: 99,
+    earlyBirdPrice: 49.5,
     period: 'month',
     description: 'For growing businesses with higher volume.',
     features: [
@@ -90,10 +89,10 @@ const stats = [
 ];
 
 export const PricingSection = () => {
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'pro'>('pro');
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'business'>('pro');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePlanSelect = (plan: 'basic' | 'pro') => {
+  const handlePlanSelect = (plan: 'pro' | 'business') => {
     setSelectedPlan(plan);
     setIsDialogOpen(true);
   };
@@ -234,7 +233,7 @@ export const PricingSection = () => {
                     ? 'shadow-lg shadow-brand-600/20'
                     : ''
                 }`}
-                onClick={() => handlePlanSelect(plan.name.toLowerCase() as 'basic' | 'pro')}
+                onClick={() => handlePlanSelect(plan.name.toLowerCase() as 'pro' | 'business')}
               >
                 {plan.cta}
                 <ArrowRight className="ml-2 h-4 w-4" />

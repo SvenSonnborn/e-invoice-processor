@@ -1,12 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Users, Clock, Sparkles } from 'lucide-react';
 import { WaitlistForm } from '../waitlist-form-client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
 
 export const WaitlistSection = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <section id="waitlist" className="relative overflow-hidden bg-white py-20 md:py-28">

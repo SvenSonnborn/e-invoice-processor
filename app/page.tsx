@@ -19,7 +19,7 @@ interface LandingPageProps {
 
 export default async function LandingPage({ searchParams }: LandingPageProps) {
   const params = await searchParams;
-  const referralCode = typeof params.ref === 'string' ? params.ref : null;
+  const _referralCode = typeof params.ref === 'string' ? params.ref : null;
 
   return (
     <div className="flex min-h-screen flex-col">

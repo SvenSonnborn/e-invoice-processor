@@ -9,10 +9,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { FileText, Calendar, Building2, Euro } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/src/lib/utils';
 import { GoBDBadge, GoBDBadgeCompact } from './gobd-badge';
-import { mapPrismaStatusToGoBD } from '@/lib/gobd';
-import type { Invoice, InvoiceLineItem, GoBDComplianceStatus } from '@prisma/client';
+import { mapPrismaStatusToGoBD } from '@/src/lib/gobd';
+import type { Invoice, InvoiceLineItem } from '@/src/generated/prisma/client';
 
 interface InvoiceCardProps {
   invoice: Invoice & { lineItems?: InvoiceLineItem[] };
@@ -29,14 +29,14 @@ export function InvoiceCard({
   showBadge = true,
   compact = false,
 }: InvoiceCardProps) {
-  const gobdStatus = mapPrismaStatusToGoBD(invoice.gobdStatus) as GoBDComplianceStatus | null;
+  const gobdStatus = mapPrismaStatusToGoBD(invoice.gobdStatus);
   
   // Parse stored violations if available
   const violations = (invoice.gobdViolations as Array<{ code: string; message: string; field: string; severity: string }>) || [];
   const errors = violations.filter((v) => v.severity === 'error');
   const warnings = violations.filter((v) => v.severity === 'warning');
 
-  const formatCurrency = (amount: number | null | undefined) => {
+  const formatCurrency = (amount: unknown) => {
     if (amount === null || amount === undefined) return '-';
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',

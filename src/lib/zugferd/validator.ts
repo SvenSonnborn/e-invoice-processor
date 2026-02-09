@@ -72,8 +72,11 @@ function validateRequiredFields(xmlContent: string, flavor: InvoiceFlavor): Vali
     const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
     const parsed = parser.parse(xmlContent);
 
-    if (flavor === 'ZUGFeRD' || isCIIFormat(parsed)) validateCIIFields(parsed, errors, warnings);
-    else if (flavor === 'XRechnung' || isUBLFormat(parsed)) validateUBLFields(parsed, errors, warnings);
+    // Check actual XML format first (CII vs UBL), then fall back to flavor hint
+    if (isCIIFormat(parsed)) validateCIIFields(parsed, errors, warnings);
+    else if (isUBLFormat(parsed)) validateUBLFields(parsed, errors, warnings);
+    else if (flavor === 'ZUGFeRD') validateCIIFields(parsed, errors, warnings);
+    else if (flavor === 'XRechnung') validateUBLFields(parsed, errors, warnings);
   } catch (error) {
     errors.push(`Field validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

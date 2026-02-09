@@ -1,11 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-export default prisma;
+/**
+ * Legacy prisma import path.
+ * Re-exports from the canonical client at src/lib/db/client.ts
+ */
+export { prisma } from './db/client';
+export { prisma as default } from './db/client';
