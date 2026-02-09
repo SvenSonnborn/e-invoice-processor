@@ -26,9 +26,56 @@ export function GoBDBadge({ status, violations = [], warnings = [], showDetails:
         <div className={cn('absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border bg-white p-3 shadow-lg', c.border)}>
           {violations.length > 0 && <div className="mb-2"><h4 className="mb-1 font-semibold text-red-700 text-sm">Fehler ({violations.length})</h4><ul className="space-y-1 text-sm text-red-700">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul></div>}
           {warnings.length > 0 && <div><h4 className="mb-1 font-semibold text-yellow-700 text-sm">Hinweise ({warnings.length})</h4><ul className="space-y-1 text-sm text-yellow-700">{warnings.map((w, i) => <li key={i}>{w.message}</li>)}</ul></div>}
+          <div className="mt-3 border-t pt-2 text-xs text-gray-500">
+            GoBD = Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+/**
+ * Simplified GoBD Badge for compact displays
+ */
+export function GoBDBadgeCompact({
+  status,
+  className,
+}: {
+  status: Status;
+  className?: string;
+}) {
+  const c = config[status];
+  const Icon = c.icon;
+
+  return (
+    <div
+      className={cn(
+        'inline-flex h-6 w-6 items-center justify-center rounded-full',
+        c.bg,
+        className
+      )}
+      title={c.label}
+    >
+      <Icon className={cn('h-3.5 w-3.5', c.iconColor)} />
+    </div>
+  );
+}
+
+/**
+ * GoBD Status Indicator with icon only
+ */
+export function GoBDStatusIcon({
+  status,
+  className,
+}: {
+  status: Status;
+  className?: string;
+}) {
+  const c = config[status];
+  const Icon = c.icon;
+
+  return <Icon className={cn('h-5 w-5', c.iconColor, className)} aria-hidden="true" />;
+}
+
 export default GoBDBadge;

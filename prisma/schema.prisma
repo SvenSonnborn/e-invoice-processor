@@ -300,4 +300,3 @@ model Payment {
   @@index([status])
   @@index([createdAt])
 }
-

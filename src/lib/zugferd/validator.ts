@@ -59,6 +59,11 @@ function checkWellFormed(xmlContent: string): { valid: boolean; errors: string[]
   }
 }
 
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object') return value as Record<string, unknown>;
+  return undefined;
+}
+
 function validateRequiredFields(xmlContent: string, flavor: InvoiceFlavor): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -74,11 +79,6 @@ function validateRequiredFields(xmlContent: string, flavor: InvoiceFlavor): Vali
   }
 
   return { valid: errors.length === 0, errors, warnings };
-}
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  if (value && typeof value === 'object') return value as Record<string, unknown>;
-  return undefined;
 }
 
 function validateCIIFields(parsed: Record<string, unknown>, errors: string[], _warnings: string[]): void {

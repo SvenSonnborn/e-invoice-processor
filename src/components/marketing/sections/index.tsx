@@ -7,3 +7,4 @@ export { PricingSection } from './pricing-section';
 export { ProblemSection } from './problem-section';
 export { SolutionSection } from './solution-section';
 export { TrustSection } from './trust-section';
+export { WaitlistSection } from './waitlist-section';

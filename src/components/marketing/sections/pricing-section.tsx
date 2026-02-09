@@ -1,10 +1,16 @@
+'use client';
+
 import { Button } from '@/src/components/ui/button';
-import { ArrowRight, Check, CreditCard, HelpCircle, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, CreditCard, HelpCircle, Sparkles, X, Zap, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { WaitlistForm } from '../waitlist-form';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
 
 type PricingPlan = {
   name: string;
-  price: string;
+  regularPrice: number;
+  earlyBirdPrice: number;
   period: string;
   description: string;
   features: { text: string; included: boolean }[];
@@ -12,105 +18,134 @@ type PricingPlan = {
   href: string;
   highlighted?: boolean;
   badge?: string;
+  popular?: boolean;
 };
 
 const plans: PricingPlan[] = [
   {
-    name: 'Free',
-    price: '0',
-    period: 'forever',
-    description: 'Perfect for trying out the platform.',
+    name: 'Basic',
+    regularPrice: 9.9,
+    earlyBirdPrice: 4.95,
+    period: 'month',
+    description: 'Perfect for freelancers and small businesses.',
     features: [
-      { text: '5 invoices per month', included: true },
-      { text: 'ZUGFeRD & XRechnung', included: true },
-      { text: 'CSV export', included: true },
-      { text: 'Community support', included: true },
-      { text: 'Priority processing', included: false },
+      { text: '50 invoices per month', included: true },
+      { text: 'ZUGFeRD & XRechnung support', included: true },
+      { text: 'CSV & DATEV export', included: true },
+      { text: 'Email support', included: true },
       { text: 'API access', included: false },
+      { text: 'Team features', included: false },
     ],
-    cta: 'Get started free',
-    href: '/signup',
+    cta: 'Get Early Access',
+    href: '#waitlist',
   },
   {
     name: 'Pro',
-    price: '29',
+    regularPrice: 14.9,
+    earlyBirdPrice: 7.45,
     period: 'month',
-    description: 'For freelancers and small businesses.',
-    features: [
-      { text: '100 invoices per month', included: true },
-      { text: 'ZUGFeRD & XRechnung', included: true },
-      { text: 'All export formats', included: true },
-      { text: 'Priority processing', included: true },
-      { text: 'Email support', included: true },
-      { text: 'API access', included: false },
-    ],
-    cta: 'Start 14-day trial',
-    href: '/signup?plan=pro',
-    highlighted: true,
-    badge: 'Most popular',
-  },
-  {
-    name: 'Business',
-    price: '99',
-    period: 'month',
-    description: 'For teams and growing companies.',
+    description: 'For growing businesses with higher volume.',
     features: [
       { text: 'Unlimited invoices', included: true },
-      { text: 'ZUGFeRD & XRechnung', included: true },
+      { text: 'ZUGFeRD & XRechnung support', included: true },
       { text: 'All export formats', included: true },
       { text: 'Priority processing', included: true },
-      { text: 'Team features', included: true },
-      { text: 'Full API access', included: true },
+      { text: 'API access', included: true },
+      { text: 'Team collaboration', included: true },
     ],
-    cta: 'Contact sales',
-    href: '/contact',
+    cta: 'Get Early Access',
+    href: '#waitlist',
+    highlighted: true,
+    popular: true,
+    badge: 'Most Popular',
   },
 ];
 
 const faqs = [
   {
-    question: 'Can I change plans later?',
-    answer: 'Yes, upgrade or downgrade anytime. Changes apply immediately.',
-  },
-  {
-    question: 'What happens if I exceed my limit?',
+    question: 'When will the beta launch?',
     answer:
-      'We\'ll notify you. You can upgrade or wait until next month to continue.',
+      'We\'re targeting Q2 2025 for the public beta. Waitlist members will get access first.',
   },
   {
-    question: 'Is there a contract?',
-    answer: 'No contracts. Cancel anytime with one click.',
+    question: 'How long does the early-bird discount last?',
+    answer:
+      'The 50% discount is locked in forever as long as you maintain your subscription.',
+  },
+  {
+    question: 'Can I switch plans later?',
+    answer: 'Yes, you can upgrade or downgrade anytime. Your discount applies to any plan.',
+  },
+  {
+    question: 'What happens after the beta?',
+    answer:
+      'You\'ll keep your early-bird pricing. We\'ll never increase your rate without your consent.',
   },
 ];
 
+const stats = [
+  { icon: Users, value: '50+', label: 'Waitlist members' },
+  { icon: Clock, value: 'Q2 2025', label: 'Beta launch' },
+  { icon: Zap, value: '50%', label: 'Early-bird discount' },
+];
+
 export const PricingSection = () => {
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'pro'>('pro');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handlePlanSelect = (plan: 'basic' | 'pro') => {
+    setSelectedPlan(plan);
+    setIsDialogOpen(true);
+  };
+
   return (
     <section
       id="pricing"
       className="relative overflow-hidden bg-neutral-50 py-20 md:py-28"
     >
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-brand-200/20 blur-[100px]" />
+        <div className="absolute -right-40 bottom-0 h-[400px] w-[400px] rounded-full bg-brand-100/30 blur-[100px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-[1200px] px-4 md:px-6">
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700">
-            <CreditCard className="h-4 w-4" />
-            Pricing
+            <Sparkles className="h-4 w-4" />
+            Early-Bird Pricing
           </div>
           <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 md:text-4xl lg:text-[2.75rem]">
-            Simple,{' '}
+            Lock in{' '}
             <span className="bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
-              transparent
+              50% off
             </span>{' '}
-            pricing
+            forever
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-neutral-600">
-            Start for free. Upgrade when you need more. No hidden fees, no
-            surprises.
+            Join our waitlist today and get lifetime access at early-bird pricing. 
+            Regular prices apply after launch.
           </p>
         </div>
 
+        {/* Stats */}
+        <div className="mt-12 flex flex-wrap justify-center gap-8 md:gap-16">
+          {stats.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className="flex items-center justify-center gap-2">
+                <stat.icon className="h-5 w-5 text-brand-600" />
+                <span className="text-2xl font-bold text-neutral-900 md:text-3xl">
+                  {stat.value}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-neutral-500">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Pricing cards */}
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
+        <div className="mt-16 grid gap-6 lg:grid-cols-2 lg:max-w-4xl lg:mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -130,6 +165,14 @@ export const PricingSection = () => {
                 </div>
               )}
 
+              {/* Early bird badge */}
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+                  <Zap className="h-3 w-3" />
+                  50% OFF
+                </span>
+              </div>
+
               {/* Header */}
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-neutral-900">
@@ -142,19 +185,18 @@ export const PricingSection = () => {
 
               {/* Price */}
               <div className="mb-8">
-                <div className="flex items-baseline">
+                <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-bold tracking-tight text-neutral-900">
-                    €{plan.price}
+                    €{plan.earlyBirdPrice.toFixed(2)}
                   </span>
-                  {plan.period && (
-                    <span className="ml-1 text-neutral-500">/{plan.period}</span>
-                  )}
+                  <span className="text-lg text-neutral-400 line-through">
+                    €{plan.regularPrice.toFixed(2)}
+                  </span>
                 </div>
-                {plan.name === 'Pro' && (
-                  <p className="mt-2 text-sm text-neutral-500">
-                    Billed monthly. Cancel anytime.
-                  </p>
-                )}
+                <span className="text-neutral-500">/{plan.period}</span>
+                <p className="mt-2 text-sm text-success font-medium">
+                  Early-bird price — forever!
+                </p>
               </div>
 
               {/* Features */}
@@ -192,15 +234,21 @@ export const PricingSection = () => {
                     ? 'shadow-lg shadow-brand-600/20'
                     : ''
                 }`}
-                asChild
+                onClick={() => handlePlanSelect(plan.name.toLowerCase() as 'basic' | 'pro')}
               >
-                <Link href={plan.href}>
-                  {plan.cta}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                {plan.cta}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           ))}
+        </div>
+
+        {/* Urgency message */}
+        <div className="mt-8 text-center">
+          <p className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm text-amber-700">
+            <Clock className="h-4 w-4" />
+            Limited spots available — Only 50 early-bird slots per plan
+          </p>
         </div>
 
         {/* FAQs */}
@@ -208,9 +256,9 @@ export const PricingSection = () => {
           <div className="mx-auto max-w-3xl">
             <div className="mb-8 flex items-center justify-center gap-2 text-neutral-600">
               <HelpCircle className="h-5 w-5" />
-              <span className="font-medium">Common questions</span>
+              <span className="font-medium">Frequently asked questions</span>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               {faqs.map((faq) => (
                 <div
                   key={faq.question}
@@ -229,14 +277,26 @@ export const PricingSection = () => {
         {/* Money back guarantee */}
         <div className="mt-12 text-center">
           <p className="text-sm text-neutral-500">
-            All paid plans include a{' '}
+            All plans include a{' '}
             <span className="font-medium text-neutral-700">
-              14-day money-back guarantee
+              30-day money-back guarantee
             </span>
             . No questions asked.
           </p>
         </div>
       </div>
+
+      {/* Waitlist Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Join the Waitlist
+            </DialogTitle>
+          </DialogHeader>
+          <WaitlistForm defaultTier={selectedPlan} variant="card" />
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

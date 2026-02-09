@@ -86,6 +86,78 @@ async function getBillingPeriodStart(userId: string): Promise<Date> {
 }
 
 // ---------------------------------------------------------------------------
+// Calendar month helpers (useful for UI display)
+// ---------------------------------------------------------------------------
+
+/**
+ * Count invoices for user in current calendar month
+ */
+export async function countUserInvoicesThisMonth(userId: string): Promise<number> {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+  const count = await prisma.invoice.count({
+    where: {
+      createdBy: userId,
+      createdAt: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+    },
+  });
+
+  return count;
+}
+
+/**
+ * Count exports for user in current calendar month
+ */
+export async function countUserExportsThisMonth(userId: string): Promise<number> {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+  const count = await prisma.export.count({
+    where: {
+      createdBy: userId,
+      createdAt: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+    },
+  });
+
+  return count;
+}
+
+/**
+ * Get remaining invoices for user this month
+ */
+export async function getRemainingInvoices(userId: string): Promise<number> {
+  const tier = await getUserSubscriptionTier(userId);
+
+  if (tier === 'FREE') {
+    return 0;
+  }
+
+  const planKey = tier as PlanId;
+  const plan = STRIPE_CONFIG.PLANS[planKey];
+  if (!plan || plan.limits.invoicesPerMonth === -1) {
+    return -1; // Unlimited
+  }
+
+  const periodStart = await getBillingPeriodStart(userId);
+  const currentCount = await prisma.invoice.count({
+    where: {
+      createdBy: userId,
+      createdAt: { gte: periodStart },
+    },
+  });
+  return Math.max(0, plan.limits.invoicesPerMonth - currentCount);
+}
+
+// ---------------------------------------------------------------------------
 // Usage limit checks
 // ---------------------------------------------------------------------------
 
