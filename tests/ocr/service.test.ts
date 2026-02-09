@@ -28,7 +28,7 @@ global.fetch = async () => ({
       }
     }]
   })
-}) as any;
+}) as unknown as typeof global.fetch;
 
 describe("OcrService", () => {
   let service: OcrService;
@@ -94,7 +94,7 @@ describe("OcrService", () => {
             }]
           }]
         })
-      }) as any;
+      }) as unknown as typeof global.fetch;
 
       const buffer = Buffer.from("fake-pdf-data");
       const result = await service.processFile(buffer, "application/pdf");
