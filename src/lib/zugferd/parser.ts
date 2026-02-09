@@ -10,7 +10,8 @@ import { ParsedInvoiceResult, ValidationResult, ZUGFeRDInvoice, InvoiceFlavor, I
 import { Invoice } from '@/src/types/invoice';
 
 export { ZUGFeRDParserError, XRechnungParserError, MapperError };
-export type { ParsedInvoiceResult, ValidationResult, ZUGFeRDInvoice, InvoiceFlavor, InvoiceDetectionResult, ExtendedInvoiceData } from './types';
+export type { ParsedInvoiceResult, ValidationResult, ZUGFeRDInvoice, InvoiceFlavor, InvoiceDetectionResult } from './types';
+export type { ExtendedInvoiceData } from './mapper';
 export { mapToExtendedInvoiceData } from './mapper';
 
 export interface InvoiceParseResult {
@@ -36,7 +37,7 @@ export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint
   }
 }
 
-export function parseInvoiceFromXML(xmlContent: string): InvoiceParseResult {
+export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoiceParseResult> {
   const errors: string[] = [], warnings: string[] = [];
   try {
     const detection = detectInvoiceFlavor(xmlContent);
@@ -51,7 +52,7 @@ export function parseInvoiceFromXML(xmlContent: string): InvoiceParseResult {
 
     if (!parseResult.success || !parseResult.invoice) return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
 
-    const validation = validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
+    const validation = await validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
     let invoice: Invoice | undefined;
     let extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
     try { invoice = mapToInvoiceModel(parseResult.invoice); extendedData = mapToExtendedInvoiceData(parseResult.invoice); } catch (error) { errors.push(`Mapping error: ${error instanceof Error ? error.message : 'Unknown'}`); }
