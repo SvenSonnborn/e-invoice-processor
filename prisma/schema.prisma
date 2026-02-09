@@ -21,6 +21,12 @@ enum InvoiceStatus {
   FAILED     // Verarbeitung fehlgeschlagen
 }
 
+enum GoBDComplianceStatus {
+  COMPLIANT
+  NON_COMPLIANT
+  WARNING
+}
+
 enum UploadStatus {
   PENDING
   PROCESSED
@@ -133,6 +139,11 @@ model Invoice {
   status            InvoiceStatus @default(CREATED)
   lastProcessedAt   DateTime?
   processingVersion Int           @default(1)
+
+  // GoBD compliance tracking
+  gobdStatus        GoBDComplianceStatus?
+  gobdViolations    Json?
+  gobdValidatedAt   DateTime?
 
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
