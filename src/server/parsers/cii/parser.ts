@@ -149,8 +149,9 @@ function parsePaymentTerms(settlementData: unknown): RawInvoiceData["payment"] {
   const result: RawInvoiceData["payment"] = {};
   
   // Parse payment terms description
-  if (settlement.SpecifiedTradePaymentTerms?.Description) {
-    result.terms = extractTextValue(settlement.SpecifiedTradePaymentTerms.Description);
+  const paymentTerms = settlement.SpecifiedTradePaymentTerms as Record<string, unknown> | undefined;
+  if (paymentTerms?.Description) {
+    result.terms = extractTextValue(paymentTerms.Description);
   }
   
   // Parse specified trade settlement payment means
@@ -174,12 +175,15 @@ function parsePaymentTerms(settlementData: unknown): RawInvoiceData["payment"] {
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
+/** Line item type */
+type LineItem = NonNullable<RawInvoiceData["lineItems"]>[number];
+
 /** Parse a line item */
-function parseLineItem(itemData: unknown): RawInvoiceData["lineItems"][number] | undefined {
+function parseLineItem(itemData: unknown): LineItem | undefined {
   if (!itemData) return undefined;
   
   const item = itemData as Record<string, unknown>;
-  const result: RawInvoiceData["lineItems"][number] = {};
+  const result: LineItem = {};
   
   // Line ID
   const docLine = item.AssociatedDocumentLineDocument as Record<string, unknown> | undefined;

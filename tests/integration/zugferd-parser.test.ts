@@ -12,7 +12,12 @@ describe("ZUGFeRD Parser", () => {
   describe("parseZugferd", () => {
     it("should throw PdfExtractionError for non-PDF buffer", async () => {
       const notPdf = Buffer.from("This is not a PDF");
-      await expect(parseZugferd(notPdf)).rejects.toThrow(PdfExtractionError);
+      try {
+        await parseZugferd(notPdf);
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error instanceof PdfExtractionError).toBe(true);
+      }
     });
 
     it("should throw PdfExtractionError for PDF without embedded XML", async () => {
@@ -47,7 +52,12 @@ startxref
 %%EOF`
       );
       
-      await expect(parseZugferd(minimalPdf)).rejects.toThrow(PdfExtractionError);
+      try {
+        await parseZugferd(minimalPdf);
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error instanceof PdfExtractionError).toBe(true);
+      }
     });
   });
 

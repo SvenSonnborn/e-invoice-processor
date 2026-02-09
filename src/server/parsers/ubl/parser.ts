@@ -50,8 +50,9 @@ export function parseUblXml(parsedXml: unknown): RawInvoiceData {
   data.buyer = parseParty(root.AccountingCustomerParty);
   
   // Parse delivery info
-  if (root.Delivery?.ActualDeliveryDate) {
-    data.deliveryDate = extractTextValue(root.Delivery.ActualDeliveryDate);
+  const delivery = root.Delivery as Record<string, unknown> | undefined;
+  if (delivery?.ActualDeliveryDate) {
+    data.deliveryDate = extractTextValue(delivery.ActualDeliveryDate);
   }
   
   // Parse monetary totals
@@ -81,32 +82,37 @@ function parseParty(partyData: unknown): RawInvoiceData["seller"] {
   const result: RawInvoiceData["seller"] = {};
   
   // Party name
-  if (party.PartyName?.Name) {
-    result.name = extractTextValue(party.PartyName.Name);
-  } else if (party.PartyLegalEntity?.RegistrationName) {
-    result.name = extractTextValue(party.PartyLegalEntity.RegistrationName);
+  const partyName = party.PartyName as Record<string, unknown> | undefined;
+  const partyLegalEntity = party.PartyLegalEntity as Record<string, unknown> | undefined;
+  if (partyName?.Name) {
+    result.name = extractTextValue(partyName.Name);
+  } else if (partyLegalEntity?.RegistrationName) {
+    result.name = extractTextValue(partyLegalEntity.RegistrationName);
   }
   
   // Postal address
-  if (party.PostalAddress) {
-    const address = party.PostalAddress as Record<string, unknown>;
-    result.street = extractTextValue(address.StreetName);
-    result.city = extractTextValue(address.CityName);
-    result.postalCode = extractTextValue(address.PostalZone);
-    if (address.Country?.IdentificationCode) {
-      result.country = extractTextValue(address.Country.IdentificationCode);
+  const postalAddress = party.PostalAddress as Record<string, unknown> | undefined;
+  if (postalAddress) {
+    result.street = extractTextValue(postalAddress.StreetName);
+    result.city = extractTextValue(postalAddress.CityName);
+    result.postalCode = extractTextValue(postalAddress.PostalZone);
+    const country = postalAddress.Country as Record<string, unknown> | undefined;
+    if (country?.IdentificationCode) {
+      result.country = extractTextValue(country.IdentificationCode);
     }
   }
   
   // Tax registrations
-  if (party.PartyTaxScheme) {
-    const schemes = Array.isArray(party.PartyTaxScheme) 
-      ? party.PartyTaxScheme 
-      : [party.PartyTaxScheme];
+  const partyTaxScheme = party.PartyTaxScheme;
+  if (partyTaxScheme) {
+    const schemes = Array.isArray(partyTaxScheme) 
+      ? partyTaxScheme 
+      : [partyTaxScheme];
     
     for (const scheme of schemes) {
-      const companyId = extractTextValue((scheme as Record<string, unknown>).CompanyID);
-      const taxScheme = (scheme as Record<string, unknown>).TaxScheme as Record<string, unknown> | undefined;
+      const schemeRecord = scheme as Record<string, unknown>;
+      const companyId = extractTextValue(schemeRecord.CompanyID);
+      const taxScheme = schemeRecord.TaxScheme as Record<string, unknown> | undefined;
       const schemeId = extractTextValue(taxScheme?.ID);
       
       if (schemeId === "VAT" || companyId?.startsWith("DE")) {
@@ -116,8 +122,9 @@ function parseParty(partyData: unknown): RawInvoiceData["seller"] {
   }
   
   // Party identification
-  if (party.PartyIdentification?.ID) {
-    const id = extractTextValue(party.PartyIdentification.ID);
+  const partyIdentification = party.PartyIdentification as Record<string, unknown> | undefined;
+  if (partyIdentification?.ID) {
+    const id = extractTextValue(partyIdentification.ID);
     if (id && !result.taxId) {
       result.taxId = id;
     }
@@ -188,19 +195,24 @@ function parsePaymentMeans(meansData: unknown): RawInvoiceData["payment"] {
   }
   
   // Financial institution (BIC)
-  if (payeeAccount?.FinancialInstitutionBranch?.FinancialInstitution?.ID) {
-    result.bic = extractTextValue(payeeAccount.FinancialInstitutionBranch.FinancialInstitution.ID);
+  const financialInstitutionBranch = payeeAccount?.FinancialInstitutionBranch as Record<string, unknown> | undefined;
+  const financialInstitution = financialInstitutionBranch?.FinancialInstitution as Record<string, unknown> | undefined;
+  if (financialInstitution?.ID) {
+    result.bic = extractTextValue(financialInstitution.ID);
   }
   
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
+/** Line item type */
+type UblLineItem = NonNullable<RawInvoiceData["lineItems"]>[number];
+
 /** Parse invoice line */
-function parseInvoiceLine(lineData: unknown): RawInvoiceData["lineItems"][number] | undefined {
+function parseInvoiceLine(lineData: unknown): UblLineItem | undefined {
   if (!lineData) return undefined;
   
   const line = lineData as Record<string, unknown>;
-  const result: RawInvoiceData["lineItems"][number] = {};
+  const result: UblLineItem = {};
   
   // Line ID
   result.id = extractTextValue(line.ID);
@@ -237,8 +249,9 @@ function parseInvoiceLine(lineData: unknown): RawInvoiceData["lineItems"][number
   }
   
   // Tax info (from Item.ClassifiedTaxCategory)
-  if (item?.ClassifiedTaxCategory?.Percent) {
-    const percent = extractTextValue(item.ClassifiedTaxCategory.Percent);
+  const classifiedTaxCategory = item?.ClassifiedTaxCategory as Record<string, unknown> | undefined;
+  if (classifiedTaxCategory?.Percent) {
+    const percent = extractTextValue(classifiedTaxCategory.Percent);
     if (percent) {
       result.vatRate = parseFloat(percent);
     }

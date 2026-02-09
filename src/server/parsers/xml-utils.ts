@@ -243,8 +243,9 @@ export function extractCiiDate(dateTimeValue: unknown): string | undefined {
   if (!dateTimeValue) return undefined;
   
   const obj = dateTimeValue as Record<string, unknown>;
-  const dateString = extractTextValue(obj.DateTimeString);
-  const format = obj.DateTimeString?.["@_format"] || "102";
+  const dateTimeString = obj.DateTimeString as Record<string, unknown> | undefined;
+  const dateString = extractTextValue(dateTimeString);
+  const format = (dateTimeString?.["@_format"] as string | undefined) || "102";
   
   if (!dateString) return undefined;
   

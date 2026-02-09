@@ -18,11 +18,23 @@ describe("XML Utils", () => {
 
     it("should throw on malformed XML", () => {
       const xml = `<?xml version="1.0"?><root><item>test</root>`;
-      expect(() => validateXmlWellFormed(xml)).toThrow(XmlValidationError);
+      let threw = false;
+      try {
+        validateXmlWellFormed(xml);
+      } catch (e) {
+        threw = e instanceof XmlValidationError;
+      }
+      expect(threw).toBe(true);
     });
 
     it("should throw on empty XML", () => {
-      expect(() => validateXmlWellFormed("")).toThrow(XmlValidationError);
+      let threw = false;
+      try {
+        validateXmlWellFormed("");
+      } catch (e) {
+        threw = e instanceof XmlValidationError;
+      }
+      expect(threw).toBe(true);
     });
   });
 
@@ -105,7 +117,13 @@ describe("XML Utils", () => {
 
     it("should throw on invalid XML when validate is true", () => {
       const xml = `<?xml version="1.0"?><root><unclosed>`;
-      expect(() => parseXml(xml, true)).toThrow(XmlValidationError);
+      let threw = false;
+      try {
+        parseXml(xml, true);
+      } catch (e) {
+        threw = e instanceof XmlValidationError;
+      }
+      expect(threw).toBe(true);
     });
   });
 

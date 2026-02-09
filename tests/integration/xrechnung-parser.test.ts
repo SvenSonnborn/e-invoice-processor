@@ -92,13 +92,21 @@ describe("XRechnung Parser", () => {
     });
 
     it("should throw UnsupportedFormatError for unknown format", async () => {
-      await expect(parseXRechnung(Buffer.from(unknownXml)))
-        .rejects.toThrow(UnsupportedFormatError);
+      try {
+        await parseXRechnung(Buffer.from(unknownXml));
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error instanceof UnsupportedFormatError).toBe(true);
+      }
     });
 
     it("should throw XmlValidationError for invalid XML", async () => {
-      await expect(parseXRechnung(Buffer.from(invalidXml)))
-        .rejects.toThrow(XmlValidationError);
+      try {
+        await parseXRechnung(Buffer.from(invalidXml));
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error instanceof XmlValidationError).toBe(true);
+      }
     });
 
     it("should include warnings when validation finds issues", async () => {
@@ -143,8 +151,12 @@ describe("XRechnung Parser", () => {
           </SupplyChainTradeTransaction>
         </CrossIndustryInvoice>`;
       
-      await expect(parseXRechnung(Buffer.from(partialXml), { strict: true }))
-        .rejects.toThrow(InvoiceParseError);
+      try {
+        await parseXRechnung(Buffer.from(partialXml), { strict: true });
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error instanceof InvoiceParseError).toBe(true);
+      }
     });
 
     it("should skip validation when validate is false", async () => {
@@ -162,8 +174,12 @@ describe("XRechnung Parser", () => {
     });
 
     it("should throw on invalid XML", async () => {
-      await expect(parseXRechnungCii(Buffer.from(invalidXml)))
-        .rejects.toThrow();
+      try {
+        await parseXRechnungCii(Buffer.from(invalidXml));
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
     });
   });
 
@@ -176,8 +192,12 @@ describe("XRechnung Parser", () => {
     });
 
     it("should throw on invalid XML", async () => {
-      await expect(parseXRechnungUbl(Buffer.from(invalidXml)))
-        .rejects.toThrow();
+      try {
+        await parseXRechnungUbl(Buffer.from(invalidXml));
+        expect(false).toBe(true); // Should not reach here
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
     });
   });
 

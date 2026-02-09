@@ -104,7 +104,7 @@ export async function extractEmbeddedXml(pdfBuffer: Buffer): Promise<Buffer | nu
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     
     // Try to find embedded files in the PDF
-    const catalog = pdfDoc.context.lookup(pdfDoc.catalog.ref) as PDFDict;
+    const catalog = pdfDoc.catalog as unknown as PDFDict;
     
     // Look for EmbeddedFiles name tree
     const names = catalog.get(PDFName.of("Names")) as PDFDict | undefined;
