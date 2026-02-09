@@ -4,7 +4,7 @@
  * Integration tests for the OCR upload endpoint.
  */
 
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach, mock } from "bun:test";
 
 // Mock the OCR service
 const mockProcessFile = () => Promise.resolve({
