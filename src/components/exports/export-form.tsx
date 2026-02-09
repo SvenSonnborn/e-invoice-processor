@@ -1,12 +1,8 @@
 /**
  * Export Form Component
- * Form for creating exports
+ *
+ * @deprecated Use ExportDialog instead for the full export flow.
+ * This file is kept for backward compatibility but the dialog is the primary UI.
  */
 
-export function ExportForm() {
-  return (
-    <form>
-      {/* Export form implementation */}
-    </form>
-  );
-}
+export { ExportDialog as ExportForm } from "./export-dialog";

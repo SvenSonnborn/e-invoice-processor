@@ -18,8 +18,9 @@ This directory contains API documentation for the E-Rechnung application.
 - `POST /api/invoices/import/zugferd` - Parse ZUGFeRD/XRechnung files (single or batch); parse-only, no persistence
 
 ### Exports
-- `GET /api/exports` - List exports
-- `POST /api/exports` - Create export
+- `GET /api/exports` - List exports for the current organization
+- `POST /api/exports` - Create a new export (CSV or DATEV format)
+- `GET /api/exports/[exportId]/download` - Download a completed export file
 
 ### Uploads
 - `POST /api/uploads` - Upload file
@@ -89,6 +90,81 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 
 **Error (400):** Missing/invalid body, file too large, too many files, or parse failure (single request).
 **Error (500):** Internal server error.
+
+## Exports
+
+**GET /api/exports**
+
+List exports for the current organization. Supports query parameters: `status` (filter by status), `limit` (default 50), `offset` (default 0).
+
+**Response (200):**
+```json
+{
+  "exports": [
+    {
+      "id": "...",
+      "format": "DATEV",
+      "filename": "EXTF_1234567_00123_202401151430.csv",
+      "status": "READY",
+      "storageKey": "exports/.../...",
+      "createdAt": "...",
+      "invoices": [...],
+      "creator": { "id": "...", "name": "...", "email": "..." }
+    }
+  ]
+}
+```
+
+---
+
+**POST /api/exports**
+
+Create a new export and generate the file.
+
+**Request body:**
+```json
+{
+  "format": "CSV" | "DATEV",
+  "invoiceIds": ["inv-123", "inv-124"],
+  "filename": "optional-custom-name.csv",
+  "datevOptions": {
+    "consultantNumber": "1234567",
+    "clientNumber": "00123",
+    "fiscalYearStart": "0101",
+    "defaultExpenseAccount": "4900",
+    "defaultRevenueAccount": "8400",
+    "defaultContraAccount": "1200",
+    "batchName": "Rechnungen Januar 2024"
+  }
+}
+```
+
+`datevOptions` is only used when `format` is `"DATEV"` and is optional.
+
+**Response (201):**
+```json
+{
+  "export": {
+    "id": "...",
+    "format": "DATEV",
+    "filename": "EXTF_1234567_00123_202401151430.csv",
+    "status": "READY",
+    "invoiceCount": 2,
+    "storageKey": "exports/..."
+  }
+}
+```
+
+---
+
+**GET /api/exports/[exportId]/download**
+
+Download a completed export file. The export must have status `READY`.
+
+**Response (200):** File download with `Content-Disposition: attachment`.
+
+**Error (400):** Export not ready.
+**Error (404):** Export not found.
 
 ## Authentication
 
