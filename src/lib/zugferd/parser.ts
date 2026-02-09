@@ -26,14 +26,13 @@ export interface InvoiceParseResult {
 }
 
 export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint8Array): Promise<InvoiceParseResult> {
-  const _errors: string[] = [], warnings: string[] = [];
   try {
-    if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings };
+    if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings: [] };
     const xmlContent = await extractXMLFromPDF(pdfBuffer);
     return parseInvoiceFromXML(xmlContent);
   } catch (error) {
     const errorMsg = error instanceof ZUGFeRDParserError ? error.message : 'Unknown error';
-    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [errorMsg], warnings };
+    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [errorMsg], warnings: [] };
   }
 }
 
@@ -42,7 +41,6 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
   try {
     const detection = detectInvoiceFlavor(xmlContent);
     let parseResult: ParsedInvoiceResult;
-
     if (detection.flavor === 'Unknown') {
       parseResult = parseCII(xmlContent);
       if (!parseResult.success) { const ublResult = parseUBL(xmlContent); if (ublResult.success) { parseResult = ublResult; detection.flavor = 'ZUGFeRD'; } }
@@ -59,7 +57,6 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
 
     errors.push(...parseResult.errors, ...validation.errors);
     warnings.push(...parseResult.warnings, ...validation.warnings);
-
     return { success: errors.length === 0 && !!invoice, invoice, extendedData, rawData: parseResult.invoice, validation, detection, errors, warnings };
   } catch (error) {
     return { success: false, validation: { valid: false, errors: [String(error)], warnings: [] }, detection: { flavor: 'Unknown' }, errors: [String(error)], warnings };
