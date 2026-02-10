@@ -1,4 +1,5 @@
 import { OrgSwitcher } from '@/src/components/org-switcher';
+import { Toaster } from '@/src/components/ui/sonner';
 import { requireAuth } from '@/src/lib/auth/session';
 import { prisma } from '@/src/lib/db/client';
 import { redirect } from 'next/navigation';
@@ -88,6 +89,7 @@ export default async function AppLayout({
       </nav>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
+      <Toaster />
     </div>
   );
 }

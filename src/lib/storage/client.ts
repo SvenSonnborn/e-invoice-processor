@@ -12,8 +12,13 @@ import { supabaseAdminClient } from "@/src/lib/supabase/admin";
  *   workspaceId/userId/documentId/...
  */
 
+export interface UploadOptions {
+  contentType?: string;
+  metadata?: Record<string, string>;
+}
+
 export interface StorageClient {
-  upload(key: string, data: Buffer | string): Promise<string>;
+  upload(key: string, data: Buffer | string, options?: UploadOptions): Promise<string>;
   download(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
   getUrl(key: string): Promise<string>;
@@ -35,7 +40,7 @@ function resolveBucketAndPath(key: string): { bucket: BucketName; path: string }
 
 export function createStorageClient(): StorageClient {
   return {
-    async upload(key, data) {
+    async upload(key, data, options?) {
       const { bucket, path } = resolveBucketAndPath(key);
       const body = typeof data === "string" ? Buffer.from(data) : data;
 
@@ -44,6 +49,8 @@ export function createStorageClient(): StorageClient {
         .upload(path, body, {
           // We generally don't want to overwrite existing artifacts silently.
           upsert: false,
+          contentType: options?.contentType,
+          metadata: options?.metadata,
         });
 
       if (error) {

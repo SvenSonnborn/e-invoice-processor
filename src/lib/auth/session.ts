@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/src/lib/supabase/server";
+import { prisma } from "@/src/lib/db/client";
 
 /**
  * Session Management
@@ -25,5 +26,23 @@ export async function requireAuth() {
   }
 
   return session;
+}
+
+/**
+ * Get current user from database
+ * Returns the user record from our database based on Supabase auth session
+ */
+export async function getCurrentUser() {
+  const session = await getSession();
+  
+  if (!session?.user) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { supabaseUserId: session.user.id },
+  });
+
+  return user;
 }
 
