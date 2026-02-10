@@ -1,1 +1,0 @@
-export { parseUblXml } from "./parser";

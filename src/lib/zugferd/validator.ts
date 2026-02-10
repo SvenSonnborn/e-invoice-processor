@@ -1,34 +1,24 @@
 /**
- * XSD Schema Validator for ZUGFeRD/XRechnung
+ * Structural and required-fields validation for ZUGFeRD/XRechnung.
+ * Performs well-formedness check and EN 16931 required-field checks.
+ * Full XSD schema validation is not implemented; use preloadSchema for future use.
  */
 
 import { XMLParser } from 'fast-xml-parser';
 import { ValidationResult, InvoiceFlavor } from './types';
 
 export class ValidatorError extends Error { constructor(message: string, public cause?: Error) { super(message); this.name = 'ValidatorError'; } }
-let libxmljs: typeof import('libxmljs2') | null = null;
 
-// Dynamic import for optional dependency (ESM compatible)
-async function loadLibxmljs(): Promise<void> {
-  if (libxmljs) return;
-  try {
-    const libxmljsMod = await import('libxmljs2');
-    libxmljs = libxmljsMod as typeof import('libxmljs2');
-  } catch {
-    // libxmljs2 not available
-  }
-}
-const schemaCache = new Map<string, string>();
+/** Cache for optional future XSD schema validation (not yet implemented). */
+export const schemaCache = new Map<string, string>();
 
 export async function validateXML(xmlContent: string, flavor: InvoiceFlavor, _version?: string, _profile?: string): Promise<ValidationResult> {
   const errors: string[] = [], warnings: string[] = [];
   const wellFormed = checkWellFormed(xmlContent);
   if (!wellFormed.valid) return { valid: false, errors: wellFormed.errors, warnings };
   const fieldValidation = validateRequiredFields(xmlContent, flavor);
-  errors.push(...fieldValidation.errors); warnings.push(...fieldValidation.warnings);
-  await loadLibxmljs();
-  if (libxmljs) { try { const schemaResult = await validateAgainstSchema(xmlContent, flavor, _version, _profile); errors.push(...schemaResult.errors); warnings.push(...schemaResult.warnings); } catch { warnings.push('Schema validation skipped'); } }
-  else { warnings.push('Schema validation skipped: libxmljs2 not available'); }
+  errors.push(...fieldValidation.errors);
+  warnings.push(...fieldValidation.warnings);
   return { valid: errors.length === 0, errors, warnings };
 }
 
@@ -47,32 +37,51 @@ function validateRequiredFields(xmlContent: string, flavor: InvoiceFlavor): Vali
   return { valid: errors.length === 0, errors, warnings };
 }
 
+/** EN 16931 / CII required fields. */
 function validateCIIFields(parsed: Record<string, unknown>, errors: string[]): void {
   const cii = parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice;
   if (!cii) { errors.push('Missing root element: CrossIndustryInvoice'); return; }
-  const supplyChainTrade = (cii as Record<string, unknown>)['rsm:SupplyChainTradeTransaction'] || (cii as Record<string, unknown>).SupplyChainTradeTransaction;
+  const root = cii as Record<string, unknown>;
+  const exchangedDoc = root['rsm:ExchangedDocument'] || root.ExchangedDocument;
+  if (exchangedDoc) {
+    const id = getTextContent((exchangedDoc as Record<string, unknown>)['rsm:ID'] ?? (exchangedDoc as Record<string, unknown>).ID);
+    if (!id) errors.push('Missing ExchangedDocument/ID');
+    const typeCode = getTextContent((exchangedDoc as Record<string, unknown>)['rsm:TypeCode'] ?? (exchangedDoc as Record<string, unknown>).TypeCode);
+    if (!typeCode) errors.push('Missing ExchangedDocument/TypeCode');
+    const issueDateTime = (exchangedDoc as Record<string, unknown>)['rsm:IssueDateTime'] ?? (exchangedDoc as Record<string, unknown>).IssueDateTime;
+    if (!issueDateTime) errors.push('Missing ExchangedDocument/IssueDateTime');
+  } else {
+    errors.push('Missing ExchangedDocument');
+  }
+  const supplyChainTrade = root['rsm:SupplyChainTradeTransaction'] || root.SupplyChainTradeTransaction;
   const agreement = (supplyChainTrade as Record<string, unknown>)?.['ram:ApplicableHeaderTradeAgreement'] || (supplyChainTrade as Record<string, unknown>)?.ApplicableHeaderTradeAgreement;
   const seller = (agreement as Record<string, unknown>)?.['ram:SellerTradeParty'] || (agreement as Record<string, unknown>)?.SellerTradeParty;
   const buyer = (agreement as Record<string, unknown>)?.['ram:BuyerTradeParty'] || (agreement as Record<string, unknown>)?.BuyerTradeParty;
   if (!seller) errors.push('Missing Seller');
   if (!buyer) errors.push('Missing Buyer');
   const settlement = (supplyChainTrade as Record<string, unknown>)?.['ram:ApplicableHeaderTradeSettlement'] || (supplyChainTrade as Record<string, unknown>)?.ApplicableHeaderTradeSettlement;
-  if (!getTextContent((settlement as Record<string, unknown>)?.['ram:InvoiceCurrencyCode'] || (settlement as Record<string, unknown>)?.InvoiceCurrencyCode)) errors.push('Missing Currency');
+  const settlementObj = settlement as Record<string, unknown> | undefined;
+  if (!getTextContent(settlementObj?.['ram:InvoiceCurrencyCode'] ?? settlementObj?.InvoiceCurrencyCode)) errors.push('Missing Currency');
+  const summation = settlementObj?.['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] ?? settlementObj?.SpecifiedTradeSettlementHeaderMonetarySummation;
+  const grandTotal = summation && getTextContent((summation as Record<string, unknown>)['ram:GrandTotalAmount'] ?? (summation as Record<string, unknown>).GrandTotalAmount);
+  if (!grandTotal) errors.push('Missing SpecifiedTradeSettlementHeaderMonetarySummation/GrandTotalAmount');
 }
 
+/** EN 16931 / UBL required fields. */
 function validateUBLFields(parsed: Record<string, unknown>, errors: string[]): void {
   const invoice = parsed['ubl:Invoice'] || parsed.Invoice;
   if (!invoice) { errors.push('Missing root element: Invoice'); return; }
-  const supplier = (invoice as Record<string, unknown>)['cac:AccountingSupplierParty'] || (invoice as Record<string, unknown>).AccountingSupplierParty;
-  const customer = (invoice as Record<string, unknown>)['cac:AccountingCustomerParty'] || (invoice as Record<string, unknown>).AccountingCustomerParty;
+  const inv = invoice as Record<string, unknown>;
+  if (!getTextContent(inv['cbc:ID'] ?? inv.ID)) errors.push('Missing Invoice/ID');
+  if (!getTextContent(inv['cbc:IssueDate'] ?? inv.IssueDate)) errors.push('Missing Invoice/IssueDate');
+  if (!getTextContent(inv['cbc:DocumentCurrencyCode'] ?? inv.DocumentCurrencyCode)) errors.push('Missing Invoice/DocumentCurrencyCode');
+  const supplier = inv['cac:AccountingSupplierParty'] || inv.AccountingSupplierParty;
+  const customer = inv['cac:AccountingCustomerParty'] || inv.AccountingCustomerParty;
   if (!supplier) errors.push('Missing Supplier');
   if (!customer) errors.push('Missing Customer');
-}
-
-async function validateAgainstSchema(xmlContent: string, _flavor: InvoiceFlavor, _version?: string, _profile?: string): Promise<ValidationResult> {
-  if (!libxmljs) return { valid: true, errors: [], warnings: ['libxmljs2 not available'] };
-  try { libxmljs.parseXml(xmlContent); return { valid: true, errors: [], warnings: ['Schema validation skipped: schemas not cached'] }; }
-  catch (error) { return { valid: false, errors: [`Schema validation error: ${error instanceof Error ? error.message : 'Unknown error'}`], warnings: [] }; }
+  const legalTotal = inv['cac:LegalMonetaryTotal'] || inv.LegalMonetaryTotal;
+  const payableAmount = legalTotal && getTextContent((legalTotal as Record<string, unknown>)['cbc:PayableAmount'] ?? (legalTotal as Record<string, unknown>).PayableAmount);
+  if (!payableAmount) errors.push('Missing LegalMonetaryTotal/PayableAmount');
 }
 
 function isCIIFormat(parsed: Record<string, unknown>): boolean { return !!(parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice); }

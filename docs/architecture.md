@@ -35,8 +35,7 @@ The application follows a layered architecture with clear separation of concerns
 - Supports S3, R2, and local storage
 
 ### Parsers
-- ZUGFeRD parser in `src/server/parsers/zugferd/`
-- XRechnung parser in `src/server/parsers/xrechnung/`
+- ZUGFeRD/XRechnung parser (CII & UBL) in `src/lib/zugferd/`
 - OCR adapter in `src/server/parsers/ocr/`
 
 ### Exporters

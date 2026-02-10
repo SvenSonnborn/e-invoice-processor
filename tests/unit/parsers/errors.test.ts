@@ -1,51 +1,53 @@
 import { describe, it, expect } from "bun:test";
 import {
-  InvoiceParseError,
-  XmlValidationError,
-  PdfExtractionError,
-  UnsupportedFormatError,
-} from "@/src/server/parsers/errors";
+  ValidatorError,
+  ZUGFeRDParserError,
+  XRechnungParserError,
+  MapperError,
+} from "@/src/lib/zugferd";
 
 describe("Parser Errors", () => {
-  describe("InvoiceParseError", () => {
-    it("should create error with code and message", () => {
-      const error = new InvoiceParseError("Test error", "TEST_CODE");
-      expect(error.message).toBe("Test error");
-      expect(error.code).toBe("TEST_CODE");
-      expect(error.name).toBe("InvoiceParseError");
-    });
-
-    it("should include details when provided", () => {
-      const details = { field: "test", value: 123 };
-      const error = new InvoiceParseError("Test error", "TEST_CODE", details);
-      expect(error.details).toEqual(details);
-    });
-  });
-
-  describe("XmlValidationError", () => {
-    it("should create error with validation errors", () => {
-      const errors = ["Missing ID", "Invalid date"];
-      const error = new XmlValidationError("Validation failed", errors);
+  describe("ValidatorError", () => {
+    it("should create error with message", () => {
+      const error = new ValidatorError("Validation failed");
       expect(error.message).toBe("Validation failed");
-      expect(error.validationErrors).toEqual(errors);
-      expect(error.code).toBe("XML_VALIDATION_ERROR");
+      expect(error.name).toBe("ValidatorError");
+    });
+
+    it("should optionally include cause", () => {
+      const cause = new Error("Root cause");
+      const error = new ValidatorError("Validation failed", cause);
+      expect(error.cause).toBe(cause);
     });
   });
 
-  describe("PdfExtractionError", () => {
-    it("should create error with details", () => {
-      const error = new PdfExtractionError("PDF extraction failed", { page: 1 });
+  describe("ZUGFeRDParserError", () => {
+    it("should create error with message", () => {
+      const error = new ZUGFeRDParserError("PDF extraction failed");
       expect(error.message).toBe("PDF extraction failed");
-      expect(error.code).toBe("PDF_EXTRACTION_ERROR");
-      expect(error.details).toEqual({ page: 1 });
+      expect(error.name).toBe("ZUGFeRDParserError");
     });
   });
 
-  describe("UnsupportedFormatError", () => {
-    it("should create error with format info", () => {
-      const error = new UnsupportedFormatError("Format not supported", { format: "PDF" });
-      expect(error.message).toBe("Format not supported");
-      expect(error.code).toBe("UNSUPPORTED_FORMAT_ERROR");
+  describe("XRechnungParserError", () => {
+    it("should create error with message", () => {
+      const error = new XRechnungParserError("XML parse failed");
+      expect(error.message).toBe("XML parse failed");
+      expect(error.name).toBe("XRechnungParserError");
+    });
+  });
+
+  describe("MapperError", () => {
+    it("should create error with message", () => {
+      const error = new MapperError("Mapping failed");
+      expect(error.message).toBe("Mapping failed");
+      expect(error.name).toBe("MapperError");
+    });
+
+    it("should optionally include cause", () => {
+      const cause = new Error("Root cause");
+      const error = new MapperError("Mapping failed", cause);
+      expect(error.cause).toBe(cause);
     });
   });
 });

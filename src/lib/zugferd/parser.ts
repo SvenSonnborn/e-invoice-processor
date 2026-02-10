@@ -78,6 +78,33 @@ export async function isValidEInvoice(buffer: Buffer | ArrayBuffer | Uint8Array)
   } catch (error) { return { valid: false, error: String(error) }; }
 }
 
-export async function parseInvoicesBatch(items: Array<{ buffer: Buffer | ArrayBuffer | Uint8Array; filename?: string }>): Promise<Array<InvoiceParseResult & { filename?: string }>> {
-  return Promise.all(items.map(async item => ({ ...(await parseInvoice(item.buffer)), filename: item.filename })));
+const DEFAULT_BATCH_CONCURRENCY = 5;
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  async function worker(): Promise<void> {
+    while (index < items.length) {
+      const i = index++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+export async function parseInvoicesBatch(
+  items: Array<{ buffer: Buffer | ArrayBuffer | Uint8Array; filename?: string }>,
+  options?: { concurrency?: number }
+): Promise<Array<InvoiceParseResult & { filename?: string }>> {
+  const concurrency = Math.max(1, options?.concurrency ?? DEFAULT_BATCH_CONCURRENCY);
+  return runWithConcurrency(items, concurrency, async (item) => ({
+    ...(await parseInvoice(item.buffer)),
+    filename: item.filename,
+  }));
 }

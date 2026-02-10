@@ -2,6 +2,32 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2025-02-10: ZUGFeRD Parser Gaps & Consolidation
+
+### Changes
+
+#### Validation
+
+- **Structural/required-fields validation** – `src/lib/zugferd/validator.ts` now performs well-formedness checks and EN 16931 required-field validation (CII and UBL). Full XSD schema validation is not implemented; behavior is documented and `schemaCache`/`preloadSchema` remain for future use.
+
+#### API
+
+- **Batch import** – `POST /api/invoices/import/zugferd` supports batch requests: multiple files via `multipart/form-data` (field `file`) or JSON body `{ invoices: [{ xml, format? }] }`. Max 50 files/items per request; concurrency-limited batch parsing (5 at a time).
+- **API docs** – `docs/api/README.md` documents `GET` and `POST /api/invoices/import/zugferd` (single and batch, request/response examples). Endpoint is documented as parse-only (no persistence); optional persistence may be added later.
+
+#### Parser consolidation
+
+- **Single parser stack** – Removed duplicate ZUGFeRD/XRechnung implementation from `src/server/parsers/` (zugferd, xrechnung, cii, ubl, mapper, xml-utils, types, errors, schemas). All parsing now uses `src/lib/zugferd/`. OCR remains in `src/server/parsers/ocr/`.
+- **Tests** – Integration and unit tests migrated to `src/lib/zugferd/`. New `tests/unit/parsers/format-detection.test.ts` for format detection and validation. Removed `tests/unit/parsers/xml-utils.test.ts`.
+
+#### Integration test
+
+- **ZUGFeRD PDF fixture** – Integration test “should parse ZUGFeRD 2.3 PDF with embedded CII XML when fixture is present” runs when `tests/fixtures/zugferd-invoice.pdf` exists; otherwise skipped with a short note. `tests/fixtures/README.md` describes how to obtain a sample PDF (e.g. ZUGFeRD/corpus).
+
+#### Documentation
+
+- **`docs/architecture.md`** – Parsers section updated to reference `src/lib/zugferd/` for ZUGFeRD/XRechnung.
+
 ## 2025-01-29: Static Assets & Branding
 
 ### ✨ Neue Features
