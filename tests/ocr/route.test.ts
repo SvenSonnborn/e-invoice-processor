@@ -25,9 +25,17 @@ const mockProcessFile = () => Promise.resolve({
 });
 
 const mockParseInvoice = () => Promise.resolve({
-  invoiceNumber: "TEST-001",
-  totalAmount: 100.00,
-  currency: "EUR"
+  number: "TEST-001",
+  issueDate: "2024-01-15",
+  dueDate: "2024-02-15",
+  supplier: {
+    name: "Test Vendor"
+  },
+  totals: {
+    grossAmount: 100.00,
+    currency: "EUR",
+    taxAmount: 19.00
+  }
 });
 
 mock.module("@/src/server/services/ocr", () => ({
@@ -144,6 +152,7 @@ describe("POST /api/ocr", () => {
     expect(data.data.invoice.invoiceNumber).toBe("TEST-001");
     expect(data.data.invoice.totalAmount).toBe(100.00);
     expect(data.data.invoice.currency).toBe("EUR");
+    expect(data.data.invoice.vendor).toBe("Test Vendor");
   });
 
   it("should include metadata in response", async () => {
