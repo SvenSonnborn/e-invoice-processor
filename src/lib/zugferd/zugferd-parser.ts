@@ -52,7 +52,10 @@ async function findZUGFeRDXML(pdfDoc: PDFDocument, namesArray: PDFArray): Promis
       if (efDict) {
         const fStreamRef = efDict.get(PDFName.of('F')) as PDFRef | PDFStream;
         const fStream = fStreamRef instanceof PDFRef ? pdfDoc.context.lookup(fStreamRef) as PDFStream : fStreamRef;
-        if (fStream) { const bytes = await fStream.bytesAsync(); return new TextDecoder('utf-8').decode(bytes); }
+        if (fStream) {
+          const bytes = await (fStream as unknown as { bytesAsync: () => Promise<Uint8Array> }).bytesAsync();
+          return new TextDecoder('utf-8').decode(bytes);
+        }
       }
     }
   }
@@ -60,6 +63,10 @@ async function findZUGFeRDXML(pdfDoc: PDFDocument, namesArray: PDFArray): Promis
 }
 
 export function isPDF(buffer: Buffer | ArrayBuffer | Uint8Array): boolean {
-  const header = Buffer.isBuffer(buffer) ? buffer.slice(0, 5) : Buffer.from(buffer.slice(0, 5));
-  return header.toString() === '%PDF-';
+  const headerBytes = Buffer.isBuffer(buffer)
+    ? buffer.subarray(0, 5)
+    : buffer instanceof ArrayBuffer
+      ? new Uint8Array(buffer.slice(0, 5))
+      : buffer.subarray(0, 5);
+  return Buffer.from(headerBytes).toString() === '%PDF-';
 }

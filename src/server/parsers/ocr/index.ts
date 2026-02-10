@@ -5,7 +5,7 @@
  * from PDFs and images (PNG, JPG, TIFF).
  */
 
-import type { Invoice, InvoiceTotals, InvoiceParty } from "@/src/types";
+import type { Invoice } from "@/src/types";
 import { ocrService } from "@/src/server/services/ocr";
 import { logger } from "@/src/lib/logging";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
@@ -71,23 +71,16 @@ export async function parseWithOcr(
     const parsedFields = await ocrService.parseInvoice(ocrResult);
 
     // Map to Invoice type
-    const totals: InvoiceTotals = {
-      currency: parsedFields.currency || "EUR",
-      grossAmount: parsedFields.totalAmount?.toString(),
-    };
-
-    const supplier: InvoiceParty | undefined = parsedFields.vendor ? {
-      name: parsedFields.vendor,
-    } : undefined;
-
     const invoice: Partial<Invoice> = {
       format: "UNKNOWN",
-      number: parsedFields.invoiceNumber,
-      issueDate: parsedFields.invoiceDate,
-      dueDate: parsedFields.dueDate,
-      totals,
-      supplier,
+      ...parsedFields,
     };
+
+    if (!invoice.totals) {
+      invoice.totals = { currency: "EUR" };
+    } else if (!invoice.totals.currency) {
+      invoice.totals.currency = "EUR";
+    }
 
     logger.info(
       { 

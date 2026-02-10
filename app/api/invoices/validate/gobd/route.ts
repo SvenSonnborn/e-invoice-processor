@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateGoBDCompliance, formatValidationResult } from '@/lib/gobd';
+import { validateGoBDCompliance, formatValidationResult } from '@/src/lib/gobd';
 
 export async function POST(request: NextRequest) {
   try {

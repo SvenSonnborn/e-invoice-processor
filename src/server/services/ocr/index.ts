@@ -49,6 +49,17 @@ export interface OcrOptions {
   timeoutMs?: number;
 }
 
+export interface OcrInvoiceLineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export type OcrInvoiceData = Partial<Invoice> & {
+  lineItems?: OcrInvoiceLineItem[];
+};
+
 const DEFAULT_OPTIONS: OcrOptions = {
   languageHints: ["de", "en"],
   confidenceThreshold: 0.95,
@@ -160,7 +171,7 @@ export class OcrService {
   /**
    * Parse invoice data from OCR result
    */
-  async parseInvoice(ocrResult: OcrResult): Promise<Partial<Invoice>> {
+  async parseInvoice(ocrResult: OcrResult): Promise<OcrInvoiceData> {
     logger.debug("Parsing invoice from OCR result");
     return this.textExtractor.parseInvoiceFields(ocrResult);
   }

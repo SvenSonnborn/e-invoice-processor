@@ -10,6 +10,7 @@ import type {
   OcrPage,
   TextBlock,
   BoundingBox,
+  OcrInvoiceData,
 } from "./index";
 import type {
   AnnotateImageResponse,
@@ -237,25 +238,19 @@ export class TextExtractor {
   /**
    * Parse invoice fields from OCR result
    */
-  parseInvoiceFields(ocrResult: OcrResult): Partial<{
-    invoiceNumber: string;
-    invoiceDate: string;
-    dueDate: string;
-    vendor: string;
-    totalAmount: number;
-    currency: string;
-    taxAmount: number;
-    lineItems: Array<{
-      description: string;
-      quantity: number;
-      unitPrice: number;
-      total: number;
-    }>;
-  }> {
+  parseInvoiceFields(ocrResult: OcrResult): OcrInvoiceData {
     const text = ocrResult.text;
     const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
 
-    const result: ReturnType<typeof this.parseInvoiceFields> = {};
+    const result: OcrInvoiceData = {};
+    const ensureTotals = () => {
+      if (!result.totals) {
+        result.totals = { currency: "EUR" };
+      } else if (!result.totals.currency) {
+        result.totals.currency = "EUR";
+      }
+      return result.totals;
+    };
 
     // Extract invoice number (common patterns)
     const invoiceNumberPatterns = [
@@ -267,7 +262,7 @@ export class TextExtractor {
     for (const pattern of invoiceNumberPatterns) {
       const match = text.match(pattern);
       if (match) {
-        result.invoiceNumber = match[1].trim();
+        result.number = match[1].trim();
         break;
       }
     }
@@ -294,7 +289,7 @@ export class TextExtractor {
       foundDates.sort((a, b) => a.getTime() - b.getTime());
       
       // Invoice date is usually the earliest
-      result.invoiceDate = foundDates[0].toISOString().split("T")[0];
+      result.issueDate = foundDates[0].toISOString().split("T")[0];
       
       // Due date might be mentioned explicitly or be the later date
       if (foundDates.length > 1) {
@@ -334,16 +329,17 @@ export class TextExtractor {
 
     if (amounts.length > 0) {
       // Usually the largest amount is the total
-      result.totalAmount = Math.max(...amounts);
+      const grossAmount = Math.max(...amounts);
+      ensureTotals().grossAmount = String(grossAmount);
     }
 
     // Extract currency
     if (text.includes("EUR") || text.includes("€")) {
-      result.currency = "EUR";
+      ensureTotals().currency = "EUR";
     } else if (text.includes("USD") || text.includes("$")) {
-      result.currency = "USD";
+      ensureTotals().currency = "USD";
     } else {
-      result.currency = "EUR"; // Default for German invoices
+      ensureTotals().currency = "EUR"; // Default for German invoices
     }
 
     // Extract vendor (sender)
@@ -356,14 +352,14 @@ export class TextExtractor {
     for (const pattern of vendorPatterns) {
       const match = text.match(pattern);
       if (match) {
-        result.vendor = match[1].trim();
+        result.supplier = { ...(result.supplier || {}), name: match[1].trim() };
         break;
       }
     }
 
     // If no vendor found, use first few lines
-    if (!result.vendor && lines.length > 0) {
-      result.vendor = lines.slice(0, 3).join(" ").substring(0, 100);
+    if (!result.supplier && lines.length > 0) {
+      result.supplier = { ...(result.supplier || {}), name: lines.slice(0, 3).join(" ").substring(0, 100) };
     }
 
     // Extract line items

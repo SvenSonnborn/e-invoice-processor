@@ -8,10 +8,15 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { OcrService, OcrResult } from "@/src/server/services/ocr";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 
+const buildJsonResponse = (payload: unknown) =>
+  new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+
 // Mock the Vision API fetch calls
-global.fetch = async () => ({
-  ok: true,
-  json: async () => ({
+global.fetch = (async () =>
+  buildJsonResponse({
     responses: [{
       fullTextAnnotation: {
         text: "Rechnungsnummer: INV-001\nDatum: 15.01.2024\nBetrag: 100,00 EUR",
@@ -27,8 +32,7 @@ global.fetch = async () => ({
         }]
       }
     }]
-  })
-}) as unknown as typeof global.fetch;
+  })) as unknown as typeof global.fetch;
 
 describe("OcrService", () => {
   let service: OcrService;
@@ -62,7 +66,7 @@ describe("OcrService", () => {
         await service.processFile(buffer, "text/plain");
         expect(false).toBe(true); // Should not reach here
       } catch (error) {
-        expect(error).toBeInstanceOf(OcrError);
+        expect(error).toBeInstanceOf(OcrError as unknown as new (...args: unknown[]) => unknown);
       }
     });
 
@@ -73,15 +77,14 @@ describe("OcrService", () => {
         await service.processFile(largeBuffer, "image/png");
         expect(false).toBe(true); // Should not reach here
       } catch (error) {
-        expect(error).toBeInstanceOf(OcrError);
+        expect(error).toBeInstanceOf(OcrError as unknown as new (...args: unknown[]) => unknown);
       }
     });
 
     it("should handle PDF files", async () => {
       // Mock PDF batch response
-      global.fetch = async () => ({
-        ok: true,
-        json: async () => ({
+      global.fetch = (async () =>
+        buildJsonResponse({
           responses: [{
             responses: [{
               fullTextAnnotation: {
@@ -93,8 +96,7 @@ describe("OcrService", () => {
               }
             }]
           }]
-        })
-      }) as unknown as typeof global.fetch;
+        })) as unknown as typeof global.fetch;
 
       const buffer = Buffer.from("fake-pdf-data");
       const result = await service.processFile(buffer, "application/pdf");
@@ -125,7 +127,7 @@ describe("OcrService", () => {
 
       const invoice = await service.parseInvoice(ocrResult);
 
-      expect(invoice.invoiceNumber).toBe("INV-2024-001");
+      expect(invoice.number).toBe("INV-2024-001");
     });
 
     it("should extract dates from OCR result", async () => {
@@ -148,7 +150,7 @@ describe("OcrService", () => {
 
       const invoice = await service.parseInvoice(ocrResult);
 
-      expect(invoice.invoiceDate).toBeDefined();
+      expect(invoice.issueDate).toBeDefined();
       expect(invoice.dueDate).toBeDefined();
     });
 
@@ -172,8 +174,8 @@ describe("OcrService", () => {
 
       const invoice = await service.parseInvoice(ocrResult);
 
-      expect(invoice.totalAmount).toBe(1234.56);
-      expect(invoice.currency).toBe("EUR");
+      expect(invoice.totals?.grossAmount).toBe("1234.56");
+      expect(invoice.totals?.currency).toBe("EUR");
     });
   });
 });
