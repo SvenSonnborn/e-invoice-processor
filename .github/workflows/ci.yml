@@ -38,6 +38,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      GOOGLE_CLOUD_VISION_API_KEY: "dummy-api-key"
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
