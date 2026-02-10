@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseInvoice, parseInvoiceFromPDF, parseInvoiceFromXML } from '@/src/lib/zugferd/parser';
-import { mapToInvoiceModel } from '@/src/lib/zugferd/mapper';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {

@@ -3,7 +3,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { ZUGFeRDInvoice, ZUGFeRDParty, ZUGFeRDTradeLineItem, ZUGFeRDTax, ZUGFeRDMonetarySummation, ZUGFeRDMetaData, ParsedInvoiceResult, InvoiceDetectionResult, InvoiceFlavor } from './types';
+import { ZUGFeRDInvoice, ZUGFeRDParty, ZUGFeRDTradeLineItem, ZUGFeRDTax, ZUGFeRDMonetarySummation, ZUGFeRDMetaData, ParsedInvoiceResult, InvoiceDetectionResult } from './types';
 
 export class XRechnungParserError extends Error { constructor(message: string, public cause?: Error) { super(message); this.name = 'XRechnungParserError'; } }
 const xmlParserOptions = { ignoreAttributes: false, attributeNamePrefix: '@_', parseAttributeValue: true, parseTagValue: true, trimValues: true, removeNSPrefix: false };

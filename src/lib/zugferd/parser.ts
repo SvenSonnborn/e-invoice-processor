@@ -26,7 +26,7 @@ export interface InvoiceParseResult {
 }
 
 export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint8Array): Promise<InvoiceParseResult> {
-  const errors: string[] = [], warnings: string[] = [];
+  const _errors: string[] = [], warnings: string[] = [];
   try {
     if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings };
     const xmlContent = await extractXMLFromPDF(pdfBuffer);

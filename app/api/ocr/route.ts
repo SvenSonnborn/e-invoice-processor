@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ocrService } from "@/src/server/services/ocr";
-import { parseWithOcr, isSupportedMimeType } from "@/src/server/parsers/ocr";
+import { isSupportedMimeType } from "@/src/server/parsers/ocr";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 import { logger } from "@/src/lib/logging";
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import type { DatevEntry, DatevInvoice } from "../../../src/lib/export/datev/types";
 import { validateDatevEntry, formatAmount, formatDate } from "../../../src/lib/export/datev/validator";
 import { mapInvoiceToDatevEntries, DEFAULT_INVOICE_MAPPING } from "../../../src/lib/export/datev/mapper";
-import { generateHeader, generateCSVWithBOM, generateFilename, UTF8_BOM } from "../../../src/lib/export/datev/csv-generator";
+import { generateHeader, generateCSVWithBOM, UTF8_BOM } from "../../../src/lib/export/datev/csv-generator";
 import { formatInvoicesForDatev } from "../../../src/lib/export/datev/formatter";
 
 describe("DATEV Export", () => {

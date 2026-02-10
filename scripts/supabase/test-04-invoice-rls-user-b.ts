@@ -37,7 +37,7 @@ async function main() {
   }>;
 
   const orgAIds = rows.filter((r) => r.organizationId === config.orgAId);
-  const orgBIds = rows.filter((r) => r.organizationId === config.orgBId);
+  const _orgBIds = rows.filter((r) => r.organizationId === config.orgBId);
 
   if (orgAIds.length > 0) {
     console.error("❌ User B must not see Org A invoices. Found:", orgAIds);

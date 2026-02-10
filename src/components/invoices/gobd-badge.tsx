@@ -9,7 +9,7 @@ const config: Record<Status, { icon: typeof ShieldCheck; label: string; shortLab
   'non-compliant': { icon: ShieldX, label: 'Nicht konform', shortLabel: 'Fehler', bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', iconColor: 'text-red-600' },
   warning: { icon: ShieldAlert, label: 'Mit Hinweisen', shortLabel: 'Hinweise', bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', iconColor: 'text-yellow-600' },
 };
-export function GoBDBadge({ status, violations = [], warnings = [], showDetails = true, className, size = 'md' }: Props) {
+export function GoBDBadge({ status, violations = [], warnings = [], showDetails: _showDetails = true, className, size = 'md' }: Props) {
   const [expanded, setExpanded] = useState(false);
   const c = config[status]; const Icon = c.icon; const total = violations.length + warnings.length;
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : size === 'lg' ? 'px-4 py-1.5 text-base' : 'px-3 py-1 text-sm';
