@@ -10,6 +10,7 @@
 import { prisma } from "@/src/lib/db/client";
 import { getCurrentUser } from "@/src/lib/auth/session";
 import { generateExport } from "@/src/server/services/export-service";
+import { canCreateExport } from "@/src/lib/stripe/service";
 import type { DatevExportOptions } from "@/src/server/exporters/datev";
 
 // ---------------------------------------------------------------------------
@@ -68,6 +69,15 @@ export async function createExportAction(
 ): Promise<CreateExportActionResult | ActionError> {
   try {
     const { user, organizationId } = await requireOrgMembership();
+
+    // Check subscription limits
+    const exportCheck = await canCreateExport(user.id);
+    if (!exportCheck.allowed) {
+      return {
+        success: false,
+        error: exportCheck.reason ?? "Export limit reached",
+      };
+    }
 
     const result = await generateExport({
       organizationId,

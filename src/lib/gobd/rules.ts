@@ -17,7 +17,6 @@ import {
   RuleResult,
   GoBDViolation,
   GoBDWarning,
-  InvoiceData,
 } from './types';
 
 // Helper to convert to number

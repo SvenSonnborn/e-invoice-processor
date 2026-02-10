@@ -3,7 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateGoBDCompliance, formatValidationResult, InvoiceData, ValidationOptions, GoBDValidationResponse } from '@/lib/gobd';
+import { validateGoBDCompliance, formatValidationResult, InvoiceData, ValidationOptions, GoBDValidationResponse } from '@/src/lib/gobd';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const result = validateGoBDCompliance(invoice, options);
-    return NextResponse.json({ success: true, result: formatValidationResult(result) } as GoBDValidationResponse);
+    return NextResponse.json({ success: true, result: formatValidationResult(result) } as unknown as GoBDValidationResponse);
   } catch (error) {
     console.error('GoBD validation error:', error);
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Validierung fehlgeschlagen' } as GoBDValidationResponse, { status: 500 });

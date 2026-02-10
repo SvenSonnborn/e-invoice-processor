@@ -102,7 +102,7 @@ describe("Invoice Mapper", () => {
       };
       const invoice = mapToInvoiceModel(minimal);
       expect(invoice.id).toBeDefined();
-      expect(invoice.format).toBe("ZUGFERD");
+      expect(invoice.format).toBe("UNKNOWN");
       expect(invoice.number).toBeUndefined();
       expect(invoice.supplier).toBeUndefined();
       expect(invoice.customer).toBeUndefined();

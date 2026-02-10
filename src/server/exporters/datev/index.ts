@@ -9,7 +9,7 @@
  * - Standard field mapping for accounting
  */
 
-import type { Invoice, InvoiceLineItem } from "@prisma/client";
+import type { Invoice, InvoiceLineItem } from "@/src/generated/prisma/client";
 
 // DATEV Buchungsstapel Header Felder (CSV Spalten)
 const DATEV_COLUMNS = [

@@ -2,7 +2,7 @@
 
 import { requireAuth } from '@/src/lib/auth/session'
 import { prisma } from '@/src/lib/db/client'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/src/generated/prisma/client'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { z } from 'zod'

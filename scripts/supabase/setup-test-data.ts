@@ -14,7 +14,7 @@
  */
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { existsSync, mkdirSync, writeFileSync } from "fs";

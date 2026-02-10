@@ -3,7 +3,7 @@
  */
 
 import type { DatevEntry, DatevValidationError, DatevExportConfig } from "./types";
-import { DATEV_CONSTRAINTS, DATEV_STEUERSCHLUESSEL } from "./constants";
+import { DATEV_CONSTRAINTS } from "./constants";
 
 export function validateDatevEntry(entry: DatevEntry): DatevValidationError[] {
   const errors: DatevValidationError[] = [];

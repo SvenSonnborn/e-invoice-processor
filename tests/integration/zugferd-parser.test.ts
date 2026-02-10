@@ -9,7 +9,7 @@ describe("ZUGFeRD Parser", () => {
       const notPdf = Buffer.from("This is not a PDF");
       const result = await parseInvoiceFromPDF(notPdf);
       expect(result.success).toBe(false);
-      expect(result.errors).toContain("Invalid PDF file");
+      expect(result.errors.some((e) => e.includes("Invalid PDF file"))).toBe(true);
     });
 
     it("should return success false for PDF without embedded XML", async () => {

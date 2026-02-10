@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from '@prisma/client'
+import type { InvoiceStatus } from '@/src/generated/prisma/client'
 
 /**
  * Invoice Status Utilities

@@ -26,7 +26,7 @@ export interface InvoiceParseResult {
 }
 
 export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint8Array): Promise<InvoiceParseResult> {
-  const errors: string[] = [];
+  const _errors: string[] = [];
   const warnings: string[] = [];
 
   try {
@@ -49,7 +49,7 @@ export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint
   }
 }
 
-export function parseInvoiceFromXML(xmlContent: string): InvoiceParseResult {
+export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoiceParseResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -74,7 +74,7 @@ export function parseInvoiceFromXML(xmlContent: string): InvoiceParseResult {
       return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
     }
 
-    const validation = validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
+    const validation = await validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
 
     let invoice: Invoice | undefined;
     let extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;

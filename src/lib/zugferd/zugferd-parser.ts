@@ -139,7 +139,8 @@ async function findZUGFeRDXML(
           : fStreamRef;
         
         if (fStream) {
-          const bytes = await fStream.bytesAsync();
+          // pdf-lib PDFStream internal API for decompressed content
+          const bytes = await (fStream as unknown as { getContents(): Uint8Array }).getContents();
           return new TextDecoder('utf-8').decode(bytes);
         }
       }
@@ -153,8 +154,10 @@ async function findZUGFeRDXML(
  * Check if a buffer is a valid PDF
  */
 export function isPDF(buffer: Buffer | ArrayBuffer | Uint8Array): boolean {
-  const header = Buffer.isBuffer(buffer) 
+  const header = Buffer.isBuffer(buffer)
     ? buffer.slice(0, 5)
-    : Buffer.from(buffer.slice(0, 5));
+    : buffer instanceof ArrayBuffer
+      ? Buffer.from(new Uint8Array(buffer, 0, Math.min(5, buffer.byteLength)))
+      : Buffer.from(buffer.slice(0, 5));
   return header.toString() === '%PDF-';
 }

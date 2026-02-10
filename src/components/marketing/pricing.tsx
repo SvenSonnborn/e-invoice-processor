@@ -51,8 +51,8 @@ export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) 
   };
 
   const plans: { id: PlanId; plan: Plan }[] = [
-    { id: 'BASIC', plan: STRIPE_CONFIG.PLANS.BASIC },
     { id: 'PRO', plan: STRIPE_CONFIG.PLANS.PRO },
+    { id: 'BUSINESS', plan: STRIPE_CONFIG.PLANS.BUSINESS },
   ];
 
   return (
@@ -65,12 +65,12 @@ export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) 
           <Card
             key={id}
             className={`relative flex flex-col ${
-              id === 'PRO'
+              id === 'BUSINESS'
                 ? 'border-brand-300 shadow-xl shadow-brand-600/10 ring-1 ring-brand-300'
                 : ''
             }`}
           >
-            {id === 'PRO' && (
+            {id === 'BUSINESS' && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white shadow-lg">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -112,7 +112,7 @@ export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) 
                 onClick={() => handleSubscribe(id)}
                 disabled={isCurrentPlan || isLoading}
                 className="w-full"
-                variant={id === 'PRO' ? 'default' : 'outline'}
+                variant={id === 'BUSINESS' ? 'default' : 'outline'}
                 size="lg"
               >
                 {isLoading ? (

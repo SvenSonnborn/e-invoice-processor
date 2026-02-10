@@ -8,7 +8,8 @@ import { z } from "zod";
 import { prisma } from "@/src/lib/db/client";
 import { getCurrentUser } from "@/src/lib/auth/session";
 import { generateExport } from "@/src/server/services/export-service";
-import type { ExportStatus } from "@prisma/client";
+import { canCreateExport } from "@/src/lib/stripe/service";
+import type { ExportStatus } from "@/src/generated/prisma/client";
 
 // Validation schema for export requests
 const exportRequestSchema = z.object({
@@ -117,6 +118,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { format, invoiceIds, filename, datevOptions } = validationResult.data;
+
+    // Check subscription limits
+    const exportCheck = await canCreateExport(user.id);
+    if (!exportCheck.allowed) {
+      return NextResponse.json(
+        { error: exportCheck.reason ?? "Export limit reached" },
+        { status: 403 }
+      );
+    }
 
     // Get user's organization
     const membership = await prisma.organizationMember.findFirst({

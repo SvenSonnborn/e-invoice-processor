@@ -25,18 +25,18 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: next-build
-          path: next-build
+          path: .
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Move artifact to .next directory
+      - name: Extract build artifact to .next
         run: |
-          if [ -d "next-build" ]; then
-            mv next-build .next
-            echo "Build artifact moved to .next directory"
-          else
-            echo "Error: next-build directory not found after download"
+          unzip -q next-build.zip
+          rm next-build.zip
+          if [ ! -d ".next" ]; then
+            echo "Error: .next directory not found after extracting artifact"
             exit 1
           fi
+          echo "Build artifact extracted to .next directory"
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: 1.3.6

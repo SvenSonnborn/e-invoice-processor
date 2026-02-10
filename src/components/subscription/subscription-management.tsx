@@ -13,9 +13,9 @@ import {
   CheckCircle2,
   ExternalLink 
 } from 'lucide-react';
-import { STRIPE_CONFIG, formatPrice } from '@/src/lib/stripe/config';
+import { STRIPE_CONFIG } from '@/src/lib/stripe/config';
 import type { PlanId } from '@/src/lib/stripe/config';
-import type { SubscriptionStatus, SubscriptionTier } from '@prisma/client';
+import type { SubscriptionStatus, SubscriptionTier } from '@/src/generated/prisma/client';
 
 interface SubscriptionManagementProps {
   subscription: {
@@ -45,13 +45,13 @@ const tierConfig: Record<SubscriptionTier, { name: string; description: string }
     name: 'Free', 
     description: 'Kostenloser Plan mit eingeschränkten Funktionen' 
   },
-  BASIC: { 
-    name: 'Basic', 
-    description: 'Für Einsteiger und kleine Unternehmen' 
-  },
   PRO: { 
     name: 'Pro', 
     description: 'Für wachsende Unternehmen' 
+  },
+  BUSINESS: { 
+    name: 'Business', 
+    description: 'Für Unternehmen mit hohem Volumen' 
   },
 };
 

@@ -8,8 +8,8 @@ import { mapInvoiceToDatevEntries, DEFAULT_INVOICE_MAPPING } from "./mapper";
 import { validateDatevEntry } from "./validator";
 
 export interface DatevExportOptions {
-  format: "standard" | "extended";
-  detailed: boolean;
+  format?: "standard" | "extended";
+  detailed?: boolean;
   config: DatevExportConfig;
   mapping?: DatevInvoiceMapping;
   filename?: string;
@@ -33,7 +33,7 @@ export function formatInvoicesForDatev(
   const mapping = opts.mapping || DEFAULT_INVOICE_MAPPING;
 
   try {
-    let entries: DatevEntry[] = [];
+    const entries: DatevEntry[] = [];
 
     for (const invoice of invoices) {
       const invoiceEntries = mapInvoiceToDatevEntries(invoice, mapping);
@@ -93,7 +93,7 @@ function validateAllEntries(entries: DatevEntry[]) {
 }
 
 export function previewExport(invoices: DatevInvoice[]) {
-  let entries: DatevEntry[] = [];
+  const entries: DatevEntry[] = [];
   let minDate: Date | null = null;
   let maxDate: Date | null = null;
 

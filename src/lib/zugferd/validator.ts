@@ -13,7 +13,7 @@ export class ValidatorError extends Error {
 }
 
 let libxmljs: typeof import('libxmljs2') | null = null;
-try { libxmljs = require('libxmljs2'); } catch { /* not available */ }
+try { libxmljs = await import('libxmljs2'); } catch { /* not available */ }
 
 const SCHEMA_URLS: Record<string, string> = {
   'zugferd-2.3-extended': 'https://www.zugferd.org/schemas/ZF23/FACTUR-X_EXTENDED.xsd',
@@ -76,65 +76,78 @@ function validateRequiredFields(xmlContent: string, flavor: InvoiceFlavor): Vali
   return { valid: errors.length === 0, errors, warnings };
 }
 
-function validateCIIFields(parsed: Record<string, unknown>, errors: string[], warnings: string[]): void {
-  const cii = parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice;
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object') return value as Record<string, unknown>;
+  return undefined;
+}
+
+function validateCIIFields(parsed: Record<string, unknown>, errors: string[], _warnings: string[]): void {
+  const cii = asRecord(parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice);
   if (!cii) { errors.push('Missing root element: CrossIndustryInvoice'); return; }
 
-  const header = cii['rsm:ExchangedDocument'] || cii.ExchangedDocument;
-  const supplyChainTrade = cii['rsm:SupplyChainTradeTransaction'] || cii.SupplyChainTradeTransaction;
+  const header = asRecord(cii['rsm:ExchangedDocument'] || cii.ExchangedDocument);
+  const supplyChainTrade = asRecord(cii['rsm:SupplyChainTradeTransaction'] || cii.SupplyChainTradeTransaction);
 
   if (!getTextContent(header?.['ram:ID'] || header?.ID)) errors.push('Missing required field: Document ID');
   if (!getTextContent(header?.['ram:TypeCode'] || header?.TypeCode)) errors.push('Missing required field: Document Type Code');
 
-  const agreement = supplyChainTrade?.['ram:ApplicableHeaderTradeAgreement'] || supplyChainTrade?.ApplicableHeaderTradeAgreement;
-  const seller = agreement?.['ram:SellerTradeParty'] || agreement?.SellerTradeParty;
-  const buyer = agreement?.['ram:BuyerTradeParty'] || agreement?.BuyerTradeParty;
+  const agreement = asRecord(supplyChainTrade?.['ram:ApplicableHeaderTradeAgreement'] || supplyChainTrade?.ApplicableHeaderTradeAgreement);
+  const seller = asRecord(agreement?.['ram:SellerTradeParty'] || agreement?.SellerTradeParty);
+  const buyer = asRecord(agreement?.['ram:BuyerTradeParty'] || agreement?.BuyerTradeParty);
 
   if (!seller) errors.push('Missing required field: Seller Trade Party');
-  else if (!getTextContent(seller['ram:Name'] || seller.Name || seller['ram:SpecifiedLegalOrganization']?.['ram:TradingBusinessName'] || seller.SpecifiedLegalOrganization?.TradingBusinessName)) {
-    errors.push('Missing required field: Seller Name');
+  else {
+    const sellerLegalOrg = asRecord(seller['ram:SpecifiedLegalOrganization'] || seller.SpecifiedLegalOrganization);
+    if (!getTextContent(seller['ram:Name'] || seller.Name || sellerLegalOrg?.['ram:TradingBusinessName'] || sellerLegalOrg?.TradingBusinessName)) {
+      errors.push('Missing required field: Seller Name');
+    }
   }
 
   if (!buyer) errors.push('Missing required field: Buyer Trade Party');
-  else if (!getTextContent(buyer['ram:Name'] || buyer.Name || buyer['ram:SpecifiedLegalOrganization']?.['ram:TradingBusinessName'] || buyer.SpecifiedLegalOrganization?.TradingBusinessName)) {
-    errors.push('Missing required field: Buyer Name');
+  else {
+    const buyerLegalOrg = asRecord(buyer['ram:SpecifiedLegalOrganization'] || buyer.SpecifiedLegalOrganization);
+    if (!getTextContent(buyer['ram:Name'] || buyer.Name || buyerLegalOrg?.['ram:TradingBusinessName'] || buyerLegalOrg?.TradingBusinessName)) {
+      errors.push('Missing required field: Buyer Name');
+    }
   }
 
-  const settlement = supplyChainTrade?.['ram:ApplicableHeaderTradeSettlement'] || supplyChainTrade?.ApplicableHeaderTradeSettlement;
+  const settlement = asRecord(supplyChainTrade?.['ram:ApplicableHeaderTradeSettlement'] || supplyChainTrade?.ApplicableHeaderTradeSettlement);
   if (!getTextContent(settlement?.['ram:InvoiceCurrencyCode'] || settlement?.InvoiceCurrencyCode)) errors.push('Missing required field: Invoice Currency Code');
   
-  const summation = settlement?.['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlement?.SpecifiedTradeSettlementHeaderMonetarySummation;
+  const summation = asRecord(settlement?.['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlement?.SpecifiedTradeSettlementHeaderMonetarySummation);
   if (!summation) errors.push('Missing required field: Monetary Summation');
   else if (!getTextContent(summation['ram:GrandTotalAmount'] || summation.GrandTotalAmount)) errors.push('Missing required field: Grand Total Amount');
 }
 
-function validateUBLFields(parsed: Record<string, unknown>, errors: string[], warnings: string[]): void {
-  const invoice = parsed['ubl:Invoice'] || parsed.Invoice;
+function validateUBLFields(parsed: Record<string, unknown>, errors: string[], _warnings: string[]): void {
+  const invoice = asRecord(parsed['ubl:Invoice'] || parsed.Invoice);
   if (!invoice) { errors.push('Missing root element: Invoice'); return; }
 
   if (!getTextContent(invoice['cbc:ID'] || invoice.ID)) errors.push('Missing required field: Invoice ID');
   if (!getTextContent(invoice['cbc:IssueDate'] || invoice.IssueDate)) errors.push('Missing required field: Issue Date');
   if (!getTextContent(invoice['cbc:DocumentCurrencyCode'] || invoice.DocumentCurrencyCode)) errors.push('Missing required field: Document Currency Code');
 
-  const supplier = invoice['cac:AccountingSupplierParty'] || invoice.AccountingSupplierParty;
+  const supplier = asRecord(invoice['cac:AccountingSupplierParty'] || invoice.AccountingSupplierParty);
   if (!supplier) errors.push('Missing required field: Accounting Supplier Party');
   else {
-    const party = supplier['cac:Party'] || supplier.Party;
-    if (!getTextContent(party?.['cbc:Name'] || party?.Name || party?.['cac:PartyLegalEntity']?.['cbc:RegistrationName'] || party?.PartyLegalEntity?.RegistrationName)) {
+    const party = asRecord(supplier['cac:Party'] || supplier.Party);
+    const partyLegalEntity = asRecord(party?.['cac:PartyLegalEntity'] || party?.PartyLegalEntity);
+    if (!getTextContent(party?.['cbc:Name'] || party?.Name || partyLegalEntity?.['cbc:RegistrationName'] || partyLegalEntity?.RegistrationName)) {
       errors.push('Missing required field: Supplier Name');
     }
   }
 
-  const customer = invoice['cac:AccountingCustomerParty'] || invoice.AccountingCustomerParty;
+  const customer = asRecord(invoice['cac:AccountingCustomerParty'] || invoice.AccountingCustomerParty);
   if (!customer) errors.push('Missing required field: Accounting Customer Party');
   else {
-    const party = customer['cac:Party'] || customer.Party;
-    if (!getTextContent(party?.['cbc:Name'] || party?.Name || party?.['cac:PartyLegalEntity']?.['cbc:RegistrationName'] || party?.PartyLegalEntity?.RegistrationName)) {
+    const party = asRecord(customer['cac:Party'] || customer.Party);
+    const partyLegalEntity = asRecord(party?.['cac:PartyLegalEntity'] || party?.PartyLegalEntity);
+    if (!getTextContent(party?.['cbc:Name'] || party?.Name || partyLegalEntity?.['cbc:RegistrationName'] || partyLegalEntity?.RegistrationName)) {
       errors.push('Missing required field: Customer Name');
     }
   }
 
-  const legalTotal = invoice['cac:LegalMonetaryTotal'] || invoice.LegalMonetaryTotal;
+  const legalTotal = asRecord(invoice['cac:LegalMonetaryTotal'] || invoice.LegalMonetaryTotal);
   if (!legalTotal) errors.push('Missing required field: Legal Monetary Total');
   else if (!getTextContent(legalTotal['cbc:PayableAmount'] || legalTotal.PayableAmount)) errors.push('Missing required field: Payable Amount');
 }
@@ -157,7 +170,7 @@ async function validateAgainstSchema(xmlContent: string, flavor: InvoiceFlavor, 
       return { valid: true, errors, warnings };
     }
 
-    let schemaContent = schemaCache.get(schemaUrl);
+    const schemaContent = schemaCache.get(schemaUrl);
     if (!schemaContent) {
       warnings.push(`Schema not cached: ${schemaUrl}. Schema validation skipped.`);
       return { valid: true, errors, warnings };
@@ -227,6 +240,9 @@ function getTextContent(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
-  if (typeof value === 'object') return value['#text'] || value.text || String(value);
+  if (typeof value === 'object') {
+    const rec = value as Record<string, unknown>;
+    return (rec['#text'] as string) || (rec.text as string) || String(value);
+  }
   return undefined;
 }

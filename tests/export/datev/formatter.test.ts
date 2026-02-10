@@ -4,13 +4,11 @@
  */
 
 import { describe, it, expect } from "bun:test";
-import type { DatevEntry, DatevInvoice, DatevExportConfig } from "../../../src/lib/export/datev/types";
+import type { DatevEntry, DatevInvoice } from "../../../src/lib/export/datev/types";
 import {
   validateDatevEntry,
-  validateExportConfig,
   formatAmount,
   formatDate,
-  formatDateFromISO,
 } from "../../../src/lib/export/datev/validator";
 import {
   mapInvoiceToDatevEntries,
@@ -19,18 +17,12 @@ import {
 } from "../../../src/lib/export/datev/mapper";
 import {
   generateHeader,
-  generateRow,
-  generateCSV,
   generateCSVWithBOM,
-  generateFilename,
-  UTF8_BOM,
 } from "../../../src/lib/export/datev/csv-generator";
+import { UTF8_BOM, DATEV_STEUERSCHLUESSEL } from "../../../src/lib/export/datev/constants";
 import {
   formatInvoicesForDatev,
-  previewExport,
-  getExportSummary,
 } from "../../../src/lib/export/datev/formatter";
-import { DATEV_STEUERSCHLUESSEL } from "../../../src/lib/export/datev/constants";
 
 describe("DATEV Export", () => {
   describe("Validator", () => {

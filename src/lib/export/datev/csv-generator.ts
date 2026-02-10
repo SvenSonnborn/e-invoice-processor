@@ -2,7 +2,7 @@
  * DATEV CSV Generator
  */
 
-import type { DatevEntry, DatevExportConfig } from "./types";
+import type { DatevEntry } from "./types";
 import { DATEV_DELIMITER, DATEV_FORMAT, DATEV_VERSION, DATEV_CATEGORY, DATEV_HEADER_FIELDS, UTF8_BOM } from "./constants";
 import { validateDatevEntry, formatAmount } from "./validator";
 

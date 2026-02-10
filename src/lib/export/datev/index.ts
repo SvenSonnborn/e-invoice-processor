@@ -18,8 +18,9 @@ export type {
   DatevLineItem,
   DatevExportResult,
   DatevValidationError,
-  DatevExportOptions,
 } from "./types";
+
+export type { DatevExportOptions } from "./formatter";
 
 export {
   DATEV_FORMAT,

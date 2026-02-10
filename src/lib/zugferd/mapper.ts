@@ -13,7 +13,7 @@ export class MapperError extends Error {
   }
 }
 
-export function mapToInvoiceModel(zugferdInvoice: ZUGFeRDInvoice, sourceFileName?: string): Invoice {
+export function mapToInvoiceModel(zugferdInvoice: ZUGFeRDInvoice, _sourceFileName?: string): Invoice {
   try {
     const format: InvoiceFormat = determineInvoiceFormat(zugferdInvoice);
     

@@ -1,5 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
-import type { Export, ExportStatus } from '@prisma/client'
+import type { Export, ExportStatus } from '@/src/generated/prisma/client'
 import { isValidExportStatusTransition } from './status'
 
 /**

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../node_modules/.prisma/client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -64,8 +64,8 @@ enum SubscriptionStatus {
 
 enum SubscriptionTier {
   FREE
-  BASIC
   PRO
+  BUSINESS
 }
 
 model Organization {
@@ -284,7 +284,7 @@ model Payment {
   id                String    @id @default(cuid())
   userId            String
   stripePaymentId   String?   @unique
-  stripeInvoiceId   String?
+  stripeInvoiceId   String?   @unique
   amount            Decimal   @db.Decimal(18, 2)
   currency          String    @default("EUR")
   status            String    // succeeded, failed, pending

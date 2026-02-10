@@ -2,7 +2,7 @@
  * GoBD Prisma Adapter
  */
 
-import type { Invoice, InvoiceLineItem } from '@prisma/client';
+import type { Invoice, InvoiceLineItem } from '@/src/generated/prisma/client';
 import { InvoiceData, LineItemData } from './types';
 
 export function mapPrismaInvoiceToGoBD(invoice: Invoice & { lineItems?: InvoiceLineItem[] }): InvoiceData {

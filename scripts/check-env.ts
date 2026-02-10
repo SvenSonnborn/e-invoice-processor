@@ -14,6 +14,10 @@ const requiredEnvVars = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_PRICE_ID_PRO",
+  "STRIPE_PRICE_ID_BUSINESS",
 ] as const;
 
 // Optional environment variables with defaults (nice to have, but not required)
@@ -31,9 +35,6 @@ const todoEnvVars = [
   "STORAGE_SECRET_ACCESS_KEY",
   // Auth/Session
   "SESSION_SECRET",
-  // Stripe
-  "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
   // Rate Limiting
   "RATE_LIMIT_MAX_REQUESTS",
   "RATE_LIMIT_WINDOW_MS",

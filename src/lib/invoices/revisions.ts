@@ -1,5 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
-import type { InvoiceRevision, Prisma } from '@prisma/client'
+import type { InvoiceRevision, Prisma } from '@/src/generated/prisma/client'
 
 /**
  * Invoice Revision Management
