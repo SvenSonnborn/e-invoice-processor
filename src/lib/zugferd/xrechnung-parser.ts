@@ -3,139 +3,423 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import { ZUGFeRDInvoice, ZUGFeRDParty, ZUGFeRDTradeLineItem, ZUGFeRDTax, ZUGFeRDMonetarySummation, ZUGFeRDMetaData, ParsedInvoiceResult, InvoiceDetectionResult } from './types';
+import { 
+  ZUGFeRDInvoice, 
+  ZUGFeRDParty, 
+  ZUGFeRDTradeLineItem, 
+  ZUGFeRDTax,
+  ZUGFeRDMonetarySummation,
+  ZUGFeRDPaymentTerms,
+  ZUGFeRDMetaData,
+  ParsedInvoiceResult,
+  InvoiceDetectionResult,
+} from './types';
 
-export class XRechnungParserError extends Error { constructor(message: string, public cause?: Error) { super(message); this.name = 'XRechnungParserError'; } }
-const xmlParserOptions = { ignoreAttributes: false, attributeNamePrefix: '@_', parseAttributeValue: true, parseTagValue: true, trimValues: true, removeNSPrefix: false };
+export class XRechnungParserError extends Error {
+  constructor(message: string, public cause?: Error) {
+    super(message);
+    this.name = 'XRechnungParserError';
+  }
+}
+
+// XML Parser options
+const xmlParserOptions = {
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_',
+  parseAttributeValue: true,
+  parseTagValue: true,
+  trimValues: true,
+  removeNSPrefix: false,
+};
 
 export function detectInvoiceFlavor(xmlContent: string): InvoiceDetectionResult {
   const parser = new XMLParser({ ...xmlParserOptions, stopNodes: ['*'] });
+  
   try {
-    const parsed = parser.parse(xmlContent) as Record<string, unknown>;
-    if (parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice) return { flavor: 'ZUGFeRD', version: '2.3', profile: 'EXTENDED' };
-    if (parsed['ubl:Invoice'] || parsed.Invoice) {
-      const cid = getTextContent(parsed['cbc:CustomizationID'] || parsed.CustomizationID);
-      return { flavor: cid?.toLowerCase().includes('xrechnung') ? 'XRechnung' : 'ZUGFeRD', version: '2.1', profile: cid };
+    const parsed = parser.parse(xmlContent);
+    
+    if (parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice) {
+      return { flavor: 'ZUGFeRD', version: extractVersion(parsed, 'cii'), profile: extractProfile(parsed, 'cii') };
     }
+    
+    if (parsed['ubl:Invoice'] || parsed.Invoice) {
+      const customizationId = extractUBLCustomizationId(parsed);
+      if (customizationId?.toLowerCase().includes('xrechnung')) {
+        return { flavor: 'XRechnung', version: extractVersion(parsed, 'ubl'), profile: customizationId };
+      }
+      return { flavor: 'ZUGFeRD', version: extractVersion(parsed, 'ubl'), profile: customizationId };
+    }
+    
     return { flavor: 'Unknown' };
-  } catch { return { flavor: 'Unknown' }; }
+  } catch {
+    return { flavor: 'Unknown' };
+  }
 }
 
 export function parseCII(xmlContent: string): ParsedInvoiceResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
   try {
     const parser = new XMLParser(xmlParserOptions);
-    const parsed = parser.parse(xmlContent) as Record<string, unknown>;
-    const cii = asRecord(parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice);
-    if (!cii) return { success: false, errors: ['Invalid CII format'], warnings: [] };
-    const supplyChainTrade = asRecord(cii['rsm:SupplyChainTradeTransaction'] || cii.SupplyChainTradeTransaction);
-    if (!supplyChainTrade) return { success: false, errors: ['Missing SupplyChainTradeTransaction'], warnings: [] };
-    return { success: true, invoice: parseCIIStructure(cii, supplyChainTrade), errors: [], warnings: [] };
-  } catch (error) { return { success: false, errors: [String(error)], warnings: [] }; }
+    const parsed = parser.parse(xmlContent);
+    
+    const cii = parsed['rsm:CrossIndustryInvoice'] || parsed.CrossIndustryInvoice;
+    
+    if (!cii) {
+      return { success: false, errors: ['Invalid CII format: Root element not found'], warnings };
+    }
+
+    const supplyChainTrade = cii['rsm:SupplyChainTradeTransaction'] || cii.SupplyChainTradeTransaction;
+    
+    if (!supplyChainTrade) {
+      return { success: false, errors: ['Invalid CII format: SupplyChainTradeTransaction not found'], warnings };
+    }
+
+    const invoice = parseCIIStructure(cii, supplyChainTrade, errors, warnings);
+    return { success: errors.length === 0, invoice, errors, warnings };
+  } catch (error) {
+    return { success: false, errors: [`Failed to parse CII XML: ${error instanceof Error ? error.message : 'Unknown error'}`], warnings };
+  }
 }
 
 export function parseUBL(xmlContent: string): ParsedInvoiceResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
   try {
     const parser = new XMLParser(xmlParserOptions);
-    const parsed = parser.parse(xmlContent) as Record<string, unknown>;
-    const invoice = asRecord(parsed['ubl:Invoice'] || parsed.Invoice);
-    if (!invoice) return { success: false, errors: ['Invalid UBL format'], warnings: [] };
-    return { success: true, invoice: parseUBLStructure(invoice), errors: [], warnings: [] };
-  } catch (error) { return { success: false, errors: [String(error)], warnings: [] }; }
+    const parsed = parser.parse(xmlContent);
+    
+    const invoice = parsed['ubl:Invoice'] || parsed.Invoice;
+    
+    if (!invoice) {
+      return { success: false, errors: ['Invalid UBL format: Root element not found'], warnings };
+    }
+
+    const parsedInvoice = parseUBLStructure(invoice, errors, warnings);
+    return { success: errors.length === 0, invoice: parsedInvoice, errors, warnings };
+  } catch (error) {
+    return { success: false, errors: [`Failed to parse UBL XML: ${error instanceof Error ? error.message : 'Unknown error'}`], warnings };
+  }
 }
 
-function parseCIIStructure(cii: Record<string, unknown>, supplyChainTrade: Record<string, unknown>): ZUGFeRDInvoice {
+function parseCIIStructure(cii: Record<string, unknown>, supplyChainTrade: Record<string, unknown>, _errors: string[], _warnings: string[]): ZUGFeRDInvoice {
   const header = asRecord(cii['rsm:ExchangedDocument'] || cii.ExchangedDocument);
   const agreement = asRecord(supplyChainTrade['ram:ApplicableHeaderTradeAgreement'] || supplyChainTrade.ApplicableHeaderTradeAgreement);
+  const delivery = asRecord(supplyChainTrade['ram:ApplicableHeaderTradeDelivery'] || supplyChainTrade.ApplicableHeaderTradeDelivery);
   const settlement = asRecord(supplyChainTrade['ram:ApplicableHeaderTradeSettlement'] || supplyChainTrade.ApplicableHeaderTradeSettlement);
-  const metadata: ZUGFeRDMetaData = { xmlVersion: '2.3', profile: 'EXTENDED', flavor: 'EXTENDED' };
+  
+  const metadata: ZUGFeRDMetaData = { xmlVersion: '2.3', profile: extractProfile(cii, 'cii'), flavor: 'EXTENDED' };
   const invoice: ZUGFeRDInvoice = { metadata, lineItems: [], taxes: [], monetarySummation: {} };
-  if (header) { 
-    const headerRecord = header as Record<string, unknown>;
-    invoice.documentId = getTextContent(headerRecord['ram:ID'] || headerRecord.ID); 
-    invoice.documentDate = getDateContent(headerRecord['ram:IssueDateTime'] || headerRecord.IssueDateTime); 
+
+  if (header) {
+    invoice.documentId = getTextContent(header['ram:ID'] || header.ID);
+    invoice.documentType = getTextContent(header['ram:TypeCode'] || header.TypeCode);
+    invoice.documentDate = getDateContent(header['ram:IssueDateTime'] || header.IssueDateTime);
+    invoice.notes = extractNotes(header['ram:IncludedNote'] || header.IncludedNote);
   }
-  if (agreement) { 
-    const agreementRecord = agreement as Record<string, unknown>;
-    invoice.seller = parseCIIParty(agreementRecord['ram:SellerTradeParty'] || agreementRecord.SellerTradeParty); 
-    invoice.buyer = parseCIIParty(agreementRecord['ram:BuyerTradeParty'] || agreementRecord.BuyerTradeParty); 
+
+  if (agreement) {
+    invoice.seller = parseCIIParty(asRecord(agreement['ram:SellerTradeParty'] || agreement.SellerTradeParty));
+    invoice.buyer = parseCIIParty(asRecord(agreement['ram:BuyerTradeParty'] || agreement.BuyerTradeParty));
+    const buyerOrderRef = asRecord(agreement['ram:BuyerOrderReferencedDocument'] || agreement.BuyerOrderReferencedDocument);
+    const contractRef = asRecord(agreement['ram:ContractReferencedDocument'] || agreement.ContractReferencedDocument);
+    invoice.orderReference = getTextContent(buyerOrderRef?.['ram:IssuerAssignedID'] || buyerOrderRef?.IssuerAssignedID);
+    invoice.contractReference = getTextContent(contractRef?.['ram:IssuerAssignedID'] || contractRef?.IssuerAssignedID);
   }
+
+  if (delivery) {
+    const deliveryEvent = asRecord(delivery['ram:ActualDeliverySupplyChainEvent'] || delivery.ActualDeliverySupplyChainEvent);
+    invoice.deliveryDate = getDateContent(deliveryEvent?.['ram:OccurrenceDateTime'] || deliveryEvent?.OccurrenceDateTime);
+  }
+
   if (settlement) {
-    const settlementRecord = settlement as Record<string, unknown>;
-    invoice.currency = getTextContent(settlementRecord['ram:InvoiceCurrencyCode'] || settlementRecord.InvoiceCurrencyCode);
-    invoice.monetarySummation = parseMonetarySummation(settlementRecord['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlementRecord.SpecifiedTradeSettlementHeaderMonetarySummation);
+    invoice.currency = getTextContent(settlement['ram:InvoiceCurrencyCode'] || settlement.InvoiceCurrencyCode);
+    invoice.paymentTerms = parsePaymentTerms(settlement as Record<string, unknown>);
+    const paymentMeans = asRecord(settlement['ram:SpecifiedTradeSettlementPaymentMeans'] || settlement.SpecifiedTradeSettlementPaymentMeans);
+    invoice.paymentMeansCode = getTextContent(paymentMeans?.['ram:TypeCode'] || paymentMeans?.TypeCode);
+    
     const lineItems = supplyChainTrade['ram:IncludedSupplyChainTradeLineItem'] || supplyChainTrade.IncludedSupplyChainTradeLineItem;
-    if (lineItems) invoice.lineItems = parseArray(lineItems).map(parseCIILineItem);
-    const taxBreakdown = settlementRecord['ram:ApplicableTradeTax'] || settlementRecord.ApplicableTradeTax;
-    if (taxBreakdown) invoice.taxes = parseArray(taxBreakdown).map(parseCIITax);
+    if (lineItems) invoice.lineItems = parseArray(lineItems).map(item => parseCIILineItem(item as Record<string, unknown>));
+
+    const taxBreakdown = settlement['ram:ApplicableTradeTax'] || settlement.ApplicableTradeTax;
+    if (taxBreakdown) invoice.taxes = parseArray(taxBreakdown).map(tax => parseCIITax(tax as Record<string, unknown>));
+
+    const summation = asRecord(settlement['ram:SpecifiedTradeSettlementHeaderMonetarySummation'] || settlement.SpecifiedTradeSettlementHeaderMonetarySummation);
+    if (summation) invoice.monetarySummation = parseMonetarySummation(summation as Record<string, unknown>);
   }
+
   return invoice;
 }
 
-function parseUBLStructure(ubl: Record<string, unknown>): ZUGFeRDInvoice {
-  const metadata: ZUGFeRDMetaData = { xmlVersion: '2.1', flavor: 'EXTENDED' };
+function parseUBLStructure(ubl: Record<string, unknown>, _errors: string[], _warnings: string[]): ZUGFeRDInvoice {
+  const metadata: ZUGFeRDMetaData = { xmlVersion: extractVersion(ubl, 'ubl'), profile: extractUBLCustomizationId(ubl), flavor: 'EXTENDED' };
   const invoice: ZUGFeRDInvoice = { metadata, lineItems: [], taxes: [], monetarySummation: {} };
+
   invoice.documentId = getTextContent(ubl['cbc:ID'] || ubl.ID);
+  invoice.documentType = getTextContent(ubl['cbc:InvoiceTypeCode'] || ubl.InvoiceTypeCode);
   invoice.documentDate = getTextContent(ubl['cbc:IssueDate'] || ubl.IssueDate);
+  invoice.notes = extractUBLNotes(ubl['cbc:Note'] || ubl.Note);
   invoice.currency = getTextContent(ubl['cbc:DocumentCurrencyCode'] || ubl.DocumentCurrencyCode);
-  const supplier = asRecord(ubl['cac:AccountingSupplierParty'] || ubl.AccountingSupplierParty);
-  const customer = asRecord(ubl['cac:AccountingCustomerParty'] || ubl.AccountingCustomerParty);
-  if (supplier) invoice.seller = parseUBLParty(supplier['cac:Party'] || supplier.Party);
-  if (customer) invoice.buyer = parseUBLParty(customer['cac:Party'] || customer.Party);
+  invoice.dueDate = getTextContent(ubl['cbc:DueDate'] || ubl.DueDate);
+
+  const orderRef = asRecord(ubl['cac:OrderReference'] || ubl.OrderReference);
+  invoice.orderReference = getTextContent(orderRef?.['cbc:ID'] || orderRef?.ID);
+
+  const accountingSupplier = asRecord(ubl['cac:AccountingSupplierParty'] || ubl.AccountingSupplierParty);
+  const accountingCustomer = asRecord(ubl['cac:AccountingCustomerParty'] || ubl.AccountingCustomerParty);
+  
+  if (accountingSupplier) invoice.seller = parseUBLParty(asRecord(accountingSupplier['cac:Party'] || accountingSupplier.Party));
+  if (accountingCustomer) invoice.buyer = parseUBLParty(asRecord(accountingCustomer['cac:Party'] || accountingCustomer.Party));
+
+  const delivery = asRecord(ubl['cac:Delivery'] || ubl.Delivery);
+  if (delivery) invoice.deliveryDate = getTextContent(delivery['cbc:ActualDeliveryDate'] || delivery.ActualDeliveryDate);
+
+  const paymentMeans = ubl['cac:PaymentMeans'] || ubl.PaymentMeans;
+  if (paymentMeans) {
+    const pm = asRecord(parseArray(paymentMeans)[0]);
+    if (pm) {
+      invoice.paymentMeansCode = getTextContent(pm['cbc:PaymentMeansCode'] || pm.PaymentMeansCode);
+      const payeeAccount = asRecord(pm['cac:PayeeFinancialAccount'] || pm.PayeeFinancialAccount);
+      invoice.payeeIban = getTextContent(payeeAccount?.['cbc:ID'] || payeeAccount?.ID);
+    }
+  }
+
+  const lineItems = ubl['cac:InvoiceLine'] || ubl.InvoiceLine;
+  if (lineItems) invoice.lineItems = parseArray(lineItems).map(item => parseUBLLineItem(item as Record<string, unknown>));
+
+  const taxTotal = asRecord(ubl['cac:TaxTotal'] || ubl.TaxTotal);
+  if (taxTotal) {
+    const subtotal = taxTotal['cac:TaxSubtotal'] || taxTotal.TaxSubtotal;
+    if (subtotal) invoice.taxes = parseArray(subtotal).map(tax => parseUBLTax(tax as Record<string, unknown>));
+    invoice.monetarySummation.taxTotalAmount = getTextContent(taxTotal['cbc:TaxAmount'] || taxTotal.TaxAmount);
+  }
+
   const legalTotal = asRecord(ubl['cac:LegalMonetaryTotal'] || ubl.LegalMonetaryTotal);
   if (legalTotal) {
-    invoice.monetarySummation = { lineTotalAmount: getTextContent(legalTotal['cbc:LineExtensionAmount'] || legalTotal.LineExtensionAmount), taxBasisTotalAmount: getTextContent(legalTotal['cbc:TaxExclusiveAmount'] || legalTotal.TaxExclusiveAmount), grandTotalAmount: getTextContent(legalTotal['cbc:TaxInclusiveAmount'] || legalTotal.TaxInclusiveAmount), duePayableAmount: getTextContent(legalTotal['cbc:PayableAmount'] || legalTotal.PayableAmount) };
+    invoice.monetarySummation = {
+      ...invoice.monetarySummation,
+      lineTotalAmount: getTextContent(legalTotal['cbc:LineExtensionAmount'] || legalTotal.LineExtensionAmount),
+      taxBasisTotalAmount: getTextContent(legalTotal['cbc:TaxExclusiveAmount'] || legalTotal.TaxExclusiveAmount),
+      grandTotalAmount: getTextContent(legalTotal['cbc:TaxInclusiveAmount'] || legalTotal.TaxInclusiveAmount),
+      duePayableAmount: getTextContent(legalTotal['cbc:PayableAmount'] || legalTotal.PayableAmount),
+    };
   }
-  const lineItems = ubl['cac:InvoiceLine'] || ubl.InvoiceLine;
-  if (lineItems) invoice.lineItems = parseArray(lineItems).map(parseUBLLineItem);
-  const taxTotal = asRecord(ubl['cac:TaxTotal'] || ubl.TaxTotal);
-  if (taxTotal) { const subtotal = taxTotal['cac:TaxSubtotal'] || taxTotal.TaxSubtotal; if (subtotal) invoice.taxes = parseArray(subtotal).map(parseUBLTax); }
+
   return invoice;
 }
 
-function parseCIIParty(party: unknown): ZUGFeRDParty | undefined {
+function parseCIIParty(party: Record<string, unknown> | undefined): ZUGFeRDParty | undefined {
   if (!party) return undefined;
-  const p = party as Record<string, unknown>;
-  const addr = asRecord(p['ram:PostalTradeAddress'] || p.PostalTradeAddress);
-  return { id: getTextContent(p['ram:ID'] || p.ID), name: getTextContent(p['ram:Name'] || p.Name), addressLine1: getTextContent(addr?.['ram:LineOne'] || addr?.LineOne), postcode: getTextContent(addr?.['ram:PostcodeCode'] || addr?.PostcodeCode), city: getTextContent(addr?.['ram:CityName'] || addr?.CityName), countryCode: getTextContent(addr?.['ram:CountryID'] || addr?.CountryID) };
+
+  const legalOrg = asRecord(party['ram:SpecifiedLegalOrganization'] || party.SpecifiedLegalOrganization);
+  const tradeAddress = asRecord(party['ram:PostalTradeAddress'] || party.PostalTradeAddress);
+  const taxReg = party['ram:SpecifiedTaxRegistration'] || party.SpecifiedTaxRegistration;
+  const contact = asRecord(party['ram:DefinedTradeContact'] || party.DefinedTradeContact);
+
+  const vatId = (() => {
+    const regs = parseArray(taxReg);
+    for (const t of regs) {
+      const rec = asRecord(t);
+      const id = asRecord(rec?.['ram:ID'] || rec?.ID);
+      if (getTextContent(id?.['@_schemeID'] || id?.schemeID) === 'VA') {
+        return getTextContent(id?.['#text'] || id);
+      }
+    }
+    return undefined;
+  })();
+
+  const phone = asRecord(contact?.['ram:TelephoneUniversalCommunication'] || contact?.TelephoneUniversalCommunication);
+  const email = asRecord(contact?.['ram:EmailURIUniversalCommunication'] || contact?.EmailURIUniversalCommunication);
+
+  return {
+    id: getTextContent(party['ram:ID'] || party.ID),
+    name: getTextContent(party['ram:Name'] || party.Name) || getTextContent(legalOrg?.['ram:TradingBusinessName'] || legalOrg?.TradingBusinessName),
+    legalForm: getTextContent(legalOrg?.['ram:LegalForm'] || legalOrg?.LegalForm),
+    contactName: getTextContent(contact?.['ram:PersonName'] || contact?.PersonName),
+    contactPhone: getTextContent(phone?.['ram:CompleteNumber'] || phone?.CompleteNumber),
+    contactEmail: getTextContent(email?.['ram:URIID'] || email?.URIID),
+    addressLine1: getTextContent(tradeAddress?.['ram:LineOne'] || tradeAddress?.LineOne),
+    addressLine2: getTextContent(tradeAddress?.['ram:LineTwo'] || tradeAddress?.LineTwo),
+    addressLine3: getTextContent(tradeAddress?.['ram:LineThree'] || tradeAddress?.LineThree),
+    postcode: getTextContent(tradeAddress?.['ram:PostcodeCode'] || tradeAddress?.PostcodeCode),
+    city: getTextContent(tradeAddress?.['ram:CityName'] || tradeAddress?.CityName),
+    countryCode: getTextContent(tradeAddress?.['ram:CountryID'] || tradeAddress?.CountryID),
+    vatId,
+  };
 }
 
-function parseUBLParty(party: unknown): ZUGFeRDParty | undefined {
+function parseUBLParty(party: Record<string, unknown> | undefined): ZUGFeRDParty | undefined {
   if (!party) return undefined;
-  const p = party as Record<string, unknown>;
-  const addr = asRecord(p['cac:PostalAddress'] || p.PostalAddress);
-  return { name: getTextContent(p['cbc:Name'] || p.Name), addressLine1: getTextContent(addr?.['cbc:StreetName'] || addr?.StreetName), postcode: getTextContent(addr?.['cbc:PostalZone'] || addr?.PostalZone), city: getTextContent(addr?.['cbc:CityName'] || addr?.CityName), countryCode: getTextContent((addr?.['cac:Country'] as Record<string, unknown> | undefined)?.['cbc:IdentificationCode'] || (addr?.Country as Record<string, unknown> | undefined)?.IdentificationCode) };
+
+  const legalEntity = asRecord(party['cac:PartyLegalEntity'] || party.PartyLegalEntity);
+  const postalAddress = asRecord(party['cac:PostalAddress'] || party.PostalAddress);
+  const contact = asRecord(party['cac:Contact'] || party.Contact);
+  const partyTaxScheme = party['cac:PartyTaxScheme'] || party.PartyTaxScheme;
+
+  const vatId = (() => {
+    const schemes = parseArray(partyTaxScheme);
+    for (const t of schemes) {
+      const rec = asRecord(t);
+      const taxScheme = asRecord(rec?.['cac:TaxScheme'] || rec?.TaxScheme);
+      if (getTextContent(taxScheme?.['cbc:ID'] || taxScheme?.ID) === 'VAT') {
+        return getTextContent(rec?.['cbc:CompanyID'] || rec?.CompanyID);
+      }
+    }
+    return undefined;
+  })();
+
+  const country = asRecord(postalAddress?.['cac:Country'] || postalAddress?.Country);
+
+  return {
+    name: getTextContent(party['cbc:Name'] || party.Name) || getTextContent(legalEntity?.['cbc:RegistrationName'] || legalEntity?.RegistrationName),
+    contactName: getTextContent(contact?.['cbc:Name'] || contact?.Name),
+    contactPhone: getTextContent(contact?.['cbc:Telephone'] || contact?.Telephone),
+    contactEmail: getTextContent(contact?.['cbc:ElectronicMail'] || contact?.ElectronicMail),
+    addressLine1: getTextContent(postalAddress?.['cbc:StreetName'] || postalAddress?.StreetName),
+    addressLine2: getTextContent(postalAddress?.['cbc:AdditionalStreetName'] || postalAddress?.AdditionalStreetName),
+    postcode: getTextContent(postalAddress?.['cbc:PostalZone'] || postalAddress?.PostalZone),
+    city: getTextContent(postalAddress?.['cbc:CityName'] || postalAddress?.CityName),
+    countryCode: getTextContent(country?.['cbc:IdentificationCode'] || country?.IdentificationCode),
+    vatId,
+  };
 }
 
-function parseCIILineItem(item: unknown): ZUGFeRDTradeLineItem {
-  const i = item as Record<string, unknown>;
-  const product = asRecord(i['ram:SpecifiedTradeProduct'] || i.SpecifiedTradeProduct);
-  const assocDoc = asRecord(i['ram:AssociatedDocumentLineDocument'] || i.AssociatedDocumentLineDocument);
-  const lineSettlement = asRecord(i['ram:SpecifiedLineTradeSettlement'] || i.SpecifiedLineTradeSettlement);
-  const lineSummary = asRecord(lineSettlement?.['ram:SpecifiedTradeSettlementLineMonetarySummation'] || lineSettlement?.SpecifiedTradeSettlementLineMonetarySummation);
-  const delivery = asRecord(i['ram:SpecifiedLineTradeDelivery'] || i.SpecifiedLineTradeDelivery);
-  return { id: getTextContent(assocDoc?.['ram:LineID'] || assocDoc?.LineID), name: getTextContent(product?.['ram:Name'] || product?.Name), billedQuantity: getTextContent(delivery?.['ram:BilledQuantity']), lineTotalAmount: getTextContent(lineSummary?.['ram:LineTotalAmount'] || lineSummary?.LineTotalAmount) };
+function parseCIILineItem(item: Record<string, unknown>): ZUGFeRDTradeLineItem {
+  const agreement = asRecord(item['ram:SpecifiedLineTradeAgreement'] || item.SpecifiedLineTradeAgreement);
+  const delivery = asRecord(item['ram:SpecifiedLineTradeDelivery'] || item.SpecifiedLineTradeDelivery);
+  const settlement = asRecord(item['ram:SpecifiedLineTradeSettlement'] || item.SpecifiedLineTradeSettlement);
+  const product = asRecord(item['ram:SpecifiedTradeProduct'] || item.SpecifiedTradeProduct);
+  const netPrice = asRecord(agreement?.['ram:NetPriceProductTradePrice'] || agreement?.NetPriceProductTradePrice);
+  const tradeTax = asRecord(settlement?.['ram:ApplicableTradeTax'] || settlement?.ApplicableTradeTax);
+  const docLine = asRecord(item['ram:AssociatedDocumentLineDocument'] || item.AssociatedDocumentLineDocument);
+  const billedQty = asRecord(delivery?.['ram:BilledQuantity'] || delivery?.BilledQuantity);
+  const summation = asRecord(settlement?.['ram:SpecifiedTradeSettlementLineMonetarySummation'] || settlement?.SpecifiedTradeSettlementLineMonetarySummation);
+
+  return {
+    id: getTextContent(docLine?.['ram:LineID'] || docLine?.LineID),
+    name: getTextContent(product?.['ram:Name'] || product?.Name),
+    description: getTextContent(product?.['ram:Description'] || product?.Description),
+    unitCode: getTextContent(billedQty?.['@_unitCode']),
+    unitPrice: getTextContent(netPrice?.['ram:ChargeAmount'] || netPrice?.ChargeAmount),
+    billedQuantity: getTextContent(billedQty?.['#text']),
+    lineTotalAmount: getTextContent(summation?.['ram:LineTotalAmount'] || summation?.LineTotalAmount),
+    taxRatePercent: getTextContent(tradeTax?.['ram:RateApplicablePercent'] || tradeTax?.RateApplicablePercent),
+    taxCategoryCode: getTextContent(tradeTax?.['ram:CategoryCode'] || tradeTax?.CategoryCode),
+  };
 }
 
-function parseUBLLineItem(item: unknown): ZUGFeRDTradeLineItem {
-  const i = item as Record<string, unknown>;
-  const itemData = asRecord(i['cac:Item'] || i.Item);
-  return { id: getTextContent(i['cbc:ID'] || i.ID), name: getTextContent(itemData?.['cbc:Name'] || itemData?.Name), billedQuantity: getTextContent(i['cbc:InvoicedQuantity'] || i.InvoicedQuantity), lineTotalAmount: getTextContent(i['cbc:LineExtensionAmount'] || i.LineExtensionAmount) };
+function parseUBLLineItem(item: Record<string, unknown>): ZUGFeRDTradeLineItem {
+  const price = asRecord(item['cac:Price'] || item.Price);
+  const itemData = asRecord(item['cac:Item'] || item.Item);
+  const tax = asRecord(itemData?.['cac:ClassifiedTaxCategory'] || itemData?.ClassifiedTaxCategory);
+  const invoicedQty = asRecord(item['cbc:InvoicedQuantity'] || item.InvoicedQuantity);
+
+  return {
+    id: getTextContent(item['cbc:ID'] || item.ID),
+    name: getTextContent(itemData?.['cbc:Name'] || itemData?.Name),
+    description: getTextContent(itemData?.['cbc:Description'] || itemData?.Description),
+    unitCode: getTextContent(invoicedQty?.['@_unitCode']),
+    unitPrice: getTextContent(price?.['cbc:PriceAmount'] || price?.PriceAmount),
+    billedQuantity: getTextContent(invoicedQty?.['#text']),
+    lineTotalAmount: getTextContent(item['cbc:LineExtensionAmount'] || item.LineExtensionAmount),
+    taxRatePercent: getTextContent(tax?.['cbc:Percent'] || tax?.Percent),
+    taxCategoryCode: getTextContent(tax?.['cbc:ID'] || tax?.ID),
+  };
 }
 
-function parseCIITax(tax: unknown): ZUGFeRDTax {
-  const t = tax as Record<string, unknown>;
-  return { typeCode: getTextContent(t['ram:TypeCode'] || t.TypeCode), categoryCode: getTextContent(t['ram:CategoryCode'] || t.CategoryCode), ratePercent: getTextContent(t['ram:RateApplicablePercent'] || t.RateApplicablePercent), calculatedAmount: getTextContent(t['ram:CalculatedAmount'] || t.CalculatedAmount) };
+function parseCIITax(tax: Record<string, unknown>): ZUGFeRDTax {
+  return {
+    typeCode: getTextContent(tax['ram:TypeCode'] || tax.TypeCode),
+    categoryCode: getTextContent(tax['ram:CategoryCode'] || tax.CategoryCode),
+    ratePercent: getTextContent(tax['ram:RateApplicablePercent'] || tax.RateApplicablePercent),
+    basisAmount: getTextContent(tax['ram:BasisAmount'] || tax.BasisAmount),
+    calculatedAmount: getTextContent(tax['ram:CalculatedAmount'] || tax.CalculatedAmount),
+  };
 }
 
-function parseUBLTax(tax: unknown): ZUGFeRDTax {
-  const t = tax as Record<string, unknown>;
-  const tc = asRecord(t['cac:TaxCategory'] || t.TaxCategory);
-  return { typeCode: getTextContent((tc?.['cac:TaxScheme'] as Record<string, unknown> | undefined)?.['cbc:ID'] || (tc?.TaxScheme as Record<string, unknown> | undefined)?.ID), categoryCode: getTextContent(tc?.['cbc:ID'] || tc?.ID), ratePercent: getTextContent(tc?.['cbc:Percent'] || tc?.Percent), calculatedAmount: getTextContent(t['cbc:TaxAmount'] || t.TaxAmount) };
+function parseUBLTax(tax: Record<string, unknown>): ZUGFeRDTax {
+  const taxCategory = asRecord(tax['cac:TaxCategory'] || tax.TaxCategory);
+  const taxScheme = asRecord(taxCategory?.['cac:TaxScheme'] || taxCategory?.TaxScheme);
+  return {
+    typeCode: getTextContent(taxScheme?.['cbc:ID'] || taxScheme?.ID),
+    categoryCode: getTextContent(taxCategory?.['cbc:ID'] || taxCategory?.ID),
+    ratePercent: getTextContent(taxCategory?.['cbc:Percent'] || taxCategory?.Percent),
+    basisAmount: getTextContent(tax['cbc:TaxableAmount'] || tax.TaxableAmount),
+    calculatedAmount: getTextContent(tax['cbc:TaxAmount'] || tax.TaxAmount),
+  };
 }
 
-function parseMonetarySummation(summation: unknown): ZUGFeRDMonetarySummation {
-  const s = summation as Record<string, unknown>;
-  return { lineTotalAmount: getTextContent(s['ram:LineTotalAmount'] || s.LineTotalAmount), taxBasisTotalAmount: getTextContent(s['ram:TaxBasisTotalAmount'] || s.TaxBasisTotalAmount), taxTotalAmount: getTextContent(s['ram:TaxTotalAmount'] || s.TaxTotalAmount), grandTotalAmount: getTextContent(s['ram:GrandTotalAmount'] || s.GrandTotalAmount), duePayableAmount: getTextContent(s['ram:DuePayableAmount'] || s.DuePayableAmount) };
+function parsePaymentTerms(settlement: Record<string, unknown>): ZUGFeRDPaymentTerms | undefined {
+  const terms = asRecord(settlement['ram:SpecifiedTradePaymentTerms'] || settlement.SpecifiedTradePaymentTerms);
+  if (!terms) return undefined;
+  return {
+    description: getTextContent(terms['ram:Description'] || terms.Description),
+    dueDate: getDateContent(terms['ram:DueDateDateTime'] || terms.DueDateDateTime),
+    directDebitMandateId: getTextContent(terms['ram:DirectDebitMandateID'] || terms.DirectDebitMandateID),
+  };
+}
+
+function parseMonetarySummation(summation: Record<string, unknown>): ZUGFeRDMonetarySummation {
+  return {
+    lineTotalAmount: getTextContent(summation['ram:LineTotalAmount'] || summation.LineTotalAmount),
+    chargeTotalAmount: getTextContent(summation['ram:ChargeTotalAmount'] || summation.ChargeTotalAmount),
+    allowanceTotalAmount: getTextContent(summation['ram:AllowanceTotalAmount'] || summation.AllowanceTotalAmount),
+    taxBasisTotalAmount: getTextContent(summation['ram:TaxBasisTotalAmount'] || summation.TaxBasisTotalAmount),
+    taxTotalAmount: getTextContent(summation['ram:TaxTotalAmount'] || summation.TaxTotalAmount),
+    grandTotalAmount: getTextContent(summation['ram:GrandTotalAmount'] || summation.GrandTotalAmount),
+    totalPrepaidAmount: getTextContent(summation['ram:TotalPrepaidAmount'] || summation.TotalPrepaidAmount),
+    duePayableAmount: getTextContent(summation['ram:DuePayableAmount'] || summation.DuePayableAmount),
+  };
+}
+
+function extractVersion(parsed: Record<string, unknown>, format: 'cii' | 'ubl'): string | undefined {
+  if (format === 'cii') {
+    const cii = asRecord(parsed['rsm:CrossIndustryInvoice'] ?? parsed.CrossIndustryInvoice) ?? parsed;
+    const context = asRecord(cii['rsm:ExchangedDocumentContext'] || cii.ExchangedDocumentContext);
+    const guidParam = asRecord(context?.['ram:GuidelineSpecifiedDocumentContextParameter'] || context?.GuidelineSpecifiedDocumentContextParameter);
+    const guid = guidParam?.['ram:ID'] || guidParam?.ID;
+    const version = getTextContent(guid);
+    const match = version?.match(/ver(\d+p\d+)/);
+    return match ? match[1].replace('p', '.') : version;
+  }
+  return getTextContent(parsed['cbc:VersionID'] || parsed.VersionID);
+}
+
+function extractProfile(parsed: Record<string, unknown>, format: 'cii' | 'ubl'): string | undefined {
+  if (format === 'cii') {
+    const cii = asRecord(parsed['rsm:CrossIndustryInvoice'] ?? parsed.CrossIndustryInvoice) ?? parsed;
+    const context = asRecord(cii['rsm:ExchangedDocumentContext'] || cii.ExchangedDocumentContext);
+    const guidParam = asRecord(context?.['ram:GuidelineSpecifiedDocumentContextParameter'] || context?.GuidelineSpecifiedDocumentContextParameter);
+    const guid = guidParam?.['ram:ID'] || guidParam?.ID;
+    const profile = getTextContent(guid);
+    const match = profile?.match(/:(\w+):/);
+    return match ? match[1] : profile;
+  }
+  return undefined;
+}
+
+function extractUBLCustomizationId(parsed: Record<string, unknown>): string | undefined {
+  return getTextContent(parsed['cbc:CustomizationID'] || parsed.CustomizationID);
+}
+
+function extractNotes(notes: unknown): string[] {
+  if (!notes) return [];
+  return parseArray(notes).map(note => {
+    const rec = asRecord(note);
+    return getTextContent(rec?.['ram:Content'] || rec?.Content);
+  }).filter(Boolean) as string[];
+}
+
+function extractUBLNotes(notes: unknown): string[] {
+  if (!notes) return [];
+  return parseArray(notes).map(note => typeof note === 'string' ? note : getTextContent(note)).filter(Boolean) as string[];
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object') return value as Record<string, unknown>;
+  return undefined;
 }
 
 function getTextContent(value: unknown): string | undefined {
@@ -143,8 +427,8 @@ function getTextContent(value: unknown): string | undefined {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
   if (typeof value === 'object') {
-    const record = value as Record<string, string>;
-    return record['#text'] || record.text || String(value);
+    const rec = value as Record<string, unknown>;
+    return (rec['#text'] as string) || (rec.text as string) || String(value);
   }
   return undefined;
 }
@@ -152,15 +436,16 @@ function getTextContent(value: unknown): string | undefined {
 function getDateContent(value: unknown): string | undefined {
   if (!value) return undefined;
   if (typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    const dateTime = asRecord(record['udt:DateTimeString']);
-    return getTextContent(record['#text'] || dateTime?.['#text']);
+    const rec = value as Record<string, unknown>;
+    const dateTimeString = asRecord(rec['udt:DateTimeString']);
+    const dateString = (rec['#text'] as string) || (dateTimeString?.['#text'] as string);
+    return getTextContent(dateString);
   }
   return getTextContent(value);
 }
 
-function parseArray<T>(value: T | T[]): T[] { return !value ? [] : Array.isArray(value) ? value : [value]; }
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
+function parseArray<T>(value: T | T[]): T[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  return [value];
 }

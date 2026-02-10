@@ -26,8 +26,10 @@ This directory contains API documentation for the E-Rechnung application.
 - `POST /api/uploads` - Upload file
 - `GET /api/uploads/[uploadId]` - Get upload status
 
-### Webhooks
-- `POST /api/webhooks/stripe` - Stripe webhook handler
+### Stripe
+- `POST /api/stripe/checkout` - Create Stripe Checkout session
+- `POST /api/stripe/portal` - Create Stripe Customer Portal session
+- `POST /api/stripe/webhook` - Stripe webhook handler (signature-verified)
 
 ### Health
 - `GET /api/health` - Health check endpoint

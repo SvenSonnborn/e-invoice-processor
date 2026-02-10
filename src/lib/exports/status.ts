@@ -1,4 +1,4 @@
-import type { ExportStatus } from '@prisma/client'
+import type { ExportStatus } from '@/src/generated/prisma/client'
 
 /**
  * Export Status Utilities

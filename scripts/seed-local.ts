@@ -4,7 +4,7 @@
  * Seeds the local database with test data
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 

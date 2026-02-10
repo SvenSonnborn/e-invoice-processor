@@ -110,13 +110,11 @@ jobs:
           find .next -type f | head -10
           echo "Total files in .next:"
           find .next -type f | wc -l
-      - name: Copy .next to next-build for artifact upload
-        run: |
-          cp -r .next next-build
-          ls -la next-build | head -10
+      - name: Create build archive
+        run: zip -r next-build.zip .next
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: next-build
+          path: next-build.zip
           if-no-files-found: error

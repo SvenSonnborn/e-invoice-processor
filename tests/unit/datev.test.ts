@@ -13,8 +13,8 @@ import {
   type DatevExportOptions,
   type DatevExportLineItem,
 } from "@/src/server/exporters/datev";
-import { Prisma } from "@prisma/client";
-import type { Invoice, InvoiceLineItem } from "@prisma/client";
+import { Prisma } from "@/src/generated/prisma/client";
+import type { Invoice, InvoiceLineItem } from "@/src/generated/prisma/client";
 
 /** Shorthand for creating Prisma.Decimal values in test data */
 const d = (n: number) => new Prisma.Decimal(n);

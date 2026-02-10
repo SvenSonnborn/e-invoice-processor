@@ -1,5 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
-import type { InvoiceLineItem } from '@prisma/client'
+import type { InvoiceLineItem } from '@/src/generated/prisma/client'
 
 /**
  * Invoice Line Items Utilities

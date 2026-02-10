@@ -1,5 +1,5 @@
 import { prisma } from '@/src/lib/db/client'
-import type { InvoiceStatus, Prisma } from '@prisma/client'
+import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client'
 import { isValidStatusTransition } from './status'
 import { CURRENT_PROCESSOR_VERSION } from './revisions'
 

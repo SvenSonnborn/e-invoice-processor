@@ -1,10 +1,22 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not defined');
-}
+let stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-01-28.clover',
-  typescript: true,
-});
+/**
+ * Returns the Stripe client. Creates it on first use and caches it.
+ * Throws only when called at runtime without STRIPE_SECRET_KEY (not at import time),
+ * so the build can complete without Stripe env vars.
+ */
+export function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY is not defined');
+    }
+    stripeInstance = new Stripe(key, {
+      apiVersion: '2026-01-28.clover',
+      typescript: true,
+    });
+  }
+  return stripeInstance;
+}

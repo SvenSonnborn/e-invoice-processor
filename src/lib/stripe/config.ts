@@ -14,39 +14,42 @@ export const STRIPE_CONFIG = {
 
   // Subscription plans
   PLANS: {
-    BASIC: {
-      id: 'basic',
-      name: 'Basic',
-      description: 'Für Einsteiger und kleine Unternehmen',
-      price: 9.90,
-      priceId: process.env.STRIPE_PRICE_ID_BASIC || '',
-      features: [
-        '50 Rechnungen pro Monat',
-        'ZUGFeRD & XRechnung Unterstützung',
-        'CSV Export',
-        'E-Mail Support',
-        '14 Tage kostenlos testen',
-      ],
-      limits: {
-        invoicesPerMonth: 50,
-        exportsPerMonth: 100,
-        apiAccess: false,
-        priorityProcessing: false,
-      },
-    },
     PRO: {
       id: 'pro',
       name: 'Pro',
       description: 'Für wachsende Unternehmen',
-      price: 14.90,
+      price: 29.00,
       priceId: process.env.STRIPE_PRICE_ID_PRO || '',
       features: [
+        '100 Rechnungen pro Monat',
+        '100 Exports pro Monat',
+        'ZUGFeRD & XRechnung Unterstützung',
+        'CSV Export',
+        'Prioritäre Verarbeitung',
+        'E-Mail Support',
+        '14 Tage kostenlos testen',
+      ],
+      limits: {
+        invoicesPerMonth: 100,
+        exportsPerMonth: 100,
+        apiAccess: false,
+        priorityProcessing: true,
+      },
+    },
+    BUSINESS: {
+      id: 'business',
+      name: 'Business',
+      description: 'Für Unternehmen mit hohem Volumen',
+      price: 99.00,
+      priceId: process.env.STRIPE_PRICE_ID_BUSINESS || '',
+      features: [
         'Unbegrenzte Rechnungen',
+        'Unbegrenzte Exports',
         'ZUGFeRD & XRechnung Unterstützung',
         'Alle Exportformate (CSV, DATEV)',
         'Prioritäre Verarbeitung',
         'API Zugriff',
-        'Prioritäter E-Mail Support',
+        'Prioritärer E-Mail Support',
         '14 Tage kostenlos testen',
       ],
       limits: {
@@ -75,8 +78,9 @@ export type Plan = typeof STRIPE_CONFIG.PLANS[PlanId];
  * Get plan by Stripe price ID
  */
 export function getPlanByPriceId(priceId: string): Plan | null {
+  if (!priceId) return null;
   for (const plan of Object.values(STRIPE_CONFIG.PLANS)) {
-    if (plan.priceId === priceId) {
+    if (plan.priceId && plan.priceId === priceId) {
       return plan;
     }
   }

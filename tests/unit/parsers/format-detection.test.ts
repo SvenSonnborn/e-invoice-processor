@@ -4,6 +4,7 @@ import { detectInvoiceFlavor, getValidationInfo, validateXML } from "@/src/lib/z
 describe("Format detection and validation", () => {
   const ciiXml = `<?xml version="1.0"?>
 <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
+  <ExchangedDocumentContext><GuidelineSpecifiedDocumentContextParameter><ID>urn:ferd:CrossIndustryInvoice:ver2p3:basic</ID></GuidelineSpecifiedDocumentContextParameter></ExchangedDocumentContext>
   <ExchangedDocument><ID>X</ID><TypeCode>380</TypeCode><IssueDateTime><DateTimeString format="102">20240101</DateTimeString></IssueDateTime></ExchangedDocument>
   <SupplyChainTradeTransaction>
     <ApplicableHeaderTradeAgreement>

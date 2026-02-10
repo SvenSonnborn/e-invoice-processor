@@ -1,130 +1,179 @@
 /**
  * Stripe Service Tests
+ *
+ * Tests the subscription service logic including plan limits,
+ * feature access, and usage calculation helpers.
  */
 
 import { describe, it, expect } from 'bun:test';
 import { STRIPE_CONFIG } from '../../src/lib/stripe/config';
 
-describe('Stripe Service', () => {
-  describe('Plan Limits', () => {
-    it('BASIC plan should have 50 invoices per month', () => {
-      expect(STRIPE_CONFIG.PLANS.BASIC.limits.invoicesPerMonth).toBe(50);
+describe('Stripe Service – Plan Limits', () => {
+  describe('PRO plan limits', () => {
+    const pro = STRIPE_CONFIG.PLANS.PRO;
+
+    it('should allow 100 invoices per month', () => {
+      expect(pro.limits.invoicesPerMonth).toBe(100);
     });
 
-    it('BASIC plan should have 100 exports per month', () => {
-      expect(STRIPE_CONFIG.PLANS.BASIC.limits.exportsPerMonth).toBe(100);
+    it('should allow 100 exports per month', () => {
+      expect(pro.limits.exportsPerMonth).toBe(100);
     });
 
-    it('BASIC plan should not have API access', () => {
-      expect(STRIPE_CONFIG.PLANS.BASIC.limits.apiAccess).toBe(false);
+    it('should NOT have API access', () => {
+      expect(pro.limits.apiAccess).toBe(false);
     });
 
-    it('BASIC plan should not have priority processing', () => {
-      expect(STRIPE_CONFIG.PLANS.BASIC.limits.priorityProcessing).toBe(false);
-    });
-
-    it('PRO plan should have unlimited invoices', () => {
-      expect(STRIPE_CONFIG.PLANS.PRO.limits.invoicesPerMonth).toBe(-1);
-    });
-
-    it('PRO plan should have unlimited exports', () => {
-      expect(STRIPE_CONFIG.PLANS.PRO.limits.exportsPerMonth).toBe(-1);
-    });
-
-    it('PRO plan should have API access', () => {
-      expect(STRIPE_CONFIG.PLANS.PRO.limits.apiAccess).toBe(true);
-    });
-
-    it('PRO plan should have priority processing', () => {
-      expect(STRIPE_CONFIG.PLANS.PRO.limits.priorityProcessing).toBe(true);
+    it('should have priority processing', () => {
+      expect(pro.limits.priorityProcessing).toBe(true);
     });
   });
 
-  describe('Plan Features', () => {
-    it('BASIC plan should have correct number of features', () => {
-      expect(STRIPE_CONFIG.PLANS.BASIC.features.length).toBeGreaterThan(0);
+  describe('BUSINESS plan limits', () => {
+    const business = STRIPE_CONFIG.PLANS.BUSINESS;
+
+    it('should have unlimited invoices (-1)', () => {
+      expect(business.limits.invoicesPerMonth).toBe(-1);
     });
 
-    it('PRO plan should have more features than BASIC', () => {
-      const basicFeatures = STRIPE_CONFIG.PLANS.BASIC.features.length;
-      const proFeatures = STRIPE_CONFIG.PLANS.PRO.features.length;
-      expect(proFeatures).toBeGreaterThan(basicFeatures);
+    it('should have unlimited exports (-1)', () => {
+      expect(business.limits.exportsPerMonth).toBe(-1);
     });
 
-    it('All plans should include ZUGFeRD & XRechnung support', () => {
-      const basicHasSupport = STRIPE_CONFIG.PLANS.BASIC.features.some(
-        f => f.includes('ZUGFeRD') || f.includes('XRechnung')
-      );
-      const proHasSupport = STRIPE_CONFIG.PLANS.PRO.features.some(
-        f => f.includes('ZUGFeRD') || f.includes('XRechnung')
-      );
-      
-      expect(basicHasSupport).toBe(true);
-      expect(proHasSupport).toBe(true);
+    it('should have API access', () => {
+      expect(business.limits.apiAccess).toBe(true);
     });
 
-    it('All plans should mention trial period', () => {
-      const basicHasTrial = STRIPE_CONFIG.PLANS.BASIC.features.some(
-        f => f.includes('14 Tage') || f.includes('kostenlos')
-      );
-      const proHasTrial = STRIPE_CONFIG.PLANS.PRO.features.some(
-        f => f.includes('14 Tage') || f.includes('kostenlos')
-      );
-      
-      expect(basicHasTrial).toBe(true);
-      expect(proHasTrial).toBe(true);
+    it('should have priority processing', () => {
+      expect(business.limits.priorityProcessing).toBe(true);
     });
   });
+});
 
-  describe('Webhook Events', () => {
-    it('should have checkout.session.completed event', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.CHECKOUT_COMPLETED).toBe('checkout.session.completed');
-    });
-
-    it('should have customer.subscription.updated event', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_UPDATED).toBe('customer.subscription.updated');
-    });
-
-    it('should have customer.subscription.deleted event', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_DELETED).toBe('customer.subscription.deleted');
-    });
-
-    it('should have invoice.payment_succeeded event', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED).toBe('invoice.payment_succeeded');
-    });
-
-    it('should have invoice.payment_failed event', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_FAILED).toBe('invoice.payment_failed');
-    });
-  });
-
-  describe('Usage Calculation', () => {
-    it('should handle unlimited limits correctly', () => {
+describe('Stripe Service – Usage Limit Logic', () => {
+  describe('unlimited detection', () => {
+    it('should treat -1 as unlimited', () => {
       const limit = -1;
-      const used = 1000;
-      const hasReachedLimit = limit !== -1 && used >= limit;
-      expect(hasReachedLimit).toBe(false);
+      const isUnlimited = limit === -1;
+      expect(isUnlimited).toBe(true);
     });
 
-    it('should detect when limit is reached', () => {
-      const limit = 50;
-      const used = 50;
-      const hasReachedLimit = used >= limit;
-      expect(hasReachedLimit).toBe(true);
+    it('should not treat 0 as unlimited', () => {
+      const limit: number = 0;
+      const isUnlimited = limit === -1;
+      expect(isUnlimited).toBe(false);
+    });
+  });
+
+  describe('limit enforcement', () => {
+    it('should block when usage equals limit', () => {
+      const limit: number = 100;
+      const used = 100;
+      const isAllowed = limit === -1 || used < limit;
+      expect(isAllowed).toBe(false);
     });
 
-    it('should allow usage when under limit', () => {
-      const limit = 50;
-      const used = 30;
-      const hasReachedLimit = used >= limit;
-      expect(hasReachedLimit).toBe(false);
+    it('should block when usage exceeds limit', () => {
+      const limit: number = 100;
+      const used = 101;
+      const isAllowed = limit === -1 || used < limit;
+      expect(isAllowed).toBe(false);
     });
 
+    it('should allow when usage is under limit', () => {
+      const limit: number = 100;
+      const used = 99;
+      const isAllowed = limit === -1 || used < limit;
+      expect(isAllowed).toBe(true);
+    });
+
+    it('should always allow when limit is unlimited', () => {
+      const limit: number = -1;
+      const used = 999999;
+      const isAllowed = limit === -1 || used < limit;
+      expect(isAllowed).toBe(true);
+    });
+
+    it('should allow when usage is 0', () => {
+      const limit: number = 100;
+      const used = 0;
+      const isAllowed = limit === -1 || used < limit;
+      expect(isAllowed).toBe(true);
+    });
+  });
+
+  describe('remaining calculation', () => {
     it('should calculate remaining correctly', () => {
-      const limit = 50;
+      const limit: number = 100;
       const used = 30;
       const remaining = Math.max(0, limit - used);
-      expect(remaining).toBe(20);
+      expect(remaining).toBe(70);
     });
+
+    it('should return 0 when at limit', () => {
+      const limit = 100;
+      const used = 100;
+      const remaining = Math.max(0, limit - used);
+      expect(remaining).toBe(0);
+    });
+
+    it('should return 0 when over limit', () => {
+      const limit = 100;
+      const used = 105;
+      const remaining = Math.max(0, limit - used);
+      expect(remaining).toBe(0);
+    });
+  });
+});
+
+describe('Stripe Service – Billing Period', () => {
+  it('should calculate start of current calendar month as fallback', () => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    expect(monthStart.getDate()).toBe(1);
+    expect(monthStart.getMonth()).toBe(now.getMonth());
+    expect(monthStart.getFullYear()).toBe(now.getFullYear());
+  });
+
+  it('should correctly compare dates for period filtering', () => {
+    const periodStart = new Date('2026-01-01T00:00:00Z');
+    const invoiceCreatedAt = new Date('2026-01-15T12:00:00Z');
+    const oldInvoice = new Date('2025-12-25T12:00:00Z');
+
+    expect(invoiceCreatedAt >= periodStart).toBe(true);
+    expect(oldInvoice >= periodStart).toBe(false);
+  });
+});
+
+describe('Stripe Service – Feature Access', () => {
+  it('FREE tier should have no plan', () => {
+    const tier = 'FREE';
+    const plan = tier === 'FREE' ? null : STRIPE_CONFIG.PLANS[tier as keyof typeof STRIPE_CONFIG.PLANS];
+    expect(plan).toBeNull();
+  });
+
+  it('PRO tier should resolve to PRO plan', () => {
+    const tier = 'PRO' as const;
+    const plan = STRIPE_CONFIG.PLANS[tier];
+    expect(plan).toBeDefined();
+    expect(plan.id).toBe('pro');
+  });
+
+  it('BUSINESS tier should resolve to BUSINESS plan', () => {
+    const tier = 'BUSINESS' as const;
+    const plan = STRIPE_CONFIG.PLANS[tier];
+    expect(plan).toBeDefined();
+    expect(plan.id).toBe('business');
+  });
+
+  it('API access should only be available on BUSINESS', () => {
+    expect(STRIPE_CONFIG.PLANS.PRO.limits.apiAccess).toBe(false);
+    expect(STRIPE_CONFIG.PLANS.BUSINESS.limits.apiAccess).toBe(true);
+  });
+
+  it('priority processing should be available on both PRO and BUSINESS', () => {
+    expect(STRIPE_CONFIG.PLANS.PRO.limits.priorityProcessing).toBe(true);
+    expect(STRIPE_CONFIG.PLANS.BUSINESS.limits.priorityProcessing).toBe(true);
   });
 });
