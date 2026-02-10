@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isSupportedMimeType } from "@/src/server/parsers/ocr";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 import { logger } from "@/src/lib/logging";
+import { ocrRateLimiter } from "@/src/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,39 @@ interface OcrApiResponse {
  */
 export async function POST(request: NextRequest): Promise<NextResponse<OcrApiResponse>> {
   logger.info("OCR upload request received");
+
+  // ── Rate Limiting ─────────────────────────────────────
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || request.headers.get("x-real-ip")
+    || "unknown";
+  const userId = request.headers.get("x-user-id") || undefined;
+
+  const rateLimitResult = ocrRateLimiter.check(ip, userId);
+
+  if (!rateLimitResult.allowed) {
+    const retryAfterSeconds = Math.ceil((rateLimitResult.retryAfterMs || 60_000) / 1000);
+    const messages: Record<string, string> = {
+      ip: "Zu viele Anfragen. Bitte warte eine Minute.",
+      user: "Tägliches Nutzerlimit erreicht. Bitte versuche es morgen erneut.",
+      global: "Tägliches Gesamtlimit erreicht. Bitte versuche es morgen erneut.",
+    };
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "RATE_LIMIT_EXCEEDED",
+          message: messages[rateLimitResult.reason || "ip"],
+          details: { retryAfterSeconds },
+        },
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds) },
+      }
+    );
+  }
+  // ──────────────────────────────────────────────────────
 
   try {
     // Parse multipart form data
