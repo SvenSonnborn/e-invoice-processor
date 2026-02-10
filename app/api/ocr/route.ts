@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ocrService } from "@/src/server/services/ocr";
 import { isSupportedMimeType } from "@/src/server/parsers/ocr";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 import { logger } from "@/src/lib/logging";
@@ -121,6 +120,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<OcrApiRes
     // Get optional parameters
     const languageHints = formData.get("languageHints")?.toString().split(",") || ["de", "en"];
     const confidenceThreshold = parseFloat(formData.get("confidenceThreshold")?.toString() || "0.95");
+
+    // Lazy-load OCR service to avoid initialization during build
+    const { ocrService } = await import("@/src/server/services/ocr");
 
     // Process with OCR
     const ocrResult = await ocrService.processFile(buffer, file.type, {
