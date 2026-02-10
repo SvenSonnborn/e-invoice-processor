@@ -26,14 +26,13 @@ export interface InvoiceParseResult {
 }
 
 export async function parseInvoiceFromPDF(pdfBuffer: Buffer | ArrayBuffer | Uint8Array): Promise<InvoiceParseResult> {
-  const _errors: string[] = [], warnings: string[] = [];
   try {
-    if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings };
+    if (!isPDF(pdfBuffer)) return { success: false, validation: { valid: false, errors: ['Invalid PDF file'], warnings: [] }, detection: { flavor: 'Unknown' }, errors: ['Invalid PDF file'], warnings: [] };
     const xmlContent = await extractXMLFromPDF(pdfBuffer);
     return parseInvoiceFromXML(xmlContent);
   } catch (error) {
     const errorMsg = error instanceof ZUGFeRDParserError ? error.message : 'Unknown error';
-    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [errorMsg], warnings };
+    return { success: false, validation: { valid: false, errors: [errorMsg], warnings: [] }, detection: { flavor: 'ZUGFeRD' }, errors: [errorMsg], warnings: [] };
   }
 }
 
@@ -42,7 +41,6 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
   try {
     const detection = detectInvoiceFlavor(xmlContent);
     let parseResult: ParsedInvoiceResult;
-
     if (detection.flavor === 'Unknown') {
       parseResult = parseCII(xmlContent);
       if (!parseResult.success) { const ublResult = parseUBL(xmlContent); if (ublResult.success) { parseResult = ublResult; detection.flavor = 'ZUGFeRD'; } }
@@ -53,13 +51,11 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
     if (!parseResult.success || !parseResult.invoice) return { success: false, validation: { valid: false, errors: parseResult.errors, warnings: parseResult.warnings }, detection, errors: [...errors, ...parseResult.errors], warnings: [...warnings, ...parseResult.warnings] };
 
     const validation = await validateXML(xmlContent, detection.flavor, detection.version, detection.profile);
-    let invoice: Invoice | undefined;
-    let extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
+    let invoice: Invoice | undefined, extendedData: ReturnType<typeof mapToExtendedInvoiceData> | undefined;
     try { invoice = mapToInvoiceModel(parseResult.invoice); extendedData = mapToExtendedInvoiceData(parseResult.invoice); } catch (error) { errors.push(`Mapping error: ${error instanceof Error ? error.message : 'Unknown'}`); }
 
     errors.push(...parseResult.errors, ...validation.errors);
     warnings.push(...parseResult.warnings, ...validation.warnings);
-
     return { success: errors.length === 0 && !!invoice, invoice, extendedData, rawData: parseResult.invoice, validation, detection, errors, warnings };
   } catch (error) {
     return { success: false, validation: { valid: false, errors: [String(error)], warnings: [] }, detection: { flavor: 'Unknown' }, errors: [String(error)], warnings };
@@ -82,6 +78,33 @@ export async function isValidEInvoice(buffer: Buffer | ArrayBuffer | Uint8Array)
   } catch (error) { return { valid: false, error: String(error) }; }
 }
 
-export async function parseInvoicesBatch(items: Array<{ buffer: Buffer | ArrayBuffer | Uint8Array; filename?: string }>): Promise<Array<InvoiceParseResult & { filename?: string }>> {
-  return Promise.all(items.map(async item => ({ ...(await parseInvoice(item.buffer)), filename: item.filename })));
+const DEFAULT_BATCH_CONCURRENCY = 5;
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  async function worker(): Promise<void> {
+    while (index < items.length) {
+      const i = index++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+export async function parseInvoicesBatch(
+  items: Array<{ buffer: Buffer | ArrayBuffer | Uint8Array; filename?: string }>,
+  options?: { concurrency?: number }
+): Promise<Array<InvoiceParseResult & { filename?: string }>> {
+  const concurrency = Math.max(1, options?.concurrency ?? DEFAULT_BATCH_CONCURRENCY);
+  return runWithConcurrency(items, concurrency, async (item) => ({
+    ...(await parseInvoice(item.buffer)),
+    filename: item.filename,
+  }));
 }
