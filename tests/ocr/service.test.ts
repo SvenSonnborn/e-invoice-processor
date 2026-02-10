@@ -4,7 +4,18 @@
  * Unit tests for the OCR service implementation.
  */
 
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach, mock } from "bun:test";
+
+// Mock logger to suppress output during tests
+mock.module("@/src/lib/logging", () => ({
+  logger: {
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {},
+  },
+}));
+
 import { OcrService, OcrResult } from "@/src/server/services/ocr";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 

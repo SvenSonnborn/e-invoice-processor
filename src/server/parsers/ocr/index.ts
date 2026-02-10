@@ -6,7 +6,7 @@
  */
 
 import type { Invoice } from "@/src/types";
-import { ocrService } from "@/src/server/services/ocr";
+import { getOcrService } from "@/src/server/services/ocr";
 import { logger } from "@/src/lib/logging";
 import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
 
@@ -44,6 +44,7 @@ export async function parseWithOcr(
 
   try {
     // Process file with OCR
+    const ocrService = getOcrService();
     const ocrResult = await ocrService.processFile(fileBuffer, mimeType, {
       languageHints: opts.languageHints,
       confidenceThreshold: opts.confidenceThreshold,

@@ -156,7 +156,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<OcrApiRes
     const confidenceThreshold = parseFloat(formData.get("confidenceThreshold")?.toString() || "0.95");
 
     // Lazy-load OCR service to avoid initialization during build
-    const { ocrService } = await import("@/src/server/services/ocr");
+    const { getOcrService } = await import("@/src/server/services/ocr");
+    const ocrService = getOcrService();
 
     // Process with OCR
     const ocrResult = await ocrService.processFile(buffer, file.type, {

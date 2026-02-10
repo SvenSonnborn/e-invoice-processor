@@ -39,10 +39,10 @@ const mockParseInvoice = () => Promise.resolve({
 });
 
 mock.module("@/src/server/services/ocr", () => ({
-  ocrService: {
+  getOcrService: () => ({
     processFile: mockProcessFile,
     parseInvoice: mockParseInvoice
-  },
+  }),
   OcrService: class {
     processFile = mockProcessFile;
     parseInvoice = mockParseInvoice;
@@ -56,6 +56,17 @@ mock.module("@/src/lib/logging", () => ({
     error: () => {},
     debug: () => {}
   }
+}));
+
+mock.module("@/src/lib/rate-limit", () => ({
+  ocrRateLimiter: {
+    check: () => ({ allowed: true }),
+  },
+  RateLimiter: class {
+    check() {
+      return { allowed: true };
+    }
+  },
 }));
 
 import { POST, GET } from "@/app/api/ocr/route";
@@ -153,6 +164,9 @@ describe("POST /api/ocr", () => {
     const response = await POST(request as any);
     const data = await response.json();
 
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.data).toBeDefined();
     expect(data.data.invoice).toBeDefined();
     expect(data.data.invoice.invoiceNumber).toBe("TEST-001");
     expect(data.data.invoice.totalAmount).toBe(100.00);
@@ -174,6 +188,9 @@ describe("POST /api/ocr", () => {
     const response = await POST(request as any);
     const data = await response.json();
 
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.data).toBeDefined();
     expect(data.data.metadata).toBeDefined();
     expect(data.data.metadata.fileType).toBe("image/png");
     expect(data.data.metadata.pageCount).toBe(1);

@@ -250,8 +250,15 @@ export class OcrService {
   }
 }
 
-// Export singleton instance
-export const ocrService = new OcrService(
-  process.env.GOOGLE_CLOUD_VISION_API_KEY,
-  process.env.GOOGLE_CLOUD_PROJECT_ID
-);
+// Lazy singleton - only instantiated on first access, not at build time
+let _ocrService: OcrService | null = null;
+
+export function getOcrService(): OcrService {
+  if (!_ocrService) {
+    _ocrService = new OcrService(
+      process.env.GOOGLE_CLOUD_VISION_API_KEY,
+      process.env.GOOGLE_CLOUD_PROJECT_ID
+    );
+  }
+  return _ocrService;
+}
