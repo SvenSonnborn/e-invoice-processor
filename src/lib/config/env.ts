@@ -14,15 +14,42 @@ const envSchema = z.object({
 
 // In Next.js, env vars are available on the server at runtime.
 // We keep this minimal and server-focused.
-export const env = envSchema.parse({
-  NODE_ENV: process.env.NODE_ENV,
-  DATABASE_URL: process.env.DATABASE_URL,
-  DIRECT_URL: process.env.DIRECT_URL,
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  LOG_LEVEL: process.env.LOG_LEVEL,
-});
-
 export type Env = z.infer<typeof envSchema>;
 
+let cachedEnv: Env | null = null;
+
+function buildRawEnv() {
+  const isTest = process.env.NODE_ENV === "test";
+
+  return {
+    NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_URL: process.env.DIRECT_URL,
+    NEXT_PUBLIC_SUPABASE_URL:
+      process.env.NEXT_PUBLIC_SUPABASE_URL || (isTest ? "http://localhost" : undefined),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || (isTest ? "test" : undefined),
+    SUPABASE_SERVICE_ROLE_KEY:
+      process.env.SUPABASE_SERVICE_ROLE_KEY || (isTest ? "test" : undefined),
+    LOG_LEVEL: process.env.LOG_LEVEL,
+  };
+}
+
+function getEnv(): Env {
+  if (cachedEnv) {
+    return cachedEnv;
+  }
+
+  cachedEnv = envSchema.parse(buildRawEnv());
+  return cachedEnv;
+}
+
+export const env: Env = new Proxy({} as Env, {
+  get(_target, prop: keyof Env | symbol) {
+    if (typeof prop !== "string") {
+      return undefined;
+    }
+
+    return getEnv()[prop as keyof Env];
+  },
+});
