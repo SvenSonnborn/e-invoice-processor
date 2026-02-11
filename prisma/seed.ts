@@ -1,20 +1,20 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../src/generated/prisma/client';
 
 if (!process.env.DIRECT_URL) {
-  throw new Error("DIRECT_URL environment variable is not set");
+  throw new Error('DIRECT_URL environment variable is not set');
 }
 
-const pool = new Pool({ connectionString: process.env.DIRECT_URL });
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg({
+  connectionString: process.env.DIRECT_URL,
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // Intentionally minimal seed scaffold.
   // Add org/user/invoice seed data as the app evolves.
-  console.log("Seed starting...");
-  console.log("Seed finished.");
+  console.log('Seed starting...');
+  console.log('Seed finished.');
 }
 
 main()
@@ -25,4 +25,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

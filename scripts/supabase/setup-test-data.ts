@@ -13,17 +13,16 @@
  * Run: bun run supabase:setup
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { PrismaClient } from "@/src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { resolve } from "path";
-import { requireEnv } from "./test-helpers";
+import { PrismaClient } from '@/src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+import { requireEnv } from './test-helpers';
 
-const USER_A_EMAIL = "user-a@test.e-rechnung.local";
-const USER_B_EMAIL = "user-b@test.e-rechnung.local";
-const TEST_PASSWORD = "TestPassword123!";
+const USER_A_EMAIL = 'user-a@test.e-rechnung.local';
+const USER_B_EMAIL = 'user-b@test.e-rechnung.local';
+const TEST_PASSWORD = 'TestPassword123!';
 
 async function getOrCreateAuthUser(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,13 +37,15 @@ async function getOrCreateAuthUser(
   });
   if (!error) {
     const id = data?.user?.id;
-    if (!id) throw new Error(`createUser succeeded but no user id for ${email}`);
+    if (!id)
+      throw new Error(`createUser succeeded but no user id for ${email}`);
     return id;
   }
   const alreadyExists = /already|registered|exists/i.test(error.message);
   if (!alreadyExists) throw error;
   const existing = await resolveAuthUser(admin, email);
-  if (!existing) throw new Error(`User ${email} exists but could not be resolved`);
+  if (!existing)
+    throw new Error(`User ${email} exists but could not be resolved`);
   console.log(`  ${email} already exists, reusing.`);
   return existing;
 }
@@ -60,19 +61,20 @@ async function resolveAuthUser(
 }
 
 async function main() {
-  const supabaseUrl = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
-  const directUrl = requireEnv("DIRECT_URL");
+  const supabaseUrl = requireEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const serviceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const directUrl = requireEnv('DIRECT_URL');
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
   });
 
-  const pool = new Pool({ connectionString: directUrl });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaPg({
+    connectionString: directUrl,
+  });
   const prisma = new PrismaClient({ adapter });
 
-  console.log("Creating Supabase Auth users...");
+  console.log('Creating Supabase Auth users...');
   const supabaseUserIdA = await getOrCreateAuthUser(
     admin,
     USER_A_EMAIL,
@@ -84,16 +86,16 @@ async function main() {
     TEST_PASSWORD
   );
 
-  console.log("Creating organizations and app users...");
+  console.log('Creating organizations and app users...');
 
   const orgA = await prisma.organization.upsert({
-    where: { id: "org-a-test-id" },
-    create: { id: "org-a-test-id", name: "Organization A" },
+    where: { id: 'org-a-test-id' },
+    create: { id: 'org-a-test-id', name: 'Organization A' },
     update: {},
   });
   const orgB = await prisma.organization.upsert({
-    where: { id: "org-b-test-id" },
-    create: { id: "org-b-test-id", name: "Organization B" },
+    where: { id: 'org-b-test-id' },
+    create: { id: 'org-b-test-id', name: 'Organization B' },
     update: {},
   });
 
@@ -101,7 +103,7 @@ async function main() {
     where: { email: USER_A_EMAIL },
     create: {
       email: USER_A_EMAIL,
-      name: "User A",
+      name: 'User A',
       supabaseUserId: supabaseUserIdA,
     },
     update: { supabaseUserId: supabaseUserIdA },
@@ -110,7 +112,7 @@ async function main() {
     where: { email: USER_B_EMAIL },
     create: {
       email: USER_B_EMAIL,
-      name: "User B",
+      name: 'User B',
       supabaseUserId: supabaseUserIdB,
     },
     update: { supabaseUserId: supabaseUserIdB },
@@ -123,7 +125,7 @@ async function main() {
     create: {
       userId: appUserA.id,
       organizationId: orgA.id,
-      role: "OWNER",
+      role: 'OWNER',
     },
     update: {},
   });
@@ -134,37 +136,36 @@ async function main() {
     create: {
       userId: appUserB.id,
       organizationId: orgB.id,
-      role: "OWNER",
+      role: 'OWNER',
     },
     update: {},
   });
 
-  console.log("Creating test invoices...");
+  console.log('Creating test invoices...');
 
   await prisma.invoice.createMany({
     data: [
-      { organizationId: orgA.id, createdBy: appUserA.id, number: "INV-A-1" },
-      { organizationId: orgA.id, createdBy: appUserA.id, number: "INV-A-2" },
-      { organizationId: orgB.id, createdBy: appUserB.id, number: "INV-B-1" },
-      { organizationId: orgB.id, createdBy: appUserB.id, number: "INV-B-2" },
+      { organizationId: orgA.id, createdBy: appUserA.id, number: 'INV-A-1' },
+      { organizationId: orgA.id, createdBy: appUserA.id, number: 'INV-A-2' },
+      { organizationId: orgB.id, createdBy: appUserB.id, number: 'INV-B-1' },
+      { organizationId: orgB.id, createdBy: appUserB.id, number: 'INV-B-2' },
     ],
     skipDuplicates: true,
   });
 
-  const dir = resolve(process.cwd(), "scripts/supabase");
+  const dir = resolve(process.cwd(), 'scripts/supabase');
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const configPath = resolve(dir, "test-config.json");
+  const configPath = resolve(dir, 'test-config.json');
   const config = {
     orgAId: orgA.id,
     orgBId: orgB.id,
     userA: { email: USER_A_EMAIL, password: TEST_PASSWORD },
     userB: { email: USER_B_EMAIL, password: TEST_PASSWORD },
   };
-  writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
+  writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
 
-  console.log("✅ test-config.json written to", configPath);
-  console.log("  ORG_A_ID:", orgA.id, "| ORG_B_ID:", orgB.id);
-  await pool.end();
+  console.log('✅ test-config.json written to', configPath);
+  console.log('  ORG_A_ID:', orgA.id, '| ORG_B_ID:', orgB.id);
   await prisma.$disconnect();
 }
 

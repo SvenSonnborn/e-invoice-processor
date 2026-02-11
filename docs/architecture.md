@@ -22,23 +22,34 @@ The application follows a layered architecture with clear separation of concerns
 ## Key Components
 
 ### Database Layer
-- Uses Prisma ORM for database access
-- Models defined in `prisma/schema.prisma`
-- Database client singleton in `src/lib/db/client.ts`
+
+- Uses Prisma ORM (v7) for database access
+- Models and relations defined in `prisma/schema.prisma`
+- Prisma configuration in `prisma.config.ts`:
+  - `DIRECT_URL` is used by the Prisma CLI and migrations
+  - `DATABASE_URL` is used at runtime via the Prisma Postgres adapter
+- Generated Prisma client output lives at `src/generated/prisma` and is imported from `@/src/generated/prisma/client`
+- Database client singleton in `src/lib/db/client.ts`:
+  - Uses `@prisma/adapter-pg` (`PrismaPg`) with the Supabase `DATABASE_URL` connection string
+  - Exposes a single global `prisma` instance shared across API routes, server actions, and server components
 
 ### Authentication
+
 - Auth helpers in `src/lib/auth/`
 - Session management utilities
 
 ### Storage
+
 - Storage abstraction in `src/lib/storage/`
 - Supports S3, R2, and local storage
 
 ### Parsers
+
 - ZUGFeRD/XRechnung parser (CII & UBL) in `src/lib/zugferd/`
 - OCR adapter in `src/server/parsers/ocr/`
 
 ### Exporters
+
 - CSV exporter in `src/server/exporters/csv/`
 - DATEV exporter in `src/server/exporters/datev/`
 

@@ -71,10 +71,21 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
 
     // Create app user in database
     if (data.user) {
-      await prisma.user.create({
-        data: {
+      const rawName =
+        typeof data.user.user_metadata?.name === 'string'
+          ? data.user.user_metadata.name.trim()
+          : undefined
+      const metadataName = rawName && rawName.length > 0 ? rawName : undefined
+
+      await prisma.user.upsert({
+        where: { email: data.user.email! },
+        update: {
+          supabaseUserId: data.user.id,
+          ...(metadataName ? { name: metadataName } : { name: validation.data.name }),
+        },
+        create: {
           email: data.user.email!,
-          name: validation.data.name,
+          name: metadataName ?? validation.data.name,
           supabaseUserId: data.user.id,
         },
       })
@@ -132,6 +143,30 @@ export async function signIn(formData: FormData): Promise<AuthActionResult | nev
         success: false,
         error: 'Ungültige E-Mail-Adresse oder Passwort.',
       }
+    }
+
+    // Ensure a matching user record exists in Prisma (accounts can be recreated)
+    const { data: userData } = await supabase.auth.getUser()
+
+    if (userData.user && userData.user.email) {
+      const rawName =
+        typeof userData.user.user_metadata?.name === 'string'
+          ? userData.user.user_metadata.name.trim()
+          : undefined
+      const metadataName = rawName && rawName.length > 0 ? rawName : undefined
+
+      await prisma.user.upsert({
+        where: { email: userData.user.email },
+        update: {
+          supabaseUserId: userData.user.id,
+          ...(metadataName ? { name: metadataName } : {}),
+        },
+        create: {
+          email: userData.user.email,
+          ...(metadataName ? { name: metadataName } : {}),
+          supabaseUserId: userData.user.id,
+        },
+      })
     }
 
     // Redirect to dashboard on success
