@@ -4,6 +4,8 @@
 
 export {
   formatInvoicesForDatev,
+  formatInvoiceForDatev,
+  exportInvoicesToBuffer,
   previewExport,
   getExportSummary,
   DEFAULT_EXPORT_OPTIONS,
@@ -46,14 +48,22 @@ export {
 
 export {
   mapInvoiceToDatevEntries,
+  mapInvoiceWithLineItemsToDatevEntries,
   mapTaxRateToSteuerschluessel,
+  suggestKonto,
   DEFAULT_INVOICE_MAPPING,
 } from "./mapper";
 
 export {
   generateHeader,
+  generateExtendedHeader,
   generateRow,
   generateCSV,
   generateCSVWithBOM,
+  generateExtendedCSV,
+  generateCSVBuffer,
   generateFilename,
+  generateStructuredFilename,
+  escapeCsvField,
+  parseCsvLine,
 } from "./csv-generator";

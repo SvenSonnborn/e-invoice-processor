@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/src/components/ui/button';
 import {
   ArrowRight,
@@ -7,8 +9,12 @@ import {
   FileText,
   Sparkles,
   Upload,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import { WaitlistForm } from '../waitlist-form';
 
 const trustBadges = [
   'ZUGFeRD compliant',
@@ -16,7 +22,15 @@ const trustBadges = [
   'EN 16931 certified',
 ];
 
+const benefits = [
+  'No credit card required',
+  '50% off forever',
+  'Cancel anytime',
+];
+
 export const HeroSection = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/50 via-white to-white">
       {/* Background pattern */}
@@ -42,27 +56,28 @@ export const HeroSection = () => {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left: Content */}
           <div className="flex flex-col space-y-8">
-            {/* Badge */}
+            {/* Beta badge */}
             <div className="animate-fade-in">
               <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700">
                 <Sparkles className="h-4 w-4" />
-                E-Invoice compliance made simple
+                Beta launching Q2 2025
               </span>
             </div>
 
             {/* Headline */}
             <h1 className="animate-fade-in text-4xl font-semibold leading-[1.15] tracking-tight text-neutral-900 md:text-5xl lg:text-[3.25rem]">
-              Turn incoming invoices into{' '}
+              Turn invoices into{' '}
               <span className="bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
                 compliant e-invoices
               </span>{' '}
-              — automatically.
+              — automatically
             </h1>
 
             {/* Subheadline */}
             <p className="animate-fade-in max-w-xl text-lg leading-relaxed text-neutral-600 md:text-xl">
               Upload PDFs or scans, convert them to ZUGFeRD or XRechnung, and
-              export clean, structured data for your accounting software.
+              export clean, structured data. Join the waitlist for{' '}
+              <span className="font-semibold text-brand-600">50% off forever</span>.
             </p>
 
             {/* CTAs */}
@@ -70,26 +85,38 @@ export const HeroSection = () => {
               <Button
                 size="lg"
                 className="h-12 px-8 text-base shadow-lg shadow-brand-600/20"
-                asChild
+                onClick={() => setIsDialogOpen(true)}
               >
-                <Link href="/signup">
-                  Start for free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                <Zap className="mr-2 h-4 w-4" />
+                Join Waitlist — 50% Off
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button variant="outline" size="lg" className="h-12 px-6" asChild>
                 <Link href="#how-it-works">See how it works</Link>
               </Button>
             </div>
 
-            {/* Trust badges */}
+            {/* Benefits */}
             <div className="animate-fade-in flex flex-wrap items-center gap-4 pt-2">
-              {trustBadges.map((badge) => (
+              {benefits.map((benefit) => (
                 <div
-                  key={badge}
+                  key={benefit}
                   className="flex items-center gap-1.5 text-sm text-neutral-600"
                 >
                   <CheckCircle2 className="h-4 w-4 text-success" />
+                  <span>{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Trust badges */}
+            <div className="animate-fade-in flex flex-wrap items-center gap-4 pt-4 border-t border-neutral-200">
+              {trustBadges.map((badge) => (
+                <div
+                  key={badge}
+                  className="flex items-center gap-1.5 text-sm text-neutral-500"
+                >
+                  <CheckCircle2 className="h-4 w-4 text-brand-500" />
                   <span>{badge}</span>
                 </div>
               ))}
@@ -179,6 +206,12 @@ export const HeroSection = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Early bird badge */}
+              <div className="absolute -right-4 -top-4 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-2 text-white shadow-lg">
+                <div className="text-xs font-medium">Early Bird</div>
+                <div className="text-lg font-bold">50% OFF</div>
+              </div>
             </div>
 
             {/* Floating badges */}
@@ -202,6 +235,18 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Waitlist Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Join the Beta Waitlist
+            </DialogTitle>
+          </DialogHeader>
+          <WaitlistForm defaultTier="pro" variant="card" />
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

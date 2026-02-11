@@ -68,6 +68,7 @@ export async function parseInvoiceFromXML(xmlContent: string): Promise<InvoicePa
       if (!parseResult.success) parseResult = parseUBL(xmlContent);
     } else {
       parseResult = parseCII(xmlContent);
+      if (!parseResult.success) parseResult = parseUBL(xmlContent);
     }
 
     if (!parseResult.success || !parseResult.invoice) {

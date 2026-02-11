@@ -10,9 +10,17 @@ import {
   ProblemSection,
   SolutionSection,
   TrustSection,
+  WaitlistSection,
 } from '@/src/components/marketing';
 
-export default function LandingPage() {
+interface LandingPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function LandingPage({ searchParams }: LandingPageProps) {
+  const params = await searchParams;
+  const _referralCode = typeof params.ref === 'string' ? params.ref : null;
+
   return (
     <div className="flex min-h-screen flex-col">
       <MarketingHeader />
@@ -24,6 +32,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <DocsPreviewSection />
         <PricingSection />
+        <WaitlistSection />
         <TrustSection />
         <FinalCTASection />
       </main>
