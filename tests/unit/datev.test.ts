@@ -24,7 +24,7 @@ describe('DATEV Exporter', () => {
   const mockInvoice: Invoice = {
     id: 'inv-123',
     organizationId: 'org-123',
-    uploadId: null,
+    fileId: null,
     createdBy: null,
     format: 'ZUGFERD',
     number: 'RE-2024-001',

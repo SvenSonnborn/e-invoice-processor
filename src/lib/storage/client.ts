@@ -2,9 +2,10 @@ import { supabaseAdminClient } from '@/src/lib/supabase/admin';
 
 /**
  * Storage Client
- * Abstraction layer for Supabase Storage (documents/exports buckets).
+ * Abstraction layer for Supabase Storage (invoices/documents/exports buckets).
  *
  * Keys are expected to be prefixed with the bucket name:
+ * - "invoices/..."  -> stored in the `invoices` bucket
  * - "documents/..." -> stored in the `documents` bucket
  * - "exports/..."   -> stored in the `exports` bucket
  *
@@ -28,7 +29,7 @@ export interface StorageClient {
   getUrl(key: string): Promise<string>;
 }
 
-type BucketName = 'documents' | 'exports';
+type BucketName = 'invoices' | 'documents' | 'exports';
 
 function resolveBucketAndPath(key: string): {
   bucket: BucketName;
@@ -37,7 +38,10 @@ function resolveBucketAndPath(key: string): {
   const [prefix, ...rest] = key.split('/');
   const path = rest.join('/');
 
-  if ((prefix === 'documents' || prefix === 'exports') && path) {
+  if (
+    (prefix === 'invoices' || prefix === 'documents' || prefix === 'exports') &&
+    path
+  ) {
     return { bucket: prefix, path };
   }
 

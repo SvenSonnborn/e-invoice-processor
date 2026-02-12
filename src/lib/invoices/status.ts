@@ -12,11 +12,12 @@ import type { InvoiceStatus } from '@/src/generated/prisma/client';
  */
 export const VALID_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> =
   {
+    UPLOADED: ['PARSED', 'FAILED'],
     CREATED: ['PARSED', 'FAILED'],
     PARSED: ['VALIDATED', 'FAILED'],
     VALIDATED: ['EXPORTED', 'FAILED'],
     EXPORTED: ['VALIDATED', 'FAILED'], // Allow re-processing
-    FAILED: ['CREATED'], // Allow retry from beginning
+    FAILED: ['UPLOADED', 'CREATED'], // Allow retry from beginning
   };
 
 /**
@@ -34,6 +35,7 @@ export function isValidStatusTransition(
  */
 export function getNextStatus(current: InvoiceStatus): InvoiceStatus | null {
   const transitions: Record<InvoiceStatus, InvoiceStatus | null> = {
+    UPLOADED: 'PARSED',
     CREATED: 'PARSED',
     PARSED: 'VALIDATED',
     VALIDATED: 'EXPORTED',
@@ -64,6 +66,7 @@ export function canProcess(status: InvoiceStatus): boolean {
  */
 export function getStatusLabel(status: InvoiceStatus): string {
   const labels: Record<InvoiceStatus, string> = {
+    UPLOADED: 'Hochgeladen',
     CREATED: 'Erstellt',
     PARSED: 'Ausgelesen',
     VALIDATED: 'Validiert',
@@ -78,6 +81,7 @@ export function getStatusLabel(status: InvoiceStatus): string {
  */
 export function getStatusColor(status: InvoiceStatus): string {
   const colors: Record<InvoiceStatus, string> = {
+    UPLOADED: 'gray',
     CREATED: 'gray',
     PARSED: 'blue',
     VALIDATED: 'green',
@@ -92,6 +96,7 @@ export function getStatusColor(status: InvoiceStatus): string {
  */
 export function getStatusDescription(status: InvoiceStatus): string {
   const descriptions: Record<InvoiceStatus, string> = {
+    UPLOADED: 'Datei wurde hochgeladen, Verarbeitung steht noch aus',
     CREATED: 'Rechnung wurde erstellt, Verarbeitung steht noch aus',
     PARSED: 'Rohdaten wurden erfolgreich aus der Datei extrahiert',
     VALIDATED: 'Rechnungsdaten wurden fachlich validiert',
@@ -109,6 +114,7 @@ export function getStatusBadgeClasses(status: InvoiceStatus): string {
     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
   const colorClasses: Record<InvoiceStatus, string> = {
+    UPLOADED: 'bg-gray-100 text-gray-800',
     CREATED: 'bg-gray-100 text-gray-800',
     PARSED: 'bg-blue-100 text-blue-800',
     VALIDATED: 'bg-green-100 text-green-800',
