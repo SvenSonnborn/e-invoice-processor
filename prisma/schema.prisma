@@ -14,6 +14,7 @@ enum InvoiceFormat {
 }
 
 enum InvoiceStatus {
+  UPLOADED   // Datei wurde hochgeladen, noch nicht geparst
   CREATED    // Invoice-Datensatz existiert, noch nicht verarbeitet
   PARSED     // Rohdaten erfolgreich extrahiert
   VALIDATED  // Fachlich validiert (Summen, Pflichtfelder)
@@ -88,7 +89,7 @@ model Organization {
   members  OrganizationMember[]
   invoices Invoice[]
   exports  Export[]
-  uploads  Upload[]
+  files    File[]
 
   @@index([name])
 }
@@ -127,7 +128,7 @@ model OrganizationMember {
   @@index([organizationId])
 }
 
-model Upload {
+model File {
   id             String       @id @default(cuid())
   organizationId String
   filename       String
@@ -149,7 +150,7 @@ model Upload {
 model Invoice {
   id             String        @id @default(cuid())
   organizationId String
-  uploadId       String?       @unique
+  fileId         String?       @unique
   createdBy      String?       // FK to User (who created this invoice)
 
   // Invoice data
@@ -180,7 +181,7 @@ model Invoice {
   updatedAt      DateTime      @updatedAt
 
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  upload       Upload?            @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  file         File?              @relation(fields: [fileId], references: [id], onDelete: SetNull)
   creator      User?              @relation(fields: [createdBy], references: [id], onDelete: SetNull)
   exports      ExportInvoice[]
   revisions    InvoiceRevision[]  // Revision history

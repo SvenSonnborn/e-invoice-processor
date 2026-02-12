@@ -206,7 +206,7 @@ export async function markAsFailed(invoiceId: string, _errorMessage: string) {
 }
 
 /**
- * Retry a failed invoice (reset to CREATED)
+ * Retry a failed invoice (reset to UPLOADED)
  */
 export async function retryFailedInvoice(invoiceId: string) {
   const invoice = await prisma.invoice.findUnique({
@@ -225,7 +225,7 @@ export async function retryFailedInvoice(invoiceId: string) {
   return await prisma.invoice.update({
     where: { id: invoiceId },
     data: {
-      status: 'CREATED',
+      status: 'UPLOADED',
       lastProcessedAt: new Date(),
       processingVersion: { increment: 1 },
     },
@@ -254,9 +254,10 @@ export async function getInvoicesByStatus(
  * Get processing statistics for an organization
  */
 export async function getProcessingStats(organizationId: string) {
-  const [total, created, parsed, validated, exported, failed] =
+  const [total, uploaded, created, parsed, validated, exported, failed] =
     await Promise.all([
       prisma.invoice.count({ where: { organizationId } }),
+      prisma.invoice.count({ where: { organizationId, status: 'UPLOADED' } }),
       prisma.invoice.count({ where: { organizationId, status: 'CREATED' } }),
       prisma.invoice.count({ where: { organizationId, status: 'PARSED' } }),
       prisma.invoice.count({ where: { organizationId, status: 'VALIDATED' } }),
@@ -267,6 +268,7 @@ export async function getProcessingStats(organizationId: string) {
   return {
     total,
     byStatus: {
+      UPLOADED: uploaded,
       CREATED: created,
       PARSED: parsed,
       VALIDATED: validated,
