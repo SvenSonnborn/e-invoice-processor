@@ -73,6 +73,11 @@ mock.module('@/src/lib/rate-limit', () => ({
   },
 }));
 
+mock.module('@/src/lib/auth/session', () => ({
+  requireApiAuth: () =>
+    Promise.resolve({ id: 'test-user-id', email: 'test@example.com' }),
+}));
+
 import { POST, GET } from '@/app/api/ocr/route';
 
 describe('POST /api/ocr', () => {
