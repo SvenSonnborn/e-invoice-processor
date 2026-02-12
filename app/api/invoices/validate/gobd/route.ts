@@ -8,46 +8,40 @@ import {
   formatValidationResult,
   InvoiceData,
   ValidationOptions,
-  GoBDValidationResponse,
 } from '@/src/lib/gobd';
-import { requireApiAuth } from '@/src/lib/auth/session';
+import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
+import { ApiError } from '@/src/lib/errors/api-error';
+import { logger } from '@/src/lib/logging';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const authResult = await requireApiAuth();
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
-    const body = await request.json();
-    const {
-      invoice,
-      options = {},
-    }: { invoice: InvoiceData; options?: ValidationOptions } = body;
+    await getMyOrganizationIdOrThrow();
+
+    let body: { invoice: InvoiceData; options?: ValidationOptions };
+    try {
+      body = await request.json();
+    } catch {
+      throw ApiError.validationError('Invalid JSON body');
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw ApiError.validationError('Request body must be a JSON object');
+    }
+
+    const { invoice, options = {} } = body;
 
     if (!invoice) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Rechnungsdaten erforderlich',
-        } as GoBDValidationResponse,
-        { status: 400 }
-      );
+      throw ApiError.validationError('Rechnungsdaten erforderlich');
     }
 
     const result = validateGoBDCompliance(invoice, options);
     return NextResponse.json({
       success: true,
       result: formatValidationResult(result),
-    } as unknown as GoBDValidationResponse);
+    });
   } catch (error) {
-    console.error('GoBD validation error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Validierung fehlgeschlagen',
-      } as GoBDValidationResponse,
-      { status: 500 }
-    );
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'GoBD validation failed');
+    return ApiError.internal('Validierung fehlgeschlagen').toResponse();
   }
 }
 

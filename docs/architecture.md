@@ -54,8 +54,25 @@ The application follows a layered architecture with clear separation of concerns
 - `getSession()` — validates JWT server-side via `getUser()`, returns user or null
 - `requireAuth()` — for Server Components/Actions, redirects to `/login` if unauthenticated
 - `getCurrentUser()` — returns the Prisma `User` record linked by `supabaseUserId`
-- `requireApiAuth()` — for API Route Handlers, returns user or `401 Unauthorized` JSON response
-- `requireApiAuthWithOrg()` — same as above but also resolves the user's organization membership, returns `403` if no org
+- `getMyUserOrThrow()` — for API Route Handlers, returns authenticated `User` or throws `ApiError(UNAUTHENTICATED)`
+- `getMyOrganizationIdOrThrow()` — returns `{ user, organizationId }` or throws `ApiError`. Respects `active-org-id` cookie, falls back to first membership. Throws `NO_ORGANIZATION` if user has no memberships
+
+#### Standardized API error responses (`src/lib/errors/api-error.ts`)
+
+All API routes use a consistent structured error format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHENTICATED | NO_ORGANIZATION | VALIDATION_ERROR | NOT_FOUND | FORBIDDEN | RATE_LIMIT_EXCEEDED | INTERNAL_ERROR",
+    "message": "Human-readable message",
+    "details": {}
+  }
+}
+```
+
+The `ApiError` class provides static factory methods (`ApiError.unauthenticated()`, `ApiError.noOrganization()`, etc.) and a `toResponse()` method that returns the appropriate `NextResponse`.
 
 #### Protected API routes
 

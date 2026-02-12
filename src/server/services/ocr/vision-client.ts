@@ -6,7 +6,7 @@
 
 import { logger } from '@/src/lib/logging';
 import { OcrError, OcrErrorCode } from './errors';
-import type { OcrOptions } from './index';
+import type { OcrOptions } from './types';
 
 // Google Cloud Vision API response types
 interface AnnotateImageResponse {

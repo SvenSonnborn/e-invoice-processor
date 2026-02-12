@@ -4,7 +4,7 @@
  * Unit tests for the OCR service implementation.
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 
 // Mock logger to suppress output during tests
 mock.module('@/src/lib/logging', () => ({
@@ -16,8 +16,11 @@ mock.module('@/src/lib/logging', () => ({
   },
 }));
 
-import { OcrService, OcrResult } from '@/src/server/services/ocr';
+// Import from specific sub-modules (not the barrel) to avoid mock
+// contamination from route.test.ts which mocks '@/src/server/services/ocr'.
 import { OcrError, OcrErrorCode } from '@/src/server/services/ocr/errors';
+import { OcrService } from '@/src/server/services/ocr/service';
+import type { OcrResult } from '@/src/server/services/ocr/types';
 
 const buildJsonResponse = (payload: unknown) =>
   new Response(JSON.stringify(payload), {
@@ -25,8 +28,7 @@ const buildJsonResponse = (payload: unknown) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-// Mock the Vision API fetch calls
-global.fetch = (async () =>
+const buildImageResponse = () =>
   buildJsonResponse({
     responses: [
       {
@@ -53,13 +55,24 @@ global.fetch = (async () =>
         },
       },
     ],
-  })) as unknown as typeof global.fetch;
+  });
+
+const originalFetch = global.fetch;
+
+const setFetchResponse = (payload: unknown) => {
+  global.fetch = (async () => buildJsonResponse(payload)) as unknown as typeof fetch;
+};
 
 describe('OcrService', () => {
   let service: OcrService;
 
   beforeEach(() => {
     service = new OcrService('test-api-key', 'test-project');
+    global.fetch = (async () => buildImageResponse()) as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
   describe('processFile', () => {
@@ -83,51 +96,41 @@ describe('OcrService', () => {
     it('should reject unsupported file types', async () => {
       const buffer = Buffer.from('fake-data');
 
-      try {
-        await service.processFile(buffer, 'text/plain');
-        expect(false).toBe(true); // Should not reach here
-      } catch (error) {
-        expect(error).toBeInstanceOf(
-          OcrError as unknown as new (...args: unknown[]) => unknown
-        );
-      }
+      await expect(service.processFile(buffer, 'text/plain')).rejects.toBeInstanceOf(
+        OcrError as unknown as new (...args: unknown[]) => unknown
+      );
     });
 
     it('should reject files that are too large', async () => {
       const largeBuffer = Buffer.alloc(11 * 1024 * 1024); // 11MB
 
-      try {
-        await service.processFile(largeBuffer, 'image/png');
-        expect(false).toBe(true); // Should not reach here
-      } catch (error) {
-        expect(error).toBeInstanceOf(
-          OcrError as unknown as new (...args: unknown[]) => unknown
-        );
-      }
+      await expect(
+        service.processFile(largeBuffer, 'image/png')
+      ).rejects.toBeInstanceOf(
+        OcrError as unknown as new (...args: unknown[]) => unknown
+      );
     });
 
     it('should handle PDF files', async () => {
-      // Mock PDF batch response
-      global.fetch = (async () =>
-        buildJsonResponse({
-          responses: [
-            {
-              responses: [
-                {
-                  fullTextAnnotation: {
-                    text: 'PDF Content',
-                    pages: [
-                      {
-                        blocks: [],
-                        confidence: 0.96,
-                      },
-                    ],
-                  },
+      setFetchResponse({
+        responses: [
+          {
+            responses: [
+              {
+                fullTextAnnotation: {
+                  text: 'PDF Content',
+                  pages: [
+                    {
+                      blocks: [],
+                      confidence: 0.96,
+                    },
+                  ],
                 },
-              ],
-            },
-          ],
-        })) as unknown as typeof global.fetch;
+              },
+            ],
+          },
+        ],
+      });
 
       const buffer = Buffer.from('fake-pdf-data');
       const result = await service.processFile(buffer, 'application/pdf');

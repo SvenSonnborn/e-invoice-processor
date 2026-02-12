@@ -10,31 +10,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/src/lib/stripe/client';
 import { STRIPE_CONFIG } from '@/src/lib/stripe/config';
-import { createSupabaseServerClient } from '@/src/lib/supabase/server';
 import { prisma } from '@/src/lib/db/client';
 import { logger } from '@/src/lib/logging/logger';
+import { getMyUserOrThrow } from '@/src/lib/auth/session';
+import { ApiError } from '@/src/lib/errors/api-error';
 
 const log = logger.child({ module: 'stripe-checkout' });
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getMyUserOrThrow();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      throw ApiError.validationError('Invalid JSON body');
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw ApiError.validationError('Request body must be a JSON object');
     }
 
-    const body = await request.json();
-    const { priceId, successUrl, cancelUrl } = body;
+    const { priceId, successUrl, cancelUrl } = body as Record<string, string | undefined>;
 
     if (!priceId) {
-      return NextResponse.json(
-        { error: 'Price ID is required' },
-        { status: 400 }
-      );
+      throw ApiError.validationError('Price ID is required');
     }
 
     const validPriceIds = [
@@ -43,16 +43,16 @@ export async function POST(request: NextRequest) {
     ].filter(Boolean);
 
     if (!validPriceIds.includes(priceId)) {
-      return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 });
+      throw ApiError.validationError('Invalid price ID');
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: user.id },
+      where: { id: user.id },
       include: { subscriptions: true },
     });
 
     if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      throw ApiError.notFound('User not found');
     }
 
     let customerId = dbUser.subscriptions[0]?.stripeCustomerId;
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         name: dbUser.name || user.email,
         metadata: {
           userId: dbUser.id,
-          supabaseUserId: user.id,
+          supabaseUserId: dbUser.supabaseUserId || '',
         },
       });
       customerId = customer.id;
@@ -110,12 +110,14 @@ export async function POST(request: NextRequest) {
       'Checkout session created'
     );
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    return NextResponse.json({
+      success: true,
+      sessionId: session.id,
+      url: session.url,
+    });
   } catch (error) {
+    if (error instanceof ApiError) return error.toResponse();
     log.error({ error }, 'Stripe checkout error');
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    );
+    return ApiError.internal('Failed to create checkout session').toResponse();
   }
 }

@@ -124,6 +124,15 @@ const DATEV_COLUMNS = [
   'Belegdatum (Steuerperiode)',
 ] as const;
 
+type DatevColumn = (typeof DATEV_COLUMNS)[number];
+type DatevRow = Record<DatevColumn, string>;
+
+function buildDatevRow(values: Partial<DatevRow>): string {
+  const row = Object.fromEntries(DATEV_COLUMNS.map((column) => [column, ''])) as DatevRow;
+  Object.assign(row, values);
+  return DATEV_COLUMNS.map((column) => row[column]).join(';');
+}
+
 export interface DatevExportOptions {
   /** Beraternummer (5-7 Stellen) */
   consultantNumber?: string;
@@ -318,7 +327,7 @@ function lineItemToDatevRow(
   } = options;
 
   const invoice = item.invoice;
-  const isOutgoingInvoice = invoice.customerName ? true : false;
+  const isOutgoingInvoice = Boolean(invoice.customerName);
 
   // Bestimme Konten
   const account =
@@ -352,123 +361,25 @@ function lineItemToDatevRow(
   // Belegnummer
   const documentNumber = invoice.number ?? String(lineIndex + 1);
 
-  // Erstelle die Datenzeile
-  const row: Record<string, string> = {
+  return buildDatevRow({
     'Umsatz (ohne Soll/Haben-Kennzeichen)': formattedAmount,
     'Soll/Haben-Kennzeichen': sign,
     'WKZ Umsatz': invoice.currency ?? 'EUR',
-    Kurs: '',
-    'Basis-Umsatz': '',
-    'WKZ Basis-Umsatz': '',
     Konto: account,
     Gegenkonto: contraAccount,
     'BU-Schlüssel': taxKey,
     Belegdatum: documentDate,
     'Belegfeld 1': documentNumber.substring(0, 36),
-    'Belegfeld 2': '',
-    Skonto: '',
     Buchungstext: escapeField(bookingText).substring(0, 60),
-    Postensperre: '',
-    'Diverse Adressnummer': '',
     Geschäftspartnername: escapeField(
       invoice.supplierName ?? invoice.customerName ?? ''
     ).substring(0, 50),
-    Sachverhalt: '',
-    Zinssperre: '',
-    Beleglink: '',
-    'Beleginfo - Art 1': '',
-    'Beleginfo - Inhalt 1': '',
-    'Beleginfo - Art 2': '',
-    'Beleginfo - Inhalt 2': '',
-    'Beleginfo - Art 3': '',
-    'Beleginfo - Inhalt 3': '',
-    'Beleginfo - Art 4': '',
-    'Beleginfo - Inhalt 4': '',
-    'Beleginfo - Art 5': '',
-    'Beleginfo - Inhalt 5': '',
-    'Beleginfo - Art 6': '',
-    'Beleginfo - Inhalt 6': '',
-    'Beleginfo - Art 7': '',
-    'Beleginfo - Inhalt 7': '',
-    'Beleginfo - Art 8': '',
-    'Beleginfo - Inhalt 8': '',
     'KOST1 - Kostenstelle': escapeField(item.costCenter ?? '').substring(0, 8),
     'KOST2 - Kostenträger': escapeField(item.costObject ?? '').substring(0, 8),
     'Kost-Menge': item.quantity ? String(item.quantity) : '',
-    'EU-Land': '',
-    'EU-Steuernummer': '',
-    'EU-Betrag': '',
-    'Abw. Versteuerungsart': '',
-    'Sachverhalt L+L': '',
-    'Funktionsergänzung L+L': '',
-    'BU 49 Hauptfunktionstyp': '',
-    'BU 49 Hauptfunktionsnummer': '',
-    'BU 49 Funktionsergänzung': '',
-    'Zusatzinformation - Art 1': '',
-    'Zusatzinformation - Inhalt 1': '',
-    'Zusatzinformation - Art 2': '',
-    'Zusatzinformation - Inhalt 2': '',
-    'Zusatzinformation - Art 3': '',
-    'Zusatzinformation - Inhalt 3': '',
-    'Zusatzinformation - Art 4': '',
-    'Zusatzinformation - Inhalt 4': '',
-    'Zusatzinformation - Art 5': '',
-    'Zusatzinformation - Inhalt 5': '',
-    'Zusatzinformation - Art 6': '',
-    'Zusatzinformation - Inhalt 6': '',
-    'Zusatzinformation - Art 7': '',
-    'Zusatzinformation - Inhalt 7': '',
-    'Zusatzinformation - Art 8': '',
-    'Zusatzinformation - Inhalt 8': '',
-    'Zusatzinformation - Art 9': '',
-    'Zusatzinformation - Inhalt 9': '',
-    'Zusatzinformation - Art 10': '',
-    'Zusatzinformation - Inhalt 10': '',
-    'Zusatzinformation - Art 11': '',
-    'Zusatzinformation - Inhalt 11': '',
-    'Zusatzinformation - Art 12': '',
-    'Zusatzinformation - Inhalt 12': '',
-    'Zusatzinformation - Art 13': '',
-    'Zusatzinformation - Inhalt 13': '',
-    'Zusatzinformation - Art 14': '',
-    'Zusatzinformation - Inhalt 14': '',
-    'Zusatzinformation - Art 15': '',
-    'Zusatzinformation - Inhalt 15': '',
-    'Zusatzinformation - Art 16': '',
-    'Zusatzinformation - Inhalt 16': '',
-    'Zusatzinformation - Art 17': '',
-    'Zusatzinformation - Inhalt 17': '',
-    'Zusatzinformation - Art 18': '',
-    'Zusatzinformation - Inhalt 18': '',
-    'Zusatzinformation - Art 19': '',
-    'Zusatzinformation - Inhalt 19': '',
-    'Zusatzinformation - Art 20': '',
-    'Zusatzinformation - Inhalt 20': '',
-    Stück: '',
-    Gewicht: '',
-    Zahlweise: '',
-    Forderungsart: '',
-    Veranlagungsjahr: '',
     'Zugeordnete Fälligkeit': formatDate(invoice.dueDate),
-    Skontotyp: '',
-    Auftragsnummer: '',
-    'Buchungstyp (Anzahlungen)': '',
-    'USt-Schlüssel (Anzahlungen)': '',
-    'EU-Mitgliedstaat (Anzahlungen)': '',
-    'Sachverhalt L+L (Anzahlungen)': '',
-    'EU-Steuernummer (Anzahlungen)': '',
-    'Zusatzinformationen (Anzahlungen)': '',
-    'Konto (Anzahlungen)': '',
-    'Gegenkonto (Anzahlungen)': '',
-    'BU-Schlüssel (Anzahlungen)': '',
-    'Fälligkeit (Anzahlungen)': '',
-    'Generalumkehr (GU)': '',
     Steuersatz: item.taxRate ? String(item.taxRate) : '',
-    'Belegdatum (Steuerperiode)': '',
-  };
-
-  // Baue die Zeile in der richtigen Reihenfolge
-  return DATEV_COLUMNS.map((col) => row[col] ?? '').join(';');
+  });
 }
 
 /**
@@ -521,7 +432,7 @@ function invoiceToDatevRow(
     defaultContraAccount = '1200',
   } = options;
 
-  const isOutgoingInvoice = invoice.customerName ? true : false;
+  const isOutgoingInvoice = Boolean(invoice.customerName);
   const account = isOutgoingInvoice
     ? defaultRevenueAccount
     : defaultExpenseAccount;
@@ -549,119 +460,19 @@ function invoiceToDatevRow(
     invoice.supplierName ?? invoice.customerName ?? ''
   ).substring(0, 50);
 
-  const row: Record<string, string> = {
+  return buildDatevRow({
     'Umsatz (ohne Soll/Haben-Kennzeichen)': formattedAmount,
     'Soll/Haben-Kennzeichen': sign,
     'WKZ Umsatz': invoice.currency ?? 'EUR',
-    Kurs: '',
-    'Basis-Umsatz': '',
-    'WKZ Basis-Umsatz': '',
     Konto: account,
     Gegenkonto: contraAccount,
     'BU-Schlüssel': taxKey,
     Belegdatum: documentDate,
     'Belegfeld 1': documentNumber.substring(0, 36),
-    'Belegfeld 2': '',
-    Skonto: '',
     Buchungstext: bookingText,
-    Postensperre: '',
-    'Diverse Adressnummer': '',
     Geschäftspartnername: partnerName,
-    Sachverhalt: '',
-    Zinssperre: '',
-    Beleglink: '',
-    'Beleginfo - Art 1': '',
-    'Beleginfo - Inhalt 1': '',
-    'Beleginfo - Art 2': '',
-    'Beleginfo - Inhalt 2': '',
-    'Beleginfo - Art 3': '',
-    'Beleginfo - Inhalt 3': '',
-    'Beleginfo - Art 4': '',
-    'Beleginfo - Inhalt 4': '',
-    'Beleginfo - Art 5': '',
-    'Beleginfo - Inhalt 5': '',
-    'Beleginfo - Art 6': '',
-    'Beleginfo - Inhalt 6': '',
-    'Beleginfo - Art 7': '',
-    'Beleginfo - Inhalt 7': '',
-    'Beleginfo - Art 8': '',
-    'Beleginfo - Inhalt 8': '',
-    'KOST1 - Kostenstelle': '',
-    'KOST2 - Kostenträger': '',
-    'Kost-Menge': '',
-    'EU-Land': '',
-    'EU-Steuernummer': '',
-    'EU-Betrag': '',
-    'Abw. Versteuerungsart': '',
-    'Sachverhalt L+L': '',
-    'Funktionsergänzung L+L': '',
-    'BU 49 Hauptfunktionstyp': '',
-    'BU 49 Hauptfunktionsnummer': '',
-    'BU 49 Funktionsergänzung': '',
-    'Zusatzinformation - Art 1': '',
-    'Zusatzinformation - Inhalt 1': '',
-    'Zusatzinformation - Art 2': '',
-    'Zusatzinformation - Inhalt 2': '',
-    'Zusatzinformation - Art 3': '',
-    'Zusatzinformation - Inhalt 3': '',
-    'Zusatzinformation - Art 4': '',
-    'Zusatzinformation - Inhalt 4': '',
-    'Zusatzinformation - Art 5': '',
-    'Zusatzinformation - Inhalt 5': '',
-    'Zusatzinformation - Art 6': '',
-    'Zusatzinformation - Inhalt 6': '',
-    'Zusatzinformation - Art 7': '',
-    'Zusatzinformation - Inhalt 7': '',
-    'Zusatzinformation - Art 8': '',
-    'Zusatzinformation - Inhalt 8': '',
-    'Zusatzinformation - Art 9': '',
-    'Zusatzinformation - Inhalt 9': '',
-    'Zusatzinformation - Art 10': '',
-    'Zusatzinformation - Inhalt 10': '',
-    'Zusatzinformation - Art 11': '',
-    'Zusatzinformation - Inhalt 11': '',
-    'Zusatzinformation - Art 12': '',
-    'Zusatzinformation - Inhalt 12': '',
-    'Zusatzinformation - Art 13': '',
-    'Zusatzinformation - Inhalt 13': '',
-    'Zusatzinformation - Art 14': '',
-    'Zusatzinformation - Inhalt 14': '',
-    'Zusatzinformation - Art 15': '',
-    'Zusatzinformation - Inhalt 15': '',
-    'Zusatzinformation - Art 16': '',
-    'Zusatzinformation - Inhalt 16': '',
-    'Zusatzinformation - Art 17': '',
-    'Zusatzinformation - Inhalt 17': '',
-    'Zusatzinformation - Art 18': '',
-    'Zusatzinformation - Inhalt 18': '',
-    'Zusatzinformation - Art 19': '',
-    'Zusatzinformation - Inhalt 19': '',
-    'Zusatzinformation - Art 20': '',
-    'Zusatzinformation - Inhalt 20': '',
-    Stück: '',
-    Gewicht: '',
-    Zahlweise: '',
-    Forderungsart: '',
-    Veranlagungsjahr: '',
     'Zugeordnete Fälligkeit': formatDate(invoice.dueDate),
-    Skontotyp: '',
-    Auftragsnummer: '',
-    'Buchungstyp (Anzahlungen)': '',
-    'USt-Schlüssel (Anzahlungen)': '',
-    'EU-Mitgliedstaat (Anzahlungen)': '',
-    'Sachverhalt L+L (Anzahlungen)': '',
-    'EU-Steuernummer (Anzahlungen)': '',
-    'Zusatzinformationen (Anzahlungen)': '',
-    'Konto (Anzahlungen)': '',
-    'Gegenkonto (Anzahlungen)': '',
-    'BU-Schlüssel (Anzahlungen)': '',
-    'Fälligkeit (Anzahlungen)': '',
-    'Generalumkehr (GU)': '',
-    Steuersatz: '',
-    'Belegdatum (Steuerperiode)': '',
-  };
-
-  return DATEV_COLUMNS.map((col) => row[col] ?? '').join(';');
+  });
 }
 
 /**

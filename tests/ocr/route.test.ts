@@ -74,8 +74,11 @@ mock.module('@/src/lib/rate-limit', () => ({
 }));
 
 mock.module('@/src/lib/auth/session', () => ({
-  requireApiAuth: () =>
-    Promise.resolve({ id: 'test-user-id', email: 'test@example.com' }),
+  getMyOrganizationIdOrThrow: () =>
+    Promise.resolve({
+      user: { id: 'test-user-id', email: 'test@example.com' },
+      organizationId: 'test-org-id',
+    }),
 }));
 
 import { POST, GET } from '@/app/api/ocr/route';

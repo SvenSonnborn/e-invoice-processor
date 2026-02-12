@@ -2,6 +2,51 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-12: Standardized API Auth & Error Handling
+
+### Changes
+
+#### New: `ApiError` class (`src/lib/errors/api-error.ts`)
+
+- Standardized error class with typed error codes: `UNAUTHENTICATED`, `NO_ORGANIZATION`, `VALIDATION_ERROR`, `NOT_FOUND`, `FORBIDDEN`, `RATE_LIMIT_EXCEEDED`, `INTERNAL_ERROR`
+- Each code maps to an HTTP status code
+- `toResponse()` method returns `NextResponse` with structured JSON: `{ success: false, error: { code, message, details? } }`
+- Static factory methods: `ApiError.unauthenticated()`, `ApiError.noOrganization()`, `ApiError.validationError()`, etc.
+
+#### New: `getMyUserOrThrow()` and `getMyOrganizationIdOrThrow()` (`src/lib/auth/session.ts`)
+
+- **`getMyUserOrThrow()`** — Replaces `requireApiAuth()`. Throws `ApiError` instead of returning `NextResponse`. Used for user-level API routes (Stripe checkout/portal).
+- **`getMyOrganizationIdOrThrow()`** — Replaces `requireApiAuthWithOrg()`. Throws `ApiError` instead of returning `NextResponse`. Respects `active-org-id` cookie (consistent with app layout), falls back to first membership.
+- Old helpers `requireApiAuth()` and `requireApiAuthWithOrg()` removed.
+
+#### Migrated all API routes
+
+All API routes now use the `try/catch` + `ApiError` pattern with consistent structured JSON errors:
+
+- `/api/exports` (GET, POST) — Was: manual `getCurrentUser()` + `findFirst`. Now: `getMyOrganizationIdOrThrow()`
+- `/api/exports/[exportId]/download` (GET) — Same migration
+- `/api/invoices/export/datev` (GET, POST) — Was: `requireApiAuthWithOrg()` + `instanceof NextResponse`. Now: `getMyOrganizationIdOrThrow()`
+- `/api/invoices/import/zugferd` (POST) — Same migration
+- `/api/invoices/validate/gobd` (POST) — Was: `requireApiAuth()`. Now: `getMyOrganizationIdOrThrow()`
+- `/api/ocr` (POST) — Was: `requireApiAuth()` (no org). Now: `getMyOrganizationIdOrThrow()` (org-scoped)
+- `/api/stripe/checkout` (POST) — Was: manual Supabase auth. Now: `getMyUserOrThrow()`
+- `/api/stripe/portal` (POST) — Same migration
+- `/api/invoices`, `/api/invoices/[invoiceId]`, `/api/uploads`, `/api/uploads/[uploadId]` — Placeholder routes now use `getMyOrganizationIdOrThrow()`
+- All `console.error` calls replaced with `logger.error` (Pino)
+
+#### Tests
+
+- New: `tests/auth/session.test.ts` — 11 tests covering `getMyUserOrThrow()`, `getMyOrganizationIdOrThrow()`, and `ApiError.toResponse()`
+- Updated: `tests/ocr/route.test.ts` — Mock updated from `requireApiAuth` to `getMyOrganizationIdOrThrow`
+
+### Documentation
+
+- `docs/architecture.md` — Auth helpers section updated
+- `docs/api/README.md` — Error format and error codes documented
+- `docs/CHANGELOG.md` — This entry
+
+---
+
 ## 2026-02-12: Middleware Auth Guard & API Route Protection
 
 ### Changes

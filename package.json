@@ -11,7 +11,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:generate": "[ -f .env.local ] && export $(grep -v '^#' .env.local | grep -v '^$' | xargs) || true; prisma generate",
+    "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "bun run scripts/seed-local.ts",

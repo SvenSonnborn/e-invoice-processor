@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
-import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/src/lib/supabase/server';
 import { prisma } from '@/src/lib/db/client';
+import { ApiError } from '@/src/lib/errors/api-error';
+import type { User } from '@/src/generated/prisma/client';
 
 /**
  * Session Management
@@ -30,8 +32,8 @@ export async function requireAuth() {
 }
 
 /**
- * Get current user from database
- * Returns the user record from our database based on Supabase auth session
+ * Get current user from database.
+ * Returns the user record from our database based on Supabase auth session, or null.
  */
 export async function getCurrentUser() {
   const session = await getSession();
@@ -48,46 +50,80 @@ export async function getCurrentUser() {
 }
 
 /**
- * Auth guard for API routes.
- * Returns the authenticated database user or a 401 JSON response.
+ * API auth guard — returns the authenticated database user or throws ApiError.
  *
- * Usage in route handlers:
- *   const result = await requireApiAuth();
- *   if (result instanceof NextResponse) return result;
- *   const user = result;
+ * Usage:
+ *   const user = await getMyUserOrThrow();
+ *
+ * @throws {ApiError} UNAUTHENTICATED if no session or no database user
  */
-export async function requireApiAuth() {
-  const user = await getCurrentUser();
+export async function getMyUserOrThrow(): Promise<User> {
+  const session = await getSession();
+
+  if (!session?.user) {
+    throw ApiError.unauthenticated();
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { supabaseUserId: session.user.id },
+  });
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    throw ApiError.unauthenticated('User not found in database');
   }
 
   return user;
 }
 
 /**
- * Auth guard for API routes that also requires org membership.
- * Returns { user, organizationId } or a 401/403 JSON response.
+ * API auth + org guard — returns authenticated user and their active organization ID, or throws.
+ *
+ * Resolution order for organization:
+ *   1. `active-org-id` cookie (if set and user has membership)
+ *   2. First membership (fallback)
+ *
+ * Usage:
+ *   const { user, organizationId } = await getMyOrganizationIdOrThrow();
+ *
+ * @throws {ApiError} UNAUTHENTICATED if no session or no database user
+ * @throws {ApiError} NO_ORGANIZATION if user has no organization membership
  */
-export async function requireApiAuthWithOrg() {
-  const user = await getCurrentUser();
+export async function getMyOrganizationIdOrThrow(): Promise<{
+  user: User;
+  organizationId: string;
+}> {
+  const user = await getMyUserOrThrow();
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const cookieStore = await cookies();
+  const activeOrgId = cookieStore.get('active-org-id')?.value;
+
+  // If cookie is set, verify user actually has access to that org
+  if (activeOrgId) {
+    const activeMembership = await prisma.organizationMember.findUnique({
+      where: {
+        userId_organizationId: {
+          userId: user.id,
+          organizationId: activeOrgId,
+        },
+      },
+      select: { organizationId: true },
+    });
+
+    if (activeMembership) {
+      return { user, organizationId: activeMembership.organizationId };
+    }
   }
 
-  const membership = await prisma.organizationMember.findFirst({
+  // Fallback: first membership
+  const firstMembership = await prisma.organizationMember.findFirst({
     where: { userId: user.id },
     select: { organizationId: true },
+    orderBy: { createdAt: 'asc' },
   });
 
-  if (!membership) {
-    return NextResponse.json(
-      { error: 'No organization membership' },
-      { status: 403 }
-    );
+  if (!firstMembership) {
+    throw ApiError.noOrganization();
   }
 
-  return { user, organizationId: membership.organizationId };
+  return { user, organizationId: firstMembership.organizationId };
 }

@@ -6,17 +6,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/src/lib/db/client';
-import { getCurrentUser } from '@/src/lib/auth/session';
+import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { generateExport } from '@/src/server/services/export-service';
 import { canCreateExport } from '@/src/lib/stripe/service';
+import { ApiError } from '@/src/lib/errors/api-error';
+import { logger } from '@/src/lib/logging';
 import type { ExportStatus } from '@/src/generated/prisma/client';
 
-// Validation schema for export requests
 const exportRequestSchema = z.object({
   format: z.enum(['CSV', 'DATEV']),
   invoiceIds: z.array(z.string()).min(1),
   filename: z.string().optional(),
-  // DATEV-specific options
   datevOptions: z
     .object({
       consultantNumber: z.string().optional(),
@@ -38,23 +38,7 @@ export type ExportRequest = z.infer<typeof exportRequestSchema>;
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user's organization
-    const membership = await prisma.organizationMember.findFirst({
-      where: { userId: user.id },
-      include: { organization: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: 'No organization found' },
-        { status: 404 }
-      );
-    }
+    const { organizationId } = await getMyOrganizationIdOrThrow();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as string | undefined;
@@ -63,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const exports = await prisma.export.findMany({
       where: {
-        organizationId: membership.organizationId,
+        organizationId,
         ...(status && { status: status as ExportStatus }),
       },
       orderBy: { createdAt: 'desc' },
@@ -90,13 +74,11 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ exports });
+    return NextResponse.json({ success: true, exports });
   } catch (error) {
-    console.error('Error fetching exports:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch exports' },
-      { status: 500 }
-    );
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'Failed to fetch exports');
+    return ApiError.internal('Failed to fetch exports').toResponse();
   }
 }
 
@@ -106,50 +88,32 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, organizationId } = await getMyOrganizationIdOrThrow();
 
-    // Parse and validate request body
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      throw ApiError.validationError('Invalid JSON body');
+    }
     const validationResult = exportRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.format() },
-        { status: 400 }
-      );
+      throw ApiError.validationError('Invalid request', {
+        issues: validationResult.error.format(),
+      });
     }
 
     const { format, invoiceIds, filename, datevOptions } =
       validationResult.data;
 
-    // Check subscription limits
     const exportCheck = await canCreateExport(user.id);
     if (!exportCheck.allowed) {
-      return NextResponse.json(
-        { error: exportCheck.reason ?? 'Export limit reached' },
-        { status: 403 }
-      );
+      throw ApiError.forbidden(exportCheck.reason ?? 'Export limit reached');
     }
 
-    // Get user's organization
-    const membership = await prisma.organizationMember.findFirst({
-      where: { userId: user.id },
-      select: { organizationId: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: 'No organization found' },
-        { status: 404 }
-      );
-    }
-
-    // Delegate to the shared export service
     const result = await generateExport({
-      organizationId: membership.organizationId,
+      organizationId,
       userId: user.id,
       format,
       invoiceIds,
@@ -157,12 +121,13 @@ export async function POST(request: NextRequest) {
       datevOptions,
     });
 
-    return NextResponse.json({ export: result }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating export:', error);
     return NextResponse.json(
-      { error: 'Failed to create export' },
-      { status: 500 }
+      { success: true, export: result },
+      { status: 201 }
     );
+  } catch (error) {
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'Failed to create export');
+    return ApiError.internal('Failed to create export').toResponse();
   }
 }
