@@ -8,7 +8,7 @@
  */
 
 import { prisma } from '@/src/lib/db/client';
-import { getCurrentUser } from '@/src/lib/auth/session';
+import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { generateExport } from '@/src/server/services/export-service';
 import { canCreateExport } from '@/src/lib/stripe/service';
 import type { DatevExportOptions } from '@/src/server/exporters/datev';
@@ -17,21 +17,11 @@ import type { DatevExportOptions } from '@/src/server/exporters/datev';
 // Helper: get the current user's organization membership
 // ---------------------------------------------------------------------------
 async function requireOrgMembership() {
-  const user = await getCurrentUser();
-  if (!user) {
+  try {
+    return await getMyOrganizationIdOrThrow();
+  } catch {
     throw new Error('Unauthorized');
   }
-
-  const membership = await prisma.organizationMember.findFirst({
-    where: { userId: user.id },
-    select: { organizationId: true },
-  });
-
-  if (!membership) {
-    throw new Error('No organization found');
-  }
-
-  return { user, organizationId: membership.organizationId };
 }
 
 // ---------------------------------------------------------------------------

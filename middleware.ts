@@ -64,8 +64,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all request paths except static assets.
-    // API routes are now included so their JWTs get refreshed too.
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/dashboard/:path*',
+    '/invoices/:path*',
+    '/exports/:path*',
+    '/settings/:path*',
+    '/api/:path*',
   ],
 };
