@@ -25,12 +25,26 @@ export interface DashboardInvoicesResponse {
   success: true;
   items: DashboardInvoiceItem[];
   nextCursor: string | null;
+  pagination?: {
+    limit: number;
+    offset: number;
+    page: number;
+    hasMore: boolean;
+  };
   stats: DashboardInvoicesStats;
 }
 
 export interface DashboardInvoicesQuery {
   statusGroup?: DashboardStatusGroup;
+  status?: string;
   q?: string;
+  search?: string;
+  issueDateFrom?: string;
+  issueDateTo?: string;
+  grossAmountMin?: number;
+  grossAmountMax?: number;
   limit?: number;
   cursor?: string;
+  page?: number;
+  offset?: number;
 }
