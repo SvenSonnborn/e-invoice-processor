@@ -161,7 +161,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     const { getOcrService } = await import('@/src/server/services/ocr');
-    const ocrService = getOcrService();
+    const ocrService = await getOcrService();
 
     const ocrResult = await ocrService.processFile(buffer, file.type, {
       languageHints,

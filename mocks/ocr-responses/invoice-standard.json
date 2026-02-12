@@ -1,0 +1,78 @@
+{
+  "ocrResult": {
+    "text": "Musterfirma GmbH\nMusterstraße 1\n12345 Berlin\n\nRechnung\n\nRechnungsnummer: RE-2024-001\nRechnungsdatum: 15.01.2024\nFällig: 15.02.2024\n\nAn:\nBeispiel AG\nBeispielweg 42\n80331 München\n\nPos.  Beschreibung                    Menge  Einzelpreis  Gesamt\n1     Webentwicklung Dienstleistung   10     € 95,00      € 950,00\n2     Server Hosting (Monat)          1      € 49,00      € 49,00\n3     SSL Zertifikat                  1      € 29,00      € 29,00\n\nNettobetrag:                                              € 1.028,00\nMwSt. (19%):                                              € 195,32\nGesamtbetrag:                                             EUR 1.223,32\n\nBankverbindung:\nIBAN: DE89 3704 0044 0532 0130 00\nBIC: COBADEFFXXX\n\nZahlbar bis 15.02.2024",
+    "confidence": 0.97,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Musterfirma GmbH\nMusterstraße 1\n12345 Berlin\n\nRechnung\n\nRechnungsnummer: RE-2024-001\nRechnungsdatum: 15.01.2024\nFällig: 15.02.2024\n\nAn:\nBeispiel AG\nBeispielweg 42\n80331 München\n\nPos.  Beschreibung                    Menge  Einzelpreis  Gesamt\n1     Webentwicklung Dienstleistung   10     € 95,00      € 950,00\n2     Server Hosting (Monat)          1      € 49,00      € 49,00\n3     SSL Zertifikat                  1      € 29,00      € 29,00\n\nNettobetrag:                                              € 1.028,00\nMwSt. (19%):                                              € 195,32\nGesamtbetrag:                                             EUR 1.223,32\n\nBankverbindung:\nIBAN: DE89 3704 0044 0532 0130 00\nBIC: COBADEFFXXX\n\nZahlbar bis 15.02.2024",
+        "confidence": 0.97,
+        "blocks": [
+          {
+            "text": "Musterfirma GmbH Musterstraße 1 12345 Berlin",
+            "confidence": 0.99,
+            "boundingBox": { "x": 50, "y": 50, "width": 300, "height": 60 }
+          },
+          {
+            "text": "Rechnung",
+            "confidence": 0.99,
+            "boundingBox": { "x": 200, "y": 130, "width": 150, "height": 30 }
+          },
+          {
+            "text": "Rechnungsnummer: RE-2024-001 Rechnungsdatum: 15.01.2024 Fällig: 15.02.2024",
+            "confidence": 0.98,
+            "boundingBox": { "x": 50, "y": 180, "width": 400, "height": 50 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 1.223,32",
+            "confidence": 0.96,
+            "boundingBox": { "x": 300, "y": 500, "width": 200, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 125000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "RE-2024-001",
+    "supplier": {
+      "name": "Musterfirma GmbH"
+    },
+    "customer": {
+      "name": "Beispiel AG"
+    },
+    "issueDate": "2024-01-15",
+    "dueDate": "2024-02-15",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "1028.00",
+      "taxAmount": "195.32",
+      "grossAmount": "1223.32"
+    },
+    "lineItems": [
+      {
+        "description": "Webentwicklung Dienstleistung",
+        "quantity": 10,
+        "unitPrice": 95.0,
+        "total": 950.0
+      },
+      {
+        "description": "Server Hosting (Monat)",
+        "quantity": 1,
+        "unitPrice": 49.0,
+        "total": 49.0
+      },
+      {
+        "description": "SSL Zertifikat",
+        "quantity": 1,
+        "unitPrice": 29.0,
+        "total": 29.0
+      }
+    ]
+  }
+}
