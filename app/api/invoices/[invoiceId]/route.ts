@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { requireApiAuth } from '@/src/lib/auth/session';
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
+  const authResult = await requireApiAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
   const { invoiceId } = await params;
-  return NextResponse.json({ 
-    message: `Invoice ${invoiceId} - coming soon` 
+  return NextResponse.json({
+    message: `Invoice ${invoiceId} - coming soon`,
   });
 }
 
@@ -14,9 +18,12 @@ export async function PUT(
   _request: Request,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
+  const authResult = await requireApiAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
   const { invoiceId } = await params;
-  return NextResponse.json({ 
-    message: `Update invoice ${invoiceId} - coming soon` 
+  return NextResponse.json({
+    message: `Update invoice ${invoiceId} - coming soon`,
   });
 }
 
@@ -24,8 +31,11 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
+  const authResult = await requireApiAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
   const { invoiceId } = await params;
-  return NextResponse.json({ 
-    message: `Delete invoice ${invoiceId} - coming soon` 
+  return NextResponse.json({
+    message: `Delete invoice ${invoiceId} - coming soon`,
   });
 }

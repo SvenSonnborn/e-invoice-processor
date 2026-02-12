@@ -1,10 +1,24 @@
 'use client';
 
 import { Button } from '@/src/components/ui/button';
-import { ArrowRight, Check, HelpCircle, Sparkles, X, Zap, Users, Clock } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  HelpCircle,
+  Sparkles,
+  X,
+  Zap,
+  Users,
+  Clock,
+} from 'lucide-react';
 import { WaitlistForm } from '../waitlist-form';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/components/ui/dialog';
 
 type PricingPlan = {
   name: string;
@@ -64,7 +78,7 @@ const faqs = [
   {
     question: 'When will the beta launch?',
     answer:
-      'We\'re targeting Q2 2025 for the public beta. Waitlist members will get access first.',
+      "We're targeting Q2 2025 for the public beta. Waitlist members will get access first.",
   },
   {
     question: 'How long does the early-bird discount last?',
@@ -73,12 +87,13 @@ const faqs = [
   },
   {
     question: 'Can I switch plans later?',
-    answer: 'Yes, you can upgrade or downgrade anytime. Your discount applies to any plan.',
+    answer:
+      'Yes, you can upgrade or downgrade anytime. Your discount applies to any plan.',
   },
   {
     question: 'What happens after the beta?',
     answer:
-      'You\'ll keep your early-bird pricing. We\'ll never increase your rate without your consent.',
+      "You'll keep your early-bird pricing. We'll never increase your rate without your consent.",
   },
 ];
 
@@ -123,8 +138,8 @@ export const PricingSection = () => {
             forever
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-neutral-600">
-            Join our waitlist today and get lifetime access at early-bird pricing. 
-            Regular prices apply after launch.
+            Join our waitlist today and get lifetime access at early-bird
+            pricing. Regular prices apply after launch.
           </p>
         </div>
 
@@ -229,11 +244,13 @@ export const PricingSection = () => {
                 variant={plan.highlighted ? 'default' : 'outline'}
                 size="lg"
                 className={`w-full ${
-                  plan.highlighted
-                    ? 'shadow-lg shadow-brand-600/20'
-                    : ''
+                  plan.highlighted ? 'shadow-lg shadow-brand-600/20' : ''
                 }`}
-                onClick={() => handlePlanSelect(plan.name.toLowerCase() as 'pro' | 'business')}
+                onClick={() =>
+                  handlePlanSelect(
+                    plan.name.toLowerCase() as 'pro' | 'business'
+                  )
+                }
               >
                 {plan.cta}
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -289,9 +306,7 @@ export const PricingSection = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center">
-              Join the Waitlist
-            </DialogTitle>
+            <DialogTitle className="text-center">Join the Waitlist</DialogTitle>
           </DialogHeader>
           <WaitlistForm defaultTier={selectedPlan} variant="card" />
         </DialogContent>

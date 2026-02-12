@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { createOrganization } from '@/app/actions/organizations'
-import { useState } from 'react'
+import { createOrganization } from '@/app/actions/organizations';
+import { useState } from 'react';
 
 export default function OnboardingPage() {
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
-    const result = await createOrganization(formData)
+    const result = await createOrganization(formData);
     if ('error' in result) {
-      setError(result.error)
+      setError(result.error);
     }
     // On success, the action will redirect
   }
@@ -34,7 +34,10 @@ export default function OnboardingPage() {
 
         <form className="mt-8 space-y-6" action={handleSubmit}>
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
               Organisationsname
             </label>
             <input
@@ -47,7 +50,8 @@ export default function OnboardingPage() {
               placeholder="z.B. Ihre Firma GmbH"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Mindestens 3 Zeichen. Sie können später weitere Organisationen erstellen.
+              Mindestens 3 Zeichen. Sie können später weitere Organisationen
+              erstellen.
             </p>
           </div>
 
@@ -62,5 +66,5 @@ export default function OnboardingPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

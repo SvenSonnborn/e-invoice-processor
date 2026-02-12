@@ -1,4 +1,4 @@
-export type ExportFormat = "CSV" | "DATEV";
+export type ExportFormat = 'CSV' | 'DATEV';
 
 export interface ExportJob {
   id: string;
@@ -6,4 +6,3 @@ export interface ExportJob {
   filename: string;
   createdAt: string;
 }
-

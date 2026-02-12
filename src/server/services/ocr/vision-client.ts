@@ -1,12 +1,12 @@
 /**
  * Google Cloud Vision API Client
- * 
+ *
  * Handles communication with Google Cloud Vision API for text detection.
  */
 
-import { logger } from "@/src/lib/logging";
-import { OcrError, OcrErrorCode } from "./errors";
-import type { OcrOptions } from "./index";
+import { logger } from '@/src/lib/logging';
+import { OcrError, OcrErrorCode } from './errors';
+import type { OcrOptions } from './index';
 
 // Google Cloud Vision API response types
 interface AnnotateImageResponse {
@@ -69,16 +69,16 @@ interface AnnotateFileResponse {
 export class VisionClient {
   private apiKey: string;
   private projectId: string | undefined;
-  private baseUrl = "https://vision.googleapis.com/v1";
+  private baseUrl = 'https://vision.googleapis.com/v1';
 
   constructor(apiKey?: string, projectId?: string) {
-    this.apiKey = apiKey || process.env.GOOGLE_CLOUD_VISION_API_KEY || "";
+    this.apiKey = apiKey || process.env.GOOGLE_CLOUD_VISION_API_KEY || '';
     this.projectId = projectId || process.env.GOOGLE_CLOUD_PROJECT_ID;
 
     if (!this.apiKey) {
       throw new OcrError(
         OcrErrorCode.CONFIGURATION_ERROR,
-        "Google Cloud Vision API key is not configured"
+        'Google Cloud Vision API key is not configured'
       );
     }
   }
@@ -92,7 +92,7 @@ export class VisionClient {
     mimeType: string,
     options: OcrOptions
   ): Promise<AnnotateImageResponse> {
-    const base64Image = imageBuffer.toString("base64");
+    const base64Image = imageBuffer.toString('base64');
 
     const request = {
       requests: [
@@ -102,22 +102,22 @@ export class VisionClient {
           },
           features: [
             {
-              type: "DOCUMENT_TEXT_DETECTION",
-              model: "latest",
+              type: 'DOCUMENT_TEXT_DETECTION',
+              model: 'latest',
             },
           ],
           imageContext: {
-            languageHints: options.languageHints || ["de", "en"],
+            languageHints: options.languageHints || ['de', 'en'],
           },
         },
       ],
     };
 
-    logger.debug("Sending image annotation request to Vision API");
+    logger.debug('Sending image annotation request to Vision API');
 
     const response = await this.makeApiRequest<{
       responses: AnnotateImageResponse[];
-    }>("images:annotate", request, options.timeoutMs);
+    }>('images:annotate', request, options.timeoutMs);
 
     if (response.responses[0]?.error) {
       throw new OcrError(
@@ -139,7 +139,7 @@ export class VisionClient {
     mimeType: string,
     options: OcrOptions
   ): Promise<AnnotateFileResponse[]> {
-    const base64Content = fileBuffer.toString("base64");
+    const base64Content = fileBuffer.toString('base64');
 
     const request = {
       requests: [
@@ -150,21 +150,21 @@ export class VisionClient {
           },
           features: [
             {
-              type: "DOCUMENT_TEXT_DETECTION",
+              type: 'DOCUMENT_TEXT_DETECTION',
             },
           ],
           imageContext: {
-            languageHints: options.languageHints || ["de", "en"],
+            languageHints: options.languageHints || ['de', 'en'],
           },
         },
       ],
     };
 
-    logger.debug("Sending batch file annotation request to Vision API");
+    logger.debug('Sending batch file annotation request to Vision API');
 
     // For files (PDF/TIFF), we use the files:annotate endpoint
     const response = await this.makeApiRequest<BatchAnnotateFilesResponse>(
-      "files:annotate",
+      'files:annotate',
       request,
       options.timeoutMs
     );
@@ -198,9 +198,9 @@ export class VisionClient {
 
     try {
       const response = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
         signal: controller.signal,
@@ -217,7 +217,7 @@ export class VisionClient {
         );
       }
 
-      return await response.json() as T;
+      return (await response.json()) as T;
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -226,7 +226,7 @@ export class VisionClient {
       }
 
       if (error instanceof Error) {
-        if (error.name === "AbortError") {
+        if (error.name === 'AbortError') {
           throw new OcrError(
             OcrErrorCode.TIMEOUT,
             `Vision API request timed out after ${timeoutMs}ms`

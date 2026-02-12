@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/src/components/ui/card';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import { STRIPE_CONFIG, formatPrice } from '@/src/lib/stripe/config';
 import type { Plan, PlanId } from '@/src/lib/stripe/config';
@@ -12,7 +18,10 @@ interface PricingProps {
   isAuthenticated?: boolean;
 }
 
-export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) {
+export function Pricing({
+  currentPlan,
+  isAuthenticated = false,
+}: PricingProps) {
   const [loading, setLoading] = useState<PlanId | null>(null);
 
   const handleSubscribe = async (planId: PlanId) => {
@@ -44,7 +53,9 @@ export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) 
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Fehler beim Erstellen der Checkout-Session. Bitte versuchen Sie es später erneut.');
+      alert(
+        'Fehler beim Erstellen der Checkout-Session. Bitte versuchen Sie es später erneut.'
+      );
     } finally {
       setLoading(null);
     }
@@ -103,7 +114,9 @@ export function Pricing({ currentPlan, isAuthenticated = false }: PricingProps) 
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10">
                       <Check className="h-3.5 w-3.5 text-success" />
                     </div>
-                    <span className="text-sm text-muted-foreground">{feature}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -13,7 +13,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/components/ui/dialog';
 import { WaitlistForm } from '../waitlist-form';
 
 const trustBadges = [
@@ -77,7 +82,10 @@ export const HeroSection = () => {
             <p className="animate-fade-in max-w-xl text-lg leading-relaxed text-neutral-600 md:text-xl">
               Upload PDFs or scans, convert them to ZUGFeRD or XRechnung, and
               export clean, structured data. Join the waitlist for{' '}
-              <span className="font-semibold text-brand-600">50% off forever</span>.
+              <span className="font-semibold text-brand-600">
+                50% off forever
+              </span>
+              .
             </p>
 
             {/* CTAs */}

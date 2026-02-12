@@ -3,11 +3,11 @@
  * Page header with title and actions
  */
 
-export function Header({ 
-  title, 
-  actions 
-}: { 
-  title: string; 
+export function Header({
+  title,
+  actions,
+}: {
+  title: string;
   actions?: React.ReactNode;
 }) {
   return (

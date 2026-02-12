@@ -6,9 +6,9 @@
  * Run from project root: bun scripts/supabase/<test-script>.ts
  */
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
 
 loadEnvLocal();
 
@@ -26,17 +26,17 @@ export interface TestConfig {
 
 const TEST_CONFIG_PATH = resolve(
   process.cwd(),
-  "scripts/supabase/test-config.json"
+  'scripts/supabase/test-config.json'
 );
 
 export function loadEnvLocal() {
-  const path = resolve(process.cwd(), ".env.local");
+  const path = resolve(process.cwd(), '.env.local');
   if (!existsSync(path)) return;
-  const content = readFileSync(path, "utf-8");
-  for (const line of content.split("\n")) {
+  const content = readFileSync(path, 'utf-8');
+  for (const line of content.split('\n')) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
     let val = trimmed.slice(eq + 1).trim();
@@ -51,10 +51,10 @@ export function loadEnvLocal() {
 
 export function getTestConfig(): TestConfig {
   if (!existsSync(TEST_CONFIG_PATH)) {
-    console.error("❌ test-config.json not found. Run: bun run supabase:setup");
+    console.error('❌ test-config.json not found. Run: bun run supabase:setup');
     process.exit(1);
   }
-  const raw = readFileSync(TEST_CONFIG_PATH, "utf-8");
+  const raw = readFileSync(TEST_CONFIG_PATH, 'utf-8');
   return JSON.parse(raw) as TestConfig;
 }
 
@@ -72,7 +72,7 @@ export function requireEnv(name: string): string {
 export function createAnonClient(): SupabaseClient {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.error(
-      "❌ NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or ANON) required."
+      '❌ NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or ANON) required.'
     );
     process.exit(1);
   }
@@ -91,12 +91,12 @@ export async function signInAndGetJwt(
     password,
   });
   if (error) {
-    console.error("❌ Sign-in failed:", error.message);
+    console.error('❌ Sign-in failed:', error.message);
     process.exit(1);
   }
   const token = data.session?.access_token;
   if (!token) {
-    console.error("❌ No access token in session");
+    console.error('❌ No access token in session');
     process.exit(1);
   }
   return token;
@@ -113,11 +113,11 @@ export async function signInAndGetClient(
     password,
   });
   if (error) {
-    console.error("❌ Sign-in failed:", error.message);
+    console.error('❌ Sign-in failed:', error.message);
     process.exit(1);
   }
   if (!data.session) {
-    console.error("❌ No session after sign-in");
+    console.error('❌ No session after sign-in');
     process.exit(1);
   }
   return client;
@@ -125,6 +125,6 @@ export async function signInAndGetClient(
 
 /** Minimal valid PDF for storage upload tests */
 export const MINIMAL_PDF = Buffer.from(
-  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000125 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n202\n%%EOF\n",
-  "utf-8"
+  '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000125 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n202\n%%EOF\n',
+  'utf-8'
 );

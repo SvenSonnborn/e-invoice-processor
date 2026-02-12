@@ -79,28 +79,44 @@ export function validateRequiredFields(context: ValidationContext): RuleResult {
   const warnings: GoBDWarning[] = [];
 
   if (!invoice.number || invoice.number.trim() === '') {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_INVOICE_NUMBER, 'number'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_INVOICE_NUMBER, 'number')
+    );
   }
   if (!invoice.issueDate) {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_ISSUE_DATE, 'issueDate'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_ISSUE_DATE, 'issueDate')
+    );
   }
   if (invoice.netAmount === null || invoice.netAmount === undefined) {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_NET_AMOUNT, 'netAmount'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_NET_AMOUNT, 'netAmount')
+    );
   }
   if (invoice.taxAmount === null || invoice.taxAmount === undefined) {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_TAX_AMOUNT, 'taxAmount'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_TAX_AMOUNT, 'taxAmount')
+    );
   }
   if (invoice.grossAmount === null || invoice.grossAmount === undefined) {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_GROSS_AMOUNT, 'grossAmount'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_GROSS_AMOUNT, 'grossAmount')
+    );
   }
   if (!invoice.currency || invoice.currency.trim() === '') {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_CURRENCY, 'currency'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_CURRENCY, 'currency')
+    );
   }
   if (!invoice.supplierName || invoice.supplierName.trim() === '') {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_SUPPLIER, 'supplierName'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_SUPPLIER, 'supplierName')
+    );
   }
   if (!invoice.customerName || invoice.customerName.trim() === '') {
-    violations.push(createViolation(GOB_ERROR_CODES.MISSING_CUSTOMER, 'customerName'));
+    violations.push(
+      createViolation(GOB_ERROR_CODES.MISSING_CUSTOMER, 'customerName')
+    );
   }
   if (!invoice.dueDate) {
     warnings.push(createWarning(GOB_WARNING_CODES.MISSING_DUE_DATE, 'dueDate'));
@@ -109,16 +125,22 @@ export function validateRequiredFields(context: ValidationContext): RuleResult {
   return { passed: violations.length === 0, violations, warnings };
 }
 
-export function validateDateConstraints(context: ValidationContext): RuleResult {
+export function validateDateConstraints(
+  context: ValidationContext
+): RuleResult {
   const { invoice } = context;
   const violations: GoBDViolation[] = [];
   const warnings: GoBDWarning[] = [];
 
   if (invoice.issueDate) {
     if (!isValidDate(invoice.issueDate)) {
-      violations.push(createViolation(GOB_ERROR_CODES.INVALID_DATE_FORMAT, 'issueDate'));
+      violations.push(
+        createViolation(GOB_ERROR_CODES.INVALID_DATE_FORMAT, 'issueDate')
+      );
     } else if (isFutureDate(invoice.issueDate)) {
-      violations.push(createViolation(GOB_ERROR_CODES.FUTURE_DATE, 'issueDate'));
+      violations.push(
+        createViolation(GOB_ERROR_CODES.FUTURE_DATE, 'issueDate')
+      );
     }
   }
 
@@ -166,9 +188,23 @@ export function validateTaxRates(context: ValidationContext): RuleResult {
       const taxRate = toNumber(item.taxRate);
 
       if (taxRate === null) {
-        violations.push(createViolation(GOB_ERROR_CODES.MISSING_LINE_ITEM_TAX_RATE, `lineItems[${item.positionIndex}].taxRate`));
-      } else if (!VALID_TAX_RATES.includes(taxRate as (typeof VALID_TAX_RATES)[number])) {
-        violations.push(createViolation(GOB_ERROR_CODES.INVALID_TAX_RATE, `lineItems[${item.positionIndex}].taxRate`, 'error', { actual: taxRate, allowed: VALID_TAX_RATES }));
+        violations.push(
+          createViolation(
+            GOB_ERROR_CODES.MISSING_LINE_ITEM_TAX_RATE,
+            `lineItems[${item.positionIndex}].taxRate`
+          )
+        );
+      } else if (
+        !VALID_TAX_RATES.includes(taxRate as (typeof VALID_TAX_RATES)[number])
+      ) {
+        violations.push(
+          createViolation(
+            GOB_ERROR_CODES.INVALID_TAX_RATE,
+            `lineItems[${item.positionIndex}].taxRate`,
+            'error',
+            { actual: taxRate, allowed: VALID_TAX_RATES }
+          )
+        );
       }
 
       const itemNet = toNumber(item.netAmount);
@@ -179,7 +215,14 @@ export function validateTaxRates(context: ValidationContext): RuleResult {
         const taxDifference = Math.abs(calculatedTax - itemTax);
 
         if (taxDifference > tolerance) {
-          violations.push(createViolation(GOB_ERROR_CODES.TAX_CALCULATION_ERROR, `lineItems[${item.positionIndex}].taxAmount`, 'error', { expected: calculatedTax.toFixed(2), actual: itemTax.toFixed(2) }));
+          violations.push(
+            createViolation(
+              GOB_ERROR_CODES.TAX_CALCULATION_ERROR,
+              `lineItems[${item.positionIndex}].taxAmount`,
+              'error',
+              { expected: calculatedTax.toFixed(2), actual: itemTax.toFixed(2) }
+            )
+          );
         }
       }
     }
@@ -198,9 +241,16 @@ export function validateCurrency(context: ValidationContext): RuleResult {
   if (invoice.currency) {
     const currency = invoice.currency.toUpperCase();
     if (currency.length !== 3) {
-      violations.push(createViolation(GOB_ERROR_CODES.INVALID_CURRENCY, 'currency'));
+      violations.push(
+        createViolation(GOB_ERROR_CODES.INVALID_CURRENCY, 'currency')
+      );
     } else if (currency !== DEFAULT_CURRENCY) {
-      warnings.push(createWarning(GOB_WARNING_CODES.UNCOMMON_CURRENCY, 'currency', { currency, expected: DEFAULT_CURRENCY }));
+      warnings.push(
+        createWarning(GOB_WARNING_CODES.UNCOMMON_CURRENCY, 'currency', {
+          currency,
+          expected: DEFAULT_CURRENCY,
+        })
+      );
     }
   }
 
@@ -219,7 +269,12 @@ export function validateLineItems(context: ValidationContext): RuleResult {
   let totalNet = 0;
   for (const item of invoice.lineItems) {
     if (!item.description || item.description.trim() === '') {
-      violations.push(createViolation(GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION, `lineItems[${item.positionIndex}].description`));
+      violations.push(
+        createViolation(
+          GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION,
+          `lineItems[${item.positionIndex}].description`
+        )
+      );
     }
     const net = toNumber(item.netAmount);
     if (net !== null) totalNet += net;
@@ -227,13 +282,25 @@ export function validateLineItems(context: ValidationContext): RuleResult {
 
   const invoiceNet = toNumber(invoice.netAmount);
   if (invoiceNet !== null && Math.abs(totalNet - invoiceNet) > tolerance) {
-    violations.push(createViolation(GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH, 'lineItems', 'error', { lineItemTotal: totalNet.toFixed(2), invoiceTotal: invoiceNet.toFixed(2) }));
+    violations.push(
+      createViolation(
+        GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH,
+        'lineItems',
+        'error',
+        {
+          lineItemTotal: totalNet.toFixed(2),
+          invoiceTotal: invoiceNet.toFixed(2),
+        }
+      )
+    );
   }
 
   return { passed: violations.length === 0, violations, warnings };
 }
 
-export function getAllValidationRules(): ((context: ValidationContext) => RuleResult)[] {
+export function getAllValidationRules(): ((
+  context: ValidationContext
+) => RuleResult)[] {
   return [
     validateRequiredFields,
     validateDateConstraints,

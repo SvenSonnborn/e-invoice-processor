@@ -149,7 +149,10 @@ describe('Stripe Service – Billing Period', () => {
 describe('Stripe Service – Feature Access', () => {
   it('FREE tier should have no plan', () => {
     const tier = 'FREE';
-    const plan = tier === 'FREE' ? null : STRIPE_CONFIG.PLANS[tier as keyof typeof STRIPE_CONFIG.PLANS];
+    const plan =
+      tier === 'FREE'
+        ? null
+        : STRIPE_CONFIG.PLANS[tier as keyof typeof STRIPE_CONFIG.PLANS];
     expect(plan).toBeNull();
   });
 

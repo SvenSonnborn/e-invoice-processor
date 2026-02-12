@@ -1,5 +1,5 @@
-import { prisma } from '@/src/lib/db/client'
-import type { InvoiceLineItem } from '@/src/generated/prisma/client'
+import { prisma } from '@/src/lib/db/client';
+import type { InvoiceLineItem } from '@/src/generated/prisma/client';
 
 /**
  * Invoice Line Items Utilities
@@ -8,23 +8,23 @@ import type { InvoiceLineItem } from '@/src/generated/prisma/client'
  */
 
 export interface LineItemInput {
-  positionIndex: number
-  description?: string | null
-  quantity?: number | null
-  unitPrice?: number | null
-  taxRate?: number | null
-  netAmount?: number | null
-  taxAmount?: number | null
-  grossAmount?: number | null
+  positionIndex: number;
+  description?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  taxRate?: number | null;
+  netAmount?: number | null;
+  taxAmount?: number | null;
+  grossAmount?: number | null;
 }
 
 export interface LineItemCalculation {
-  quantity: number
-  unitPrice: number
-  taxRate: number
-  netAmount: number
-  taxAmount: number
-  grossAmount: number
+  quantity: number;
+  unitPrice: number;
+  taxRate: number;
+  netAmount: number;
+  taxAmount: number;
+  grossAmount: number;
 }
 
 /**
@@ -39,11 +39,11 @@ export async function createLineItems(
   items: LineItemInput[]
 ): Promise<InvoiceLineItem[]> {
   // Validate unique position indices
-  const indices = items.map((item) => item.positionIndex)
-  const uniqueIndices = new Set(indices)
+  const indices = items.map((item) => item.positionIndex);
+  const uniqueIndices = new Set(indices);
 
   if (indices.length !== uniqueIndices.size) {
-    throw new Error('Duplicate position indices found')
+    throw new Error('Duplicate position indices found');
   }
 
   // Create all line items in a transaction
@@ -64,10 +64,10 @@ export async function createLineItems(
           },
         })
       )
-    )
+    );
 
-    return created
-  })
+    return created;
+  });
 }
 
 /**
@@ -82,18 +82,18 @@ export async function replaceLineItems(
   items: LineItemInput[]
 ): Promise<InvoiceLineItem[]> {
   // Validate unique position indices
-  const indices = items.map((item) => item.positionIndex)
-  const uniqueIndices = new Set(indices)
+  const indices = items.map((item) => item.positionIndex);
+  const uniqueIndices = new Set(indices);
 
   if (indices.length !== uniqueIndices.size) {
-    throw new Error('Duplicate position indices found')
+    throw new Error('Duplicate position indices found');
   }
 
   return await prisma.$transaction(async (tx) => {
     // Delete existing line items
     await tx.invoiceLineItem.deleteMany({
       where: { invoiceId },
-    })
+    });
 
     // Create new line items
     const created = await Promise.all(
@@ -112,10 +112,10 @@ export async function replaceLineItems(
           },
         })
       )
-    )
+    );
 
-    return created
-  })
+    return created;
+  });
 }
 
 /**
@@ -130,7 +130,7 @@ export async function getLineItems(
   return await prisma.invoiceLineItem.findMany({
     where: { invoiceId },
     orderBy: { positionIndex: 'asc' },
-  })
+  });
 }
 
 /**
@@ -147,7 +147,7 @@ export async function updateLineItem(
   return await prisma.invoiceLineItem.update({
     where: { id: lineItemId },
     data,
-  })
+  });
 }
 
 /**
@@ -158,7 +158,7 @@ export async function updateLineItem(
 export async function deleteLineItem(lineItemId: string): Promise<void> {
   await prisma.invoiceLineItem.delete({
     where: { id: lineItemId },
-  })
+  });
 }
 
 /**
@@ -170,9 +170,9 @@ export async function deleteLineItem(lineItemId: string): Promise<void> {
 export async function deleteAllLineItems(invoiceId: string): Promise<number> {
   const result = await prisma.invoiceLineItem.deleteMany({
     where: { invoiceId },
-  })
+  });
 
-  return result.count
+  return result.count;
 }
 
 /**
@@ -188,9 +188,9 @@ export function calculateLineItem(
   unitPrice: number,
   taxRate: number
 ): LineItemCalculation {
-  const netAmount = quantity * unitPrice
-  const taxAmount = (netAmount * taxRate) / 100
-  const grossAmount = netAmount + taxAmount
+  const netAmount = quantity * unitPrice;
+  const taxAmount = (netAmount * taxRate) / 100;
+  const grossAmount = netAmount + taxAmount;
 
   return {
     quantity,
@@ -199,7 +199,7 @@ export function calculateLineItem(
     netAmount: Number(netAmount.toFixed(2)),
     taxAmount: Number(taxAmount.toFixed(2)),
     grossAmount: Number(grossAmount.toFixed(2)),
-  }
+  };
 }
 
 /**
@@ -209,10 +209,10 @@ export function calculateLineItem(
  * @returns Validation result
  */
 export function validateLineItem(item: LineItemInput): {
-  valid: boolean
-  errors: string[]
+  valid: boolean;
+  errors: string[];
 } {
-  const errors: string[] = []
+  const errors: string[] = [];
 
   // Check required fields for calculation
   if (
@@ -223,35 +223,39 @@ export function validateLineItem(item: LineItemInput): {
     item.taxRate !== null &&
     item.taxRate !== undefined
   ) {
-    const calculated = calculateLineItem(item.quantity, item.unitPrice, item.taxRate)
+    const calculated = calculateLineItem(
+      item.quantity,
+      item.unitPrice,
+      item.taxRate
+    );
 
     // Validate netAmount
     if (item.netAmount !== null && item.netAmount !== undefined) {
-      const diff = Math.abs(calculated.netAmount - item.netAmount)
+      const diff = Math.abs(calculated.netAmount - item.netAmount);
       if (diff > 0.01) {
         errors.push(
           `Net amount mismatch: expected ${calculated.netAmount}, got ${item.netAmount}`
-        )
+        );
       }
     }
 
     // Validate taxAmount
     if (item.taxAmount !== null && item.taxAmount !== undefined) {
-      const diff = Math.abs(calculated.taxAmount - item.taxAmount)
+      const diff = Math.abs(calculated.taxAmount - item.taxAmount);
       if (diff > 0.01) {
         errors.push(
           `Tax amount mismatch: expected ${calculated.taxAmount}, got ${item.taxAmount}`
-        )
+        );
       }
     }
 
     // Validate grossAmount
     if (item.grossAmount !== null && item.grossAmount !== undefined) {
-      const diff = Math.abs(calculated.grossAmount - item.grossAmount)
+      const diff = Math.abs(calculated.grossAmount - item.grossAmount);
       if (diff > 0.01) {
         errors.push(
           `Gross amount mismatch: expected ${calculated.grossAmount}, got ${item.grossAmount}`
-        )
+        );
       }
     }
   }
@@ -259,7 +263,7 @@ export function validateLineItem(item: LineItemInput): {
   return {
     valid: errors.length === 0,
     errors,
-  }
+  };
 }
 
 /**
@@ -269,24 +273,24 @@ export function validateLineItem(item: LineItemInput): {
  * @returns Invoice totals
  */
 export function calculateInvoiceTotals(items: LineItemInput[]): {
-  netAmount: number
-  taxAmount: number
-  grossAmount: number
-  lineCount: number
+  netAmount: number;
+  taxAmount: number;
+  grossAmount: number;
+  lineCount: number;
 } {
-  let totalNet = 0
-  let totalTax = 0
-  let totalGross = 0
+  let totalNet = 0;
+  let totalTax = 0;
+  let totalGross = 0;
 
   for (const item of items) {
     if (item.netAmount !== null && item.netAmount !== undefined) {
-      totalNet += item.netAmount
+      totalNet += item.netAmount;
     }
     if (item.taxAmount !== null && item.taxAmount !== undefined) {
-      totalTax += item.taxAmount
+      totalTax += item.taxAmount;
     }
     if (item.grossAmount !== null && item.grossAmount !== undefined) {
-      totalGross += item.grossAmount
+      totalGross += item.grossAmount;
     }
   }
 
@@ -295,7 +299,7 @@ export function calculateInvoiceTotals(items: LineItemInput[]): {
     taxAmount: Number(totalTax.toFixed(2)),
     grossAmount: Number(totalGross.toFixed(2)),
     lineCount: items.length,
-  }
+  };
 }
 
 /**
@@ -305,16 +309,16 @@ export function calculateInvoiceTotals(items: LineItemInput[]): {
  * @returns Validation result
  */
 export async function validateInvoiceTotals(invoiceId: string): Promise<{
-  valid: boolean
-  errors: string[]
+  valid: boolean;
+  errors: string[];
   details: {
-    invoiceNetAmount: number | null
-    invoiceTaxAmount: number | null
-    invoiceGrossAmount: number | null
-    lineItemsNetAmount: number
-    lineItemsTaxAmount: number
-    lineItemsGrossAmount: number
-  }
+    invoiceNetAmount: number | null;
+    invoiceTaxAmount: number | null;
+    invoiceGrossAmount: number | null;
+    lineItemsNetAmount: number;
+    lineItemsTaxAmount: number;
+    lineItemsGrossAmount: number;
+  };
 }> {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
@@ -324,10 +328,10 @@ export async function validateInvoiceTotals(invoiceId: string): Promise<{
       grossAmount: true,
       lineItems: true,
     },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   const lineItemTotals = calculateInvoiceTotals(
@@ -337,40 +341,40 @@ export async function validateInvoiceTotals(invoiceId: string): Promise<{
       taxAmount: item.taxAmount ? Number(item.taxAmount) : null,
       grossAmount: item.grossAmount ? Number(item.grossAmount) : null,
     }))
-  )
+  );
 
-  const errors: string[] = []
+  const errors: string[] = [];
 
   // Compare net amounts
   if (invoice.netAmount !== null) {
-    const invoiceNet = Number(invoice.netAmount)
-    const diff = Math.abs(invoiceNet - lineItemTotals.netAmount)
+    const invoiceNet = Number(invoice.netAmount);
+    const diff = Math.abs(invoiceNet - lineItemTotals.netAmount);
     if (diff > 0.01) {
       errors.push(
         `Net amount mismatch: invoice ${invoiceNet}, line items ${lineItemTotals.netAmount}`
-      )
+      );
     }
   }
 
   // Compare tax amounts
   if (invoice.taxAmount !== null) {
-    const invoiceTax = Number(invoice.taxAmount)
-    const diff = Math.abs(invoiceTax - lineItemTotals.taxAmount)
+    const invoiceTax = Number(invoice.taxAmount);
+    const diff = Math.abs(invoiceTax - lineItemTotals.taxAmount);
     if (diff > 0.01) {
       errors.push(
         `Tax amount mismatch: invoice ${invoiceTax}, line items ${lineItemTotals.taxAmount}`
-      )
+      );
     }
   }
 
   // Compare gross amounts
   if (invoice.grossAmount !== null) {
-    const invoiceGross = Number(invoice.grossAmount)
-    const diff = Math.abs(invoiceGross - lineItemTotals.grossAmount)
+    const invoiceGross = Number(invoice.grossAmount);
+    const diff = Math.abs(invoiceGross - lineItemTotals.grossAmount);
     if (diff > 0.01) {
       errors.push(
         `Gross amount mismatch: invoice ${invoiceGross}, line items ${lineItemTotals.grossAmount}`
-      )
+      );
     }
   }
 
@@ -380,12 +384,14 @@ export async function validateInvoiceTotals(invoiceId: string): Promise<{
     details: {
       invoiceNetAmount: invoice.netAmount ? Number(invoice.netAmount) : null,
       invoiceTaxAmount: invoice.taxAmount ? Number(invoice.taxAmount) : null,
-      invoiceGrossAmount: invoice.grossAmount ? Number(invoice.grossAmount) : null,
+      invoiceGrossAmount: invoice.grossAmount
+        ? Number(invoice.grossAmount)
+        : null,
       lineItemsNetAmount: lineItemTotals.netAmount,
       lineItemsTaxAmount: lineItemTotals.taxAmount,
       lineItemsGrossAmount: lineItemTotals.grossAmount,
     },
-  }
+  };
 }
 
 /**
@@ -395,7 +401,7 @@ export async function validateInvoiceTotals(invoiceId: string): Promise<{
  * @returns Line item statistics
  */
 export async function getLineItemStats(invoiceId: string) {
-  const items = await getLineItems(invoiceId)
+  const items = await getLineItems(invoiceId);
 
   if (items.length === 0) {
     return {
@@ -406,20 +412,20 @@ export async function getLineItemStats(invoiceId: string) {
       averageNetAmount: 0,
       maxNetAmount: 0,
       minNetAmount: 0,
-    }
+    };
   }
 
   const netAmounts = items
     .map((item) => (item.netAmount ? Number(item.netAmount) : 0))
-    .filter((amount) => amount > 0)
+    .filter((amount) => amount > 0);
 
-  const totalNet = netAmounts.reduce((sum, amount) => sum + amount, 0)
+  const totalNet = netAmounts.reduce((sum, amount) => sum + amount, 0);
   const totalTax = items
     .map((item) => (item.taxAmount ? Number(item.taxAmount) : 0))
-    .reduce((sum, amount) => sum + amount, 0)
+    .reduce((sum, amount) => sum + amount, 0);
   const totalGross = items
     .map((item) => (item.grossAmount ? Number(item.grossAmount) : 0))
-    .reduce((sum, amount) => sum + amount, 0)
+    .reduce((sum, amount) => sum + amount, 0);
 
   return {
     count: items.length,
@@ -432,5 +438,5 @@ export async function getLineItemStats(invoiceId: string) {
         : 0,
     maxNetAmount: netAmounts.length > 0 ? Math.max(...netAmounts) : 0,
     minNetAmount: netAmounts.length > 0 ? Math.min(...netAmounts) : 0,
-  }
+  };
 }

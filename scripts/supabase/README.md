@@ -31,12 +31,12 @@ Erstellt:
 
 ## Tests
 
-| Step | Script | Erwartung |
-|------|--------|-----------|
+| Step  | Script                     | Erwartung                                                                      |
+| ----- | -------------------------- | ------------------------------------------------------------------------------ |
 | **1** | `bun run supabase:test-01` | Upload als User A gelingt; Datei im privaten Bucket; **keine** öffentliche URL |
-| **2** | `bun run supabase:test-02` | User A kann eigene Datei lesen (Download + Inhalt) |
-| **3** | `bun run supabase:test-03` | User B kann User-A-Datei **nicht** lesen (403 / RLS) |
-| **4** | `bun run supabase:test-04` | Abfrage als User B liefert nur Rechnungen von Org B; keine von Org A |
+| **2** | `bun run supabase:test-02` | User A kann eigene Datei lesen (Download + Inhalt)                             |
+| **3** | `bun run supabase:test-03` | User B kann User-A-Datei **nicht** lesen (403 / RLS)                           |
+| **4** | `bun run supabase:test-04` | Abfrage als User B liefert nur Rechnungen von Org B; keine von Org A           |
 
 Alle vier Schritte nacheinander:
 

@@ -5,22 +5,22 @@
  * Used by both the API route and server actions to avoid duplication.
  */
 
-import { prisma } from "@/src/lib/db/client";
+import { prisma } from '@/src/lib/db/client';
 import {
   createExport,
   markAsGenerating,
   markAsReady,
   markAsFailed,
-} from "@/src/lib/exports/processor";
-import { csv, datev } from "@/src/server/exporters";
-import { storage } from "@/src/lib/storage";
-import type { DatevExportOptions } from "@/src/server/exporters/datev";
-import type { Invoice as AppInvoice } from "@/src/types";
+} from '@/src/lib/exports/processor';
+import { csv, datev } from '@/src/server/exporters';
+import { storage } from '@/src/lib/storage';
+import type { DatevExportOptions } from '@/src/server/exporters/datev';
+import type { Invoice as AppInvoice } from '@/src/types';
 
 export interface CreateExportInput {
   organizationId: string;
   userId: string;
-  format: "CSV" | "DATEV";
+  format: 'CSV' | 'DATEV';
   invoiceIds: string[];
   filename?: string;
   datevOptions?: DatevExportOptions;
@@ -39,18 +39,15 @@ export interface ExportResult {
  * Generate an export filename based on format and options
  */
 export function generateExportFilename(
-  format: "CSV" | "DATEV",
+  format: 'CSV' | 'DATEV',
   datevOptions?: DatevExportOptions
 ): string {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-")
-    .slice(0, 19);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 
   switch (format) {
-    case "DATEV":
-      return datev.generateDatevFilename(datevOptions ?? {}, "csv");
-    case "CSV":
+    case 'DATEV':
+      return datev.generateDatevFilename(datevOptions ?? {}, 'csv');
+    case 'CSV':
     default:
       return `invoices_export_${timestamp}.csv`;
   }
@@ -72,13 +69,7 @@ export function generateExportFilename(
 export async function generateExport(
   input: CreateExportInput
 ): Promise<ExportResult> {
-  const {
-    organizationId,
-    userId,
-    format,
-    invoiceIds,
-    datevOptions,
-  } = input;
+  const { organizationId, userId, format, invoiceIds, datevOptions } = input;
 
   const finalFilename =
     input.filename ?? generateExportFilename(format, datevOptions);
@@ -95,7 +86,7 @@ export async function generateExport(
   });
 
   if (invoices.length !== invoiceIds.length) {
-    throw new Error("Some invoices not found or not accessible");
+    throw new Error('Some invoices not found or not accessible');
   }
 
   // Create export record
@@ -117,14 +108,13 @@ export async function generateExport(
     let contentType: string;
 
     switch (format) {
-      case "DATEV":
+      case 'DATEV':
         // Validate DATEV options
         if (datevOptions) {
-          const validationErrors =
-            datev.validateDatevOptions(datevOptions);
+          const validationErrors = datev.validateDatevOptions(datevOptions);
           if (validationErrors.length > 0) {
             throw new Error(
-              `DATEV validation failed: ${validationErrors.join(", ")}`
+              `DATEV validation failed: ${validationErrors.join(', ')}`
             );
           }
         }
@@ -134,23 +124,19 @@ export async function generateExport(
           invoices,
           datevOptions
         );
-        contentType = "text/csv; charset=utf-8";
+        contentType = 'text/csv; charset=utf-8';
         break;
 
-      case "CSV":
+      case 'CSV':
       default: {
         // The CSV exporter uses the app-level Invoice type (with nested objects)
         // while Prisma returns flat fields. Adapt the shape here.
         const appInvoices: AppInvoice[] = invoices.map((inv) => ({
           id: inv.id,
-          format: (inv.format ?? "UNKNOWN") as AppInvoice["format"],
+          format: (inv.format ?? 'UNKNOWN') as AppInvoice['format'],
           number: inv.number ?? undefined,
-          supplier: inv.supplierName
-            ? { name: inv.supplierName }
-            : undefined,
-          customer: inv.customerName
-            ? { name: inv.customerName }
-            : undefined,
+          supplier: inv.supplierName ? { name: inv.supplierName } : undefined,
+          customer: inv.customerName ? { name: inv.customerName } : undefined,
           issueDate: inv.issueDate
             ? inv.issueDate.toISOString().slice(0, 10)
             : undefined,
@@ -158,23 +144,21 @@ export async function generateExport(
             ? inv.dueDate.toISOString().slice(0, 10)
             : undefined,
           totals: {
-            currency: inv.currency ?? "EUR",
+            currency: inv.currency ?? 'EUR',
             netAmount: inv.netAmount ? String(inv.netAmount) : undefined,
             taxAmount: inv.taxAmount ? String(inv.taxAmount) : undefined,
-            grossAmount: inv.grossAmount
-              ? String(inv.grossAmount)
-              : undefined,
+            grossAmount: inv.grossAmount ? String(inv.grossAmount) : undefined,
           },
         }));
         fileContent = csv.invoicesToCsv(appInvoices);
-        contentType = "text/csv; charset=utf-8";
+        contentType = 'text/csv; charset=utf-8';
         break;
       }
     }
 
     // Upload to storage
     const storageKey = `exports/${exportRecord.id}/${finalFilename}`;
-    const buffer = Buffer.from(fileContent, "utf-8");
+    const buffer = Buffer.from(fileContent, 'utf-8');
 
     await storage.upload(storageKey, buffer, {
       contentType,
@@ -192,13 +176,13 @@ export async function generateExport(
       id: exportRecord.id,
       format,
       filename: finalFilename,
-      status: "READY",
+      status: 'READY',
       invoiceCount: invoices.length,
       storageKey,
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+      error instanceof Error ? error.message : 'Unknown error';
     await markAsFailed(exportRecord.id, errorMessage);
     throw error;
   }

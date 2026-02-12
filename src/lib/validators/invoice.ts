@@ -3,7 +3,7 @@
  * Zod schemas for invoice validation
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const invoiceSchema = z.object({
   id: z.string().optional(),
@@ -12,7 +12,7 @@ export const invoiceSchema = z.object({
   dueDate: z.date().optional(),
   amount: z.number().positive(),
   currency: z.string().length(3),
-  status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]),
+  status: z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled']),
 });
 
 export type InvoiceInput = z.infer<typeof invoiceSchema>;

@@ -1,22 +1,22 @@
 /**
  * Text Extractor
- * 
+ *
  * Extracts structured text and invoice fields from Vision API responses.
  */
 
-import { logger } from "@/src/lib/logging";
+import { logger } from '@/src/lib/logging';
 import type {
   OcrResult,
   OcrPage,
   TextBlock,
   BoundingBox,
   OcrInvoiceData,
-} from "./index";
+} from './index';
 import type {
   AnnotateImageResponse,
   AnnotateFileResponse,
   FullTextAnnotation,
-} from "./vision-client";
+} from './vision-client';
 
 interface Vertex {
   x: number;
@@ -61,7 +61,7 @@ export class TextExtractor {
 
     if (!fullText) {
       return {
-        text: "",
+        text: '',
         confidence: 0,
         pages: [],
         metadata: {
@@ -77,7 +77,7 @@ export class TextExtractor {
     const avgConfidence = this.calculateAverageConfidence(pages);
 
     return {
-      text: fullText.text || "",
+      text: fullText.text || '',
       confidence: avgConfidence,
       pages,
       metadata: {
@@ -97,7 +97,7 @@ export class TextExtractor {
     fileSize: number
   ): OcrResult {
     const allPages: OcrPage[] = [];
-    let fullText = "";
+    let fullText = '';
 
     for (const fileResponse of responses) {
       for (let i = 0; i < fileResponse.responses.length; i++) {
@@ -106,11 +106,13 @@ export class TextExtractor {
 
         if (pageText) {
           const pages = this.extractPages(pageText);
-          allPages.push(...pages.map((p, idx) => ({
-            ...p,
-            pageNumber: allPages.length + idx + 1,
-          })));
-          fullText += pageText.text + "\n";
+          allPages.push(
+            ...pages.map((p, idx) => ({
+              ...p,
+              pageNumber: allPages.length + idx + 1,
+            }))
+          );
+          fullText += pageText.text + '\n';
         }
       }
     }
@@ -123,7 +125,7 @@ export class TextExtractor {
       pages: allPages,
       metadata: {
         processedAt: new Date(),
-        fileType: "application/pdf",
+        fileType: 'application/pdf',
         fileSize,
         pageCount: allPages.length,
       },
@@ -142,7 +144,7 @@ export class TextExtractor {
     for (let i = 0; i < apiPages.length; i++) {
       const page = apiPages[i];
       const blocks: TextBlock[] = [];
-      let pageText = "";
+      let pageText = '';
 
       for (const block of page.blocks || []) {
         const blockText = this.extractBlockText(block);
@@ -152,7 +154,7 @@ export class TextExtractor {
             confidence: block.confidence || 0,
             boundingBox: this.extractBoundingBox(block),
           });
-          pageText += blockText + "\n";
+          pageText += blockText + '\n';
         }
       }
 
@@ -170,11 +172,13 @@ export class TextExtractor {
         pageNumber: 1,
         text: fullText.text,
         confidence: 0.95, // Default confidence when not available
-        blocks: [{
-          text: fullText.text,
-          confidence: 0.95,
-          boundingBox: { x: 0, y: 0, width: 0, height: 0 },
-        }],
+        blocks: [
+          {
+            text: fullText.text,
+            confidence: 0.95,
+            boundingBox: { x: 0, y: 0, width: 0, height: 0 },
+          },
+        ],
       });
     }
 
@@ -189,14 +193,14 @@ export class TextExtractor {
 
     for (const paragraph of block.paragraphs || []) {
       for (const word of paragraph.words || []) {
-        const wordText = word.symbols?.map((s) => s.text).join("") || "";
+        const wordText = word.symbols?.map((s) => s.text).join('') || '';
         if (wordText) {
           words.push(wordText);
         }
       }
     }
 
-    return words.join(" ");
+    return words.join(' ');
   }
 
   /**
@@ -204,7 +208,7 @@ export class TextExtractor {
    */
   private extractBoundingBox(block: Block): BoundingBox {
     const vertices = block.boundingBox?.vertices || [];
-    
+
     if (vertices.length < 2) {
       return { x: 0, y: 0, width: 0, height: 0 };
     }
@@ -231,7 +235,10 @@ export class TextExtractor {
   private calculateAverageConfidence(pages: OcrPage[]): number {
     if (pages.length === 0) return 0;
 
-    const totalConfidence = pages.reduce((sum, page) => sum + page.confidence, 0);
+    const totalConfidence = pages.reduce(
+      (sum, page) => sum + page.confidence,
+      0
+    );
     return totalConfidence / pages.length;
   }
 
@@ -240,14 +247,17 @@ export class TextExtractor {
    */
   parseInvoiceFields(ocrResult: OcrResult): OcrInvoiceData {
     const text = ocrResult.text;
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     const result: OcrInvoiceData = {};
     const ensureTotals = () => {
       if (!result.totals) {
-        result.totals = { currency: "EUR" };
+        result.totals = { currency: 'EUR' };
       } else if (!result.totals.currency) {
-        result.totals.currency = "EUR";
+        result.totals.currency = 'EUR';
       }
       return result.totals;
     };
@@ -287,22 +297,26 @@ export class TextExtractor {
     // Sort dates and assign to fields
     if (foundDates.length > 0) {
       foundDates.sort((a, b) => a.getTime() - b.getTime());
-      
+
       // Invoice date is usually the earliest
-      result.issueDate = foundDates[0].toISOString().split("T")[0];
-      
+      result.issueDate = foundDates[0].toISOString().split('T')[0];
+
       // Due date might be mentioned explicitly or be the later date
       if (foundDates.length > 1) {
-        result.dueDate = foundDates[foundDates.length - 1].toISOString().split("T")[0];
+        result.dueDate = foundDates[foundDates.length - 1]
+          .toISOString()
+          .split('T')[0];
       }
     }
 
     // Look for explicit due date
-    const dueDateMatch = text.match(/(?:Zahlbar bis|Due Date|Fällig)[:\s]+(\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4})/i);
+    const dueDateMatch = text.match(
+      /(?:Zahlbar bis|Due Date|Fällig)[:\s]+(\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4})/i
+    );
     if (dueDateMatch) {
       const dueDate = this.parseDate(dueDateMatch[1]);
       if (dueDate) {
-        result.dueDate = dueDate.toISOString().split("T")[0];
+        result.dueDate = dueDate.toISOString().split('T')[0];
       }
     }
 
@@ -318,7 +332,7 @@ export class TextExtractor {
 
     const amounts: number[] = [];
     for (const pattern of amountPatterns) {
-      const matches = text.matchAll(new RegExp(pattern, "gmi"));
+      const matches = text.matchAll(new RegExp(pattern, 'gmi'));
       for (const match of matches) {
         const amount = this.parseAmount(match[1]);
         if (amount !== null) {
@@ -334,12 +348,12 @@ export class TextExtractor {
     }
 
     // Extract currency
-    if (text.includes("EUR") || text.includes("€")) {
-      ensureTotals().currency = "EUR";
-    } else if (text.includes("USD") || text.includes("$")) {
-      ensureTotals().currency = "USD";
+    if (text.includes('EUR') || text.includes('€')) {
+      ensureTotals().currency = 'EUR';
+    } else if (text.includes('USD') || text.includes('$')) {
+      ensureTotals().currency = 'USD';
     } else {
-      ensureTotals().currency = "EUR"; // Default for German invoices
+      ensureTotals().currency = 'EUR'; // Default for German invoices
     }
 
     // Extract vendor (sender)
@@ -359,13 +373,16 @@ export class TextExtractor {
 
     // If no vendor found, use first few lines
     if (!result.supplier && lines.length > 0) {
-      result.supplier = { ...(result.supplier || {}), name: lines.slice(0, 3).join(" ").substring(0, 100) };
+      result.supplier = {
+        ...(result.supplier || {}),
+        name: lines.slice(0, 3).join(' ').substring(0, 100),
+      };
     }
 
     // Extract line items
     result.lineItems = this.extractLineItems(text);
 
-    logger.debug({ fields: Object.keys(result) }, "Parsed invoice fields");
+    logger.debug({ fields: Object.keys(result) }, 'Parsed invoice fields');
 
     return result;
   }
@@ -380,10 +397,11 @@ export class TextExtractor {
     total: number;
   }> {
     const items: ReturnType<typeof this.extractLineItems> = [];
-    const lines = text.split("\n");
+    const lines = text.split('\n');
 
     // Look for patterns like "Description ... Qty ... Price ... Total"
-    const itemPattern = /(.+?)\s+(\d+(?:[.,]\d+)?)\s+(?:x|×|Stk\.?|pcs)?\s*(?:EUR|€)?\s*([\d.,]+)\s*(?:EUR|€)?\s*([\d.,]+)/i;
+    const itemPattern =
+      /(.+?)\s+(\d+(?:[.,]\d+)?)\s+(?:x|×|Stk\.?|pcs)?\s*(?:EUR|€)?\s*([\d.,]+)\s*(?:EUR|€)?\s*([\d.,]+)/i;
 
     for (const line of lines) {
       const match = line.match(itemPattern);
@@ -450,28 +468,28 @@ export class TextExtractor {
     if (!amountStr) return null;
 
     // Remove currency symbols and whitespace
-    let clean = amountStr.trim().replace(/[€$\s]/g, "");
+    let clean = amountStr.trim().replace(/[€$\s]/g, '');
 
     // Handle German format: 1.234,56 -> 1234.56
-    if (clean.includes(",") && clean.includes(".")) {
+    if (clean.includes(',') && clean.includes('.')) {
       // Determine which is the decimal separator
-      const lastComma = clean.lastIndexOf(",");
-      const lastDot = clean.lastIndexOf(".");
-      
+      const lastComma = clean.lastIndexOf(',');
+      const lastDot = clean.lastIndexOf('.');
+
       if (lastComma > lastDot) {
         // German format
-        clean = clean.replace(/\./g, "").replace(",", ".");
+        clean = clean.replace(/\./g, '').replace(',', '.');
       } else {
         // US format
-        clean = clean.replace(/,/g, "");
+        clean = clean.replace(/,/g, '');
       }
-    } else if (clean.includes(",")) {
+    } else if (clean.includes(',')) {
       // Might be decimal comma
-      const parts = clean.split(",");
+      const parts = clean.split(',');
       if (parts.length === 2 && parts[1].length <= 2) {
-        clean = parts.join(".");
+        clean = parts.join('.');
       } else {
-        clean = clean.replace(/,/g, "");
+        clean = clean.replace(/,/g, '');
       }
     }
 

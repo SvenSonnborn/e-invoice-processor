@@ -1,7 +1,7 @@
-import { describe, it, expect } from "bun:test";
-import { parseCII } from "@/src/lib/zugferd";
+import { describe, it, expect } from 'bun:test';
+import { parseCII } from '@/src/lib/zugferd';
 
-describe("CII Parser", () => {
+describe('CII Parser', () => {
   const validCiiXml = `<?xml version="1.0" encoding="UTF-8"?>
 <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
   <ExchangedDocument>
@@ -94,50 +94,50 @@ describe("CII Parser", () => {
   </SupplyChainTradeTransaction>
 </CrossIndustryInvoice>`;
 
-  describe("parseCII", () => {
-    it("should parse document metadata", () => {
+  describe('parseCII', () => {
+    it('should parse document metadata', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.documentId).toBe("INV-2024-001");
+      expect(result.invoice?.documentId).toBe('INV-2024-001');
     });
 
-    it("should parse seller information", () => {
+    it('should parse seller information', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.seller?.name).toBe("Test Seller GmbH");
+      expect(result.invoice?.seller?.name).toBe('Test Seller GmbH');
     });
 
-    it("should parse buyer information", () => {
+    it('should parse buyer information', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.buyer?.name).toBe("Test Buyer AG");
+      expect(result.invoice?.buyer?.name).toBe('Test Buyer AG');
     });
 
-    it("should parse totals", () => {
+    it('should parse totals', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.currency).toBe("EUR");
+      expect(result.invoice?.currency).toBe('EUR');
       expect(result.invoice?.monetarySummation?.grandTotalAmount).toBeDefined();
     });
 
-    it("should parse line items", () => {
+    it('should parse line items', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
       expect(result.invoice?.lineItems?.length).toBeGreaterThanOrEqual(0);
     });
 
-    it("should return success false for invalid root element", () => {
+    it('should return success false for invalid root element', () => {
       const invalidXml = `<?xml version="1.0"?><InvalidRoot></InvalidRoot>`;
       const result = parseCII(invalidXml);
       expect(result.success).toBe(false);
     });
 
-    it("should return success false for malformed XML", () => {
-      const result = parseCII("<not valid xml");
+    it('should return success false for malformed XML', () => {
+      const result = parseCII('<not valid xml');
       expect(result.success).toBe(false);
     });
 
-    it("should handle minimal CII structure", () => {
+    it('should handle minimal CII structure', () => {
       const minimalXml = `<?xml version="1.0"?>
 <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
   <SupplyChainTradeTransaction>
@@ -155,8 +155,8 @@ describe("CII Parser", () => {
 </CrossIndustryInvoice>`;
       const result = parseCII(minimalXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.seller?.name).toBe("S");
-      expect(result.invoice?.buyer?.name).toBe("B");
+      expect(result.invoice?.seller?.name).toBe('S');
+      expect(result.invoice?.buyer?.name).toBe('B');
     });
   });
 });

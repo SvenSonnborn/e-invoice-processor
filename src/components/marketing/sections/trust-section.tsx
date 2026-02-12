@@ -95,7 +95,9 @@ export const TrustSection = () => {
           <div className="grid w-full max-w-4xl grid-cols-2 gap-4 md:grid-cols-4 md:gap-0 md:divide-x md:divide-neutral-200">
             {stats.map((stat) => (
               <div key={stat.label} className="px-6 py-4 text-center">
-                <p className="text-3xl font-bold text-brand-600">{stat.value}</p>
+                <p className="text-3xl font-bold text-brand-600">
+                  {stat.value}
+                </p>
                 <p className="mt-1 text-sm text-neutral-500">{stat.label}</p>
               </div>
             ))}

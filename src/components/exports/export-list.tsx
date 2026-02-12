@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Export List Component
@@ -6,7 +6,7 @@
  * Displays a list of past exports with status badges and download actions.
  */
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from '@/src/components/ui/button';
 import {
   Download,
   FileSpreadsheet,
@@ -15,8 +15,8 @@ import {
   CheckCircle2,
   Clock,
   FileX,
-} from "lucide-react";
-import type { ExportListItem } from "@/app/actions/exports";
+} from 'lucide-react';
+import type { ExportListItem } from '@/app/actions/exports';
 
 interface ExportListProps {
   exports: ExportListItem[];
@@ -28,44 +28,44 @@ const statusConfig: Record<
   { label: string; icon: React.ElementType; className: string }
 > = {
   CREATED: {
-    label: "Erstellt",
+    label: 'Erstellt',
     icon: Clock,
-    className: "bg-gray-100 text-gray-700",
+    className: 'bg-gray-100 text-gray-700',
   },
   GENERATING: {
-    label: "Wird generiert",
+    label: 'Wird generiert',
     icon: Loader2,
-    className: "bg-blue-50 text-blue-700",
+    className: 'bg-blue-50 text-blue-700',
   },
   READY: {
-    label: "Bereit",
+    label: 'Bereit',
     icon: CheckCircle2,
-    className: "bg-green-50 text-green-700",
+    className: 'bg-green-50 text-green-700',
   },
   FAILED: {
-    label: "Fehlgeschlagen",
+    label: 'Fehlgeschlagen',
     icon: AlertCircle,
-    className: "bg-red-50 text-red-700",
+    className: 'bg-red-50 text-red-700',
   },
 };
 
 const formatConfig: Record<string, { label: string; className: string }> = {
-  CSV: { label: "CSV", className: "bg-gray-100 text-gray-700" },
-  DATEV: { label: "DATEV", className: "bg-indigo-50 text-indigo-700" },
+  CSV: { label: 'CSV', className: 'bg-gray-100 text-gray-700' },
+  DATEV: { label: 'DATEV', className: 'bg-indigo-50 text-indigo-700' },
 };
 
 const handleDownload = (exportId: string) => {
-  window.open(`/api/exports/${exportId}/download`, "_blank");
+  window.open(`/api/exports/${exportId}/download`, '_blank');
 };
 
 const formatDate = (isoString: string): string => {
   const date = new Date(isoString);
-  return date.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return date.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 };
 
@@ -155,11 +155,11 @@ export const ExportList = ({ exports, loading }: ExportListProps) => {
                     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
                   >
                     <StatusIcon
-                      className={`h-3 w-3 ${exp.status === "GENERATING" ? "animate-spin" : ""}`}
+                      className={`h-3 w-3 ${exp.status === 'GENERATING' ? 'animate-spin' : ''}`}
                     />
                     {status.label}
                   </span>
-                  {exp.status === "FAILED" && exp.errorMessage && (
+                  {exp.status === 'FAILED' && exp.errorMessage && (
                     <p
                       className="text-xs text-red-600 mt-0.5 truncate max-w-[200px]"
                       title={exp.errorMessage}
@@ -172,13 +172,13 @@ export const ExportList = ({ exports, loading }: ExportListProps) => {
                   {exp.invoiceCount}
                 </td>
                 <td className="py-3 px-3 text-muted-foreground">
-                  {exp.creatorName ?? "–"}
+                  {exp.creatorName ?? '–'}
                 </td>
                 <td className="py-3 px-3 text-muted-foreground">
                   {formatDate(exp.createdAt)}
                 </td>
                 <td className="py-3 px-3 text-right">
-                  {exp.status === "READY" ? (
+                  {exp.status === 'READY' ? (
                     <Button
                       variant="ghost"
                       size="sm"

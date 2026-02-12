@@ -68,31 +68,31 @@ export interface ZUGFeRDInvoice {
   documentId?: string;
   documentType?: string;
   documentDate?: string;
-  
+
   // Metadata
   metadata: ZUGFeRDMetaData;
-  
+
   // Parties
   seller?: ZUGFeRDParty;
   buyer?: ZUGFeRDParty;
-  
+
   // References
   orderReference?: string;
   contractReference?: string;
   projectReference?: string;
-  
+
   // Delivery
   deliveryDate?: string;
-  
+
   // Due date (top-level for UBL invoices)
   dueDate?: string;
-  
+
   // Line items
   lineItems: ZUGFeRDTradeLineItem[];
-  
+
   // Taxes
   taxes: ZUGFeRDTax[];
-  
+
   // Payment
   currency?: string;
   paymentTerms?: ZUGFeRDPaymentTerms;
@@ -101,10 +101,10 @@ export interface ZUGFeRDInvoice {
   payeeAccountName?: string;
   payeeIban?: string;
   payeeBic?: string;
-  
+
   // Totals
   monetarySummation: ZUGFeRDMonetarySummation;
-  
+
   // Notes
   notes?: string[];
 }

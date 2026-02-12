@@ -1,2 +1,1 @@
-export * as ocr from "./ocr";
-
+export * as ocr from './ocr';

@@ -3,7 +3,6 @@ import { env } from '@/src/lib/config/env';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 

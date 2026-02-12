@@ -8,14 +8,14 @@
  * Based on DATEV Format 2017/2018 (Standard Buchungsstapel)
  */
 export interface DatevHeader {
-  formatIdentifier: "DTVF" | "EXTF";
+  formatIdentifier: 'DTVF' | 'EXTF';
   version: number;
   category: number;
   formatName: string;
   formatVersion: number;
   generatedOn: string;
   reserved: string;
-  currency: "EUR" | string;
+  currency: 'EUR' | string;
   revision: string;
 }
 
@@ -58,7 +58,7 @@ export interface DatevExportConfig {
   defaultKonto?: string;
   defaultGegenkonto?: string;
   defaultSteuerschluessel?: string;
-  encoding: "UTF-8" | "ISO-8859-1" | "WINDOWS-1252";
+  encoding: 'UTF-8' | 'ISO-8859-1' | 'WINDOWS-1252';
 }
 
 /**

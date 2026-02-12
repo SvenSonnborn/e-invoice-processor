@@ -92,11 +92,13 @@ bun scripts/setup-rls.ts
 ```
 
 Dieser Befehl:
+
 - Aktiviert RLS auf allen Tabellen
 - Erstellt Policies für Multi-Tenant-Isolation
 - Richtet Storage-Policies ein
 
 **Ausgabe:**
+
 ```
 📊 Connecting to database...
 🔒 Executing RLS policies...
@@ -111,12 +113,14 @@ Dieser Befehl:
 2. Klicke auf "New bucket"
 
 **Bucket 1: `documents`**
+
 - Name: `documents`
 - Public: ❌ (Private)
 - File size limit: `52428800` (50MB)
 - Allowed MIME types: `application/pdf,application/xml,text/xml`
 
 **Bucket 2: `exports`**
+
 - Name: `exports`
 - Public: ❌ (Private)
 - File size limit: `10485760` (10MB)
@@ -174,6 +178,7 @@ VALUES (
 2. Passe die Templates auf Deutsch an:
 
 **Confirm Signup:**
+
 ```
 Betreff: Bestätigen Sie Ihre E-Mail-Adresse
 
@@ -187,6 +192,7 @@ Dieser Link ist 24 Stunden gültig.
 ```
 
 **Reset Password:**
+
 ```
 Betreff: Passwort zurücksetzen
 
@@ -255,6 +261,7 @@ SUPABASE_SERVICE_ROLE_KEY=...
 ### Redirect URLs aktualisieren
 
 In Supabase Dashboard → Authentication → URL Configuration:
+
 - Füge Production-URLs hinzu: `https://yourdomain.com/auth/callback`
 
 ### Build erstellen
@@ -272,14 +279,14 @@ Der Deploy-Workflow (`.github/workflows/deploy.yml`) läuft nach erfolgreicher C
 1. Im Repository: **Settings** → **Environments** → Environment **production** anlegen (falls noch nicht vorhanden).
 2. Unter **Environment secrets** folgende Secrets anlegen (Werte wie in `.env.local`, aber für die Production-Umgebung):
 
-| Secret-Name | Beschreibung |
-|-------------|--------------|
-| `DATABASE_URL` | Connection-Pooling-URL (Supabase → Settings → Database) |
-| `DIRECT_URL` | Direct-Connection-URL für Migrations |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable/Anon Key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service Role Key (geheim) |
-| `NEXT_PUBLIC_SITE_URL` | Production-URL der App (z.B. `https://yourdomain.com`) |
+| Secret-Name                            | Beschreibung                                            |
+| -------------------------------------- | ------------------------------------------------------- |
+| `DATABASE_URL`                         | Connection-Pooling-URL (Supabase → Settings → Database) |
+| `DIRECT_URL`                           | Direct-Connection-URL für Migrations                    |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase Project URL                                    |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable/Anon Key                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`            | Service Role Key (geheim)                               |
+| `NEXT_PUBLIC_SITE_URL`                 | Production-URL der App (z.B. `https://yourdomain.com`)  |
 
 Die CI-Workflow-Datei (`.github/workflows/ci.yml`) verwendet weiterhin Dummy-Werte und benötigt keine GitHub Secrets.
 
@@ -288,6 +295,7 @@ Die CI-Workflow-Datei (`.github/workflows/ci.yml`) verwendet weiterhin Dummy-Wer
 ### Problem: "Email not confirmed"
 
 **Lösung:** Prüfe deine E-Mails und klicke auf den Bestätigungslink. Falls keine E-Mail angekommen ist:
+
 1. Prüfe Spam-Ordner
 2. In Supabase Dashboard → Authentication → Users: Manuell Email als "confirmed" markieren
 
@@ -324,14 +332,17 @@ SELECT * FROM "User" WHERE "supabaseUserId" = 'SUPABASE_USER_ID';
 ## Weitere Dokumentation
 
 ### Supabase & Database
+
 - [Supabase RLS Runbook](./runbooks/supabase-rls.md) - Detaillierte Erklärung der RLS Policies
 - [Prisma Schema](../prisma/schema.prisma) - Datenbank-Schema
 
 ### Invoice Processing
+
 - [Invoice Processing](./invoice-processing.md) - Status-Tracking und Workflow
 - [Invoice Revisions](./invoice-revisions.md) - Versionierung und Re-Processing
 - [Invoice Line Items](./invoice-line-items.md) - Strukturierte Rechnungspositionen
 
 ### Export System
+
 - [Export Processing](./export-processing.md) - Export Status-Tracking und Fehlerbehandlung
 - [Audit Trail](./audit-trail.md) - Actor Tracking und Nachverfolgbarkeit

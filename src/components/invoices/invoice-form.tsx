@@ -4,9 +4,5 @@
  */
 
 export function InvoiceForm() {
-  return (
-    <form>
-      {/* Invoice form implementation */}
-    </form>
-  );
+  return <form>{/* Invoice form implementation */}</form>;
 }

@@ -51,7 +51,7 @@ const mapStripeStatus = (stripeStatus: StripeSubStatus): SubscriptionStatus => {
 };
 
 const resolveId = (
-  value: string | { id: string } | null | undefined,
+  value: string | { id: string } | null | undefined
 ): string | undefined => {
   if (!value) return undefined;
   return typeof value === 'string' ? value : value.id;
@@ -207,7 +207,8 @@ describe('Stripe Webhook Event Processing', () => {
           {
             price: { id: 'price_pro' },
             current_period_start: Math.floor(Date.now() / 1000),
-            current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
+            current_period_end:
+              Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
           },
         ],
       },
@@ -228,7 +229,9 @@ describe('Stripe Webhook Event Processing', () => {
     it('should extract period from subscription item (SDK v20+)', () => {
       const item = mockSubscription.items.data[0];
       expect(item.current_period_start).toBeGreaterThan(0);
-      expect(item.current_period_end).toBeGreaterThan(item.current_period_start);
+      expect(item.current_period_end).toBeGreaterThan(
+        item.current_period_start
+      );
     });
   });
 

@@ -1,8 +1,8 @@
 export { getStripe } from './client';
-export { 
-  STRIPE_CONFIG, 
-  getPlanByPriceId, 
-  getPlanById, 
+export {
+  STRIPE_CONFIG,
+  getPlanByPriceId,
+  getPlanById,
   hasUnlimitedInvoices,
   formatPrice,
   type Plan,

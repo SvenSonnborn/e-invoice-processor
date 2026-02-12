@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import { 
-  STRIPE_CONFIG, 
-  getPlanByPriceId, 
-  getPlanById, 
+import {
+  STRIPE_CONFIG,
+  getPlanByPriceId,
+  getPlanById,
   hasUnlimitedInvoices,
   formatPrice,
 } from '../../src/lib/stripe/config';
@@ -25,14 +25,14 @@ describe('Stripe Config', () => {
       expect(STRIPE_CONFIG.PLANS.PRO).toBeDefined();
       expect(STRIPE_CONFIG.PLANS.PRO.id).toBe('pro');
       expect(STRIPE_CONFIG.PLANS.PRO.name).toBe('Pro');
-      expect(STRIPE_CONFIG.PLANS.PRO.price).toBe(29.00);
+      expect(STRIPE_CONFIG.PLANS.PRO.price).toBe(29.0);
     });
 
     it('should have BUSINESS plan configured with correct pricing', () => {
       expect(STRIPE_CONFIG.PLANS.BUSINESS).toBeDefined();
       expect(STRIPE_CONFIG.PLANS.BUSINESS.id).toBe('business');
       expect(STRIPE_CONFIG.PLANS.BUSINESS.name).toBe('Business');
-      expect(STRIPE_CONFIG.PLANS.BUSINESS.price).toBe(99.00);
+      expect(STRIPE_CONFIG.PLANS.BUSINESS.price).toBe(99.0);
     });
 
     it('PRO plan should have correct limits', () => {
@@ -111,13 +111,13 @@ describe('Stripe Config', () => {
 
   describe('formatPrice', () => {
     it('should format 29.00 with EUR symbol', () => {
-      const formatted = formatPrice(29.00);
+      const formatted = formatPrice(29.0);
       expect(formatted).toContain('29,00');
       expect(formatted).toContain('€');
     });
 
     it('should format 99.00 with EUR symbol', () => {
-      const formatted = formatPrice(99.00);
+      const formatted = formatPrice(99.0);
       expect(formatted).toContain('99,00');
       expect(formatted).toContain('€');
     });
@@ -135,11 +135,21 @@ describe('Stripe Config', () => {
 
   describe('Webhook Events', () => {
     it('should define all required webhook event types', () => {
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.CHECKOUT_COMPLETED).toBe('checkout.session.completed');
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_UPDATED).toBe('customer.subscription.updated');
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_DELETED).toBe('customer.subscription.deleted');
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED).toBe('invoice.payment_succeeded');
-      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_FAILED).toBe('invoice.payment_failed');
+      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.CHECKOUT_COMPLETED).toBe(
+        'checkout.session.completed'
+      );
+      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_UPDATED).toBe(
+        'customer.subscription.updated'
+      );
+      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_DELETED).toBe(
+        'customer.subscription.deleted'
+      );
+      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED).toBe(
+        'invoice.payment_succeeded'
+      );
+      expect(STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_FAILED).toBe(
+        'invoice.payment_failed'
+      );
     });
   });
 

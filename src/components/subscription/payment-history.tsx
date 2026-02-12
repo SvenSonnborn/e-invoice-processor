@@ -1,7 +1,13 @@
 'use client';
 
 import { Badge } from '@/src/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Separator } from '@/src/components/ui/separator';
 import { ExternalLink, Receipt, AlertCircle } from 'lucide-react';
@@ -21,7 +27,13 @@ interface PaymentHistoryProps {
   payments: PaymentItem[];
 }
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   succeeded: { label: 'Erfolgreich', variant: 'default' },
   failed: { label: 'Fehlgeschlagen', variant: 'destructive' },
   pending: { label: 'Ausstehend', variant: 'secondary' },
@@ -67,9 +79,7 @@ export const PaymentHistory = ({ payments }: PaymentHistoryProps) => {
     <Card>
       <CardHeader>
         <CardTitle>Zahlungsverlauf</CardTitle>
-        <CardDescription>
-          Ihre bisherigen Zahlungen und Belege
-        </CardDescription>
+        <CardDescription>Ihre bisherigen Zahlungen und Belege</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -102,9 +112,7 @@ export const PaymentHistory = ({ payments }: PaymentHistoryProps) => {
                     <span className="text-sm font-semibold">
                       {formatAmount(payment.amount, payment.currency)}
                     </span>
-                    <Badge variant={config.variant}>
-                      {config.label}
-                    </Badge>
+                    <Badge variant={config.variant}>{config.label}</Badge>
                     {payment.receiptUrl && (
                       <Button
                         variant="ghost"

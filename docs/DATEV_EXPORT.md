@@ -9,61 +9,73 @@ Der DATEV Export implementiert das **Standard Buchungsstapel CSV Format** von DA
 ## Format-Spezifikation
 
 ### Zeichensatz
+
 - **UTF-8 mit BOM** (Byte Order Mark) - wichtig für DATEV-Kompatibilität
 
 ### Trennzeichen
+
 - **Semikolon (;)** als Feldtrennzeichen
 - **CRLF (\r\n)** als Zeilenumbruch
 
 ### Dezimaltrennzeichen
+
 - **Komma (,)** für Dezimalzahlen (z.B. `1234,56`)
 
 ## CSV-Struktur
 
 ### Zeile 1: Header (EXTFD)
+
 ```
 EXTFD;Beraternummer;Mandantennummer;WJ-Beginn;Belegdatum;Bezeichnung;Diktatnr;Buchungstyp;Rechnungswesen;...
 ```
 
 ### Zeile 2: Spaltenüberschriften
+
 Alle DATEV-Standardfelder wie definiert in der DATEV Dokumentation.
 
 ### Zeile 3+: Buchungsdaten
+
 Die eigentlichen Buchungszeilen.
 
 ## Feldmapping
 
 ### Konto (Sachkonto)
-| Rechnungstyp | Standardkonto | Beschreibung |
-|--------------|---------------|--------------|
-| Eingangsrechnung | 4900 | Allgemeiner Aufwand |
-| Ausgangsrechnung | 8400 | Umsatzerlöse |
+
+| Rechnungstyp     | Standardkonto | Beschreibung        |
+| ---------------- | ------------- | ------------------- |
+| Eingangsrechnung | 4900          | Allgemeiner Aufwand |
+| Ausgangsrechnung | 8400          | Umsatzerlöse        |
 
 **Konfigurierbar** über `defaultExpenseAccount` und `defaultRevenueAccount`
 
 ### Gegenkonto
+
 Standard: **1200** (Bank)
 
 Konfigurierbar über `defaultContraAccount`
 
 ### Soll/Haben-Kennzeichen
-| Rechnungstyp | Kennzeichen |
-|--------------|-------------|
-| Eingangsrechnung | S (Soll) |
-| Ausgangsrechnung | H (Haben) |
+
+| Rechnungstyp     | Kennzeichen |
+| ---------------- | ----------- |
+| Eingangsrechnung | S (Soll)    |
+| Ausgangsrechnung | H (Haben)   |
 
 ### BU-Schlüssel (Steuerkennzeichen)
+
 | Steuersatz | Eingangsrechnung | Ausgangsrechnung |
-|------------|------------------|------------------|
-| 0% | 0 | 0 |
-| 7% | 2 | 12 |
-| 16% | 55 | 56 |
-| 19% | 1 | 11 |
+| ---------- | ---------------- | ---------------- |
+| 0%         | 0                | 0                |
+| 7%         | 2                | 12               |
+| 16%        | 55               | 56               |
+| 19%        | 1                | 11               |
 
 ### Datumsformat
+
 **DDMMYYYY** (z.B. `15012024` für 15.01.2024)
 
 ### Betragsformat
+
 - Ohne Tausendertrennzeichen
 - Komma als Dezimaltrennzeichen
 - 2 Dezimalstellen
@@ -101,30 +113,32 @@ POST /api/exports
 
 ### Optionen
 
-| Option | Beschreibung | Format |
-|--------|--------------|--------|
-| `consultantNumber` | DATEV Beraternummer | 5-7 Ziffern |
-| `clientNumber` | DATEV Mandantennummer | 1-5 Ziffern |
-| `fiscalYearStart` | Wirtschaftsjahr Beginn | DDMM (z.B. "0101") |
-| `defaultExpenseAccount` | Standard-Aufwandkonto | 4 Ziffern |
-| `defaultRevenueAccount` | Standard-Ertragskonto | 4 Ziffern |
-| `defaultContraAccount` | Standard-Gegenkonto | 4 Ziffern |
-| `batchName` | Bezeichnung des Buchungsstapels | Freitext |
+| Option                  | Beschreibung                    | Format             |
+| ----------------------- | ------------------------------- | ------------------ |
+| `consultantNumber`      | DATEV Beraternummer             | 5-7 Ziffern        |
+| `clientNumber`          | DATEV Mandantennummer           | 1-5 Ziffern        |
+| `fiscalYearStart`       | Wirtschaftsjahr Beginn          | DDMM (z.B. "0101") |
+| `defaultExpenseAccount` | Standard-Aufwandkonto           | 4 Ziffern          |
+| `defaultRevenueAccount` | Standard-Ertragskonto           | 4 Ziffern          |
+| `defaultContraAccount`  | Standard-Gegenkonto             | 4 Ziffern          |
+| `batchName`             | Bezeichnung des Buchungsstapels | Freitext           |
 
 ### Export herunterladen
 
 ```typescript
-GET /api/exports/[exportId]/download
+GET / api / exports / [exportId] / download;
 ```
 
 ## Dateinamen
 
 Standard-Format:
+
 ```
 EXTF_[Beraternummer]_[Mandantennummer]_[YYYYMMDDhhmm].csv
 ```
 
 Beispiel:
+
 ```
 EXTF_1234567_00123_202401151430.csv
 ```
@@ -132,6 +146,7 @@ EXTF_1234567_00123_202401151430.csv
 ## Kontenrahmen
 
 Der Export ist optimiert für **SKR04** (Kontenrahmen für die Bundesrepublik Deutschland), unterstützt aber auch:
+
 - SKR03 (mittelstandorientierter Kontenrahmen)
 - IKR (Industriekontenrahmen)
 
@@ -140,12 +155,14 @@ Das Rechnungswesen wird im Header als "2" (SKR04) gekennzeichnet.
 ## Import in DATEV
 
 ### DATEV Unternehmen Online
+
 1. Buchhaltung → Belege → Buchungsdaten importieren
 2. Format: "Buchungsstapel (CSV)"
 3. Zeichensatz: UTF-8
 4. Trennzeichen: Semikolon
 
 ### DATEV Rechnungswesen
+
 1. Import → Buchungsdaten
 2. Dateityp: CSV Buchungsstapel
 3. Kodierung: UTF-8
@@ -153,12 +170,15 @@ Das Rechnungswesen wird im Header als "2" (SKR04) gekennzeichnet.
 ## Fehlerbehebung
 
 ### Umlaute werden nicht korrekt angezeigt
+
 → Stelle sicher, dass der Import als UTF-8 erfolgt
 
 ### Beträge werden falsch interpretiert
+
 → Prüfe, ob das Dezimalkomma korrekt gesetzt ist (Komma statt Punkt)
 
 ### Steuerschlüssel nicht gefunden
+
 → Überprüfe die Steuersätze in den Rechnungspositionen
 
 ## Export-Dialog (UI)
@@ -185,11 +205,13 @@ Der Export kann über die Web-Oberfläche unter `/exports` durchgeführt werden:
 ## Testen
 
 Die Tests für den DATEV Export befinden sich in:
+
 ```
 tests/unit/datev.test.ts
 ```
 
 Ausführen:
+
 ```bash
 bun test tests/unit/datev.test.ts
 ```

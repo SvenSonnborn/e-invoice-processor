@@ -1,6 +1,6 @@
 /**
  * Stripe Configuration
- * 
+ *
  * This file contains all Stripe-related configuration including
  * price IDs, plan details, and subscription limits.
  */
@@ -18,7 +18,7 @@ export const STRIPE_CONFIG = {
       id: 'pro',
       name: 'Pro',
       description: 'Für wachsende Unternehmen',
-      price: 29.00,
+      price: 29.0,
       priceId: process.env.STRIPE_PRICE_ID_PRO || '',
       features: [
         '100 Rechnungen pro Monat',
@@ -40,7 +40,7 @@ export const STRIPE_CONFIG = {
       id: 'business',
       name: 'Business',
       description: 'Für Unternehmen mit hohem Volumen',
-      price: 99.00,
+      price: 99.0,
       priceId: process.env.STRIPE_PRICE_ID_BUSINESS || '',
       features: [
         'Unbegrenzte Rechnungen',
@@ -72,7 +72,7 @@ export const STRIPE_CONFIG = {
 } as const;
 
 export type PlanId = keyof typeof STRIPE_CONFIG.PLANS;
-export type Plan = typeof STRIPE_CONFIG.PLANS[PlanId];
+export type Plan = (typeof STRIPE_CONFIG.PLANS)[PlanId];
 
 /**
  * Get plan by Stripe price ID

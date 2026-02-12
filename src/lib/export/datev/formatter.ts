@@ -2,14 +2,29 @@
  * DATEV Formatter
  */
 
-import type { DatevEntry, DatevExportConfig, DatevExportResult, DatevInvoice, DatevInvoiceMapping } from "./types";
-import { generateCSVWithBOM, generateExtendedCSV, generateFilename, generateStructuredFilename } from "./csv-generator";
-import { mapInvoiceToDatevEntries, mapInvoiceWithLineItemsToDatevEntries, DEFAULT_INVOICE_MAPPING } from "./mapper";
-import { validateDatevEntry } from "./validator";
+import type {
+  DatevEntry,
+  DatevExportConfig,
+  DatevExportResult,
+  DatevInvoice,
+  DatevInvoiceMapping,
+} from './types';
+import {
+  generateCSVWithBOM,
+  generateExtendedCSV,
+  generateFilename,
+  generateStructuredFilename,
+} from './csv-generator';
+import {
+  mapInvoiceToDatevEntries,
+  mapInvoiceWithLineItemsToDatevEntries,
+  DEFAULT_INVOICE_MAPPING,
+} from './mapper';
+import { validateDatevEntry } from './validator';
 import { validateGoBDCompliance, type InvoiceData } from '@/src/lib/gobd';
 
 export interface DatevExportOptions {
-  format?: "standard" | "extended";
+  format?: 'standard' | 'extended';
   detailed?: boolean;
   config: DatevExportConfig;
   mapping?: DatevInvoiceMapping;
@@ -18,7 +33,7 @@ export interface DatevExportOptions {
 }
 
 export const DEFAULT_EXPORT_OPTIONS: Partial<DatevExportOptions> = {
-  format: "standard",
+  format: 'standard',
   detailed: false,
   useStructuredFilename: false,
 };
@@ -30,7 +45,7 @@ export function formatInvoicesForDatev(
   const opts: DatevExportOptions = {
     ...DEFAULT_EXPORT_OPTIONS,
     ...options,
-    config: options.config || { encoding: "UTF-8" },
+    config: options.config || { encoding: 'UTF-8' },
   };
 
   const mapping = opts.mapping || DEFAULT_INVOICE_MAPPING;
@@ -38,7 +53,7 @@ export function formatInvoicesForDatev(
   try {
     // GoBD Compliance Validation
     const gobdErrors: Array<{ field: string; message: string }> = [];
-    
+
     for (let i = 0; i < invoices.length; i++) {
       const invoice = invoices[i];
       const invoiceData: InvoiceData = {
@@ -61,8 +76,10 @@ export function formatInvoicesForDatev(
         })),
       };
 
-      const gobdResult = validateGoBDCompliance(invoiceData, { strictMode: true });
-      
+      const gobdResult = validateGoBDCompliance(invoiceData, {
+        strictMode: true,
+      });
+
       if (!gobdResult.isCompliant) {
         for (const violation of gobdResult.violations) {
           gobdErrors.push({
@@ -76,8 +93,8 @@ export function formatInvoicesForDatev(
     if (gobdErrors.length > 0) {
       return {
         success: false,
-        csv: "",
-        filename: "",
+        csv: '',
+        filename: '',
         entryCount: 0,
         totalAmount: 0,
         errors: gobdErrors,
@@ -98,28 +115,29 @@ export function formatInvoicesForDatev(
     if (validationErrors.length > 0) {
       return {
         success: false,
-        csv: "",
-        filename: "",
+        csv: '',
+        filename: '',
         entryCount: 0,
         totalAmount: 0,
         errors: validationErrors,
       };
     }
 
-    const csv = opts.format === "extended"
-      ? generateExtendedCSV(entries, opts.config)
-      : generateCSVWithBOM(entries, opts.config);
+    const csv =
+      opts.format === 'extended'
+        ? generateExtendedCSV(entries, opts.config)
+        : generateCSVWithBOM(entries, opts.config);
 
-    const filename = opts.filename || (
-      opts.useStructuredFilename
+    const filename =
+      opts.filename ||
+      (opts.useStructuredFilename
         ? generateStructuredFilename(
             opts.config.beraterNummer,
             opts.config.mandantenNummer,
             opts.config.datumVon,
             opts.config.datumBis
           )
-        : generateFilename()
-    );
+        : generateFilename());
 
     const totalAmount = entries.reduce((sum, entry) => {
       return sum + entry.umsatzSoll + entry.umsatzHaben;
@@ -135,14 +153,16 @@ export function formatInvoicesForDatev(
   } catch (error) {
     return {
       success: false,
-      csv: "",
-      filename: "",
+      csv: '',
+      filename: '',
       entryCount: 0,
       totalAmount: 0,
-      errors: [{
-        field: "general",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }],
+      errors: [
+        {
+          field: 'general',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      ],
     };
   }
 }
@@ -168,14 +188,14 @@ export function exportInvoicesToBuffer(
 
   if (!result.success) {
     return {
-      buffer: Buffer.from(""),
-      filename: "",
+      buffer: Buffer.from(''),
+      filename: '',
       success: false,
-      errors: result.errors?.map(e => `${e.field}: ${e.message}`),
+      errors: result.errors?.map((e) => `${e.field}: ${e.message}`),
     };
   }
 
-  const buffer = Buffer.from(result.csv, "utf-8");
+  const buffer = Buffer.from(result.csv, 'utf-8');
 
   return {
     buffer,
@@ -202,7 +222,7 @@ export function previewExport(
   const opts: DatevExportOptions = {
     ...DEFAULT_EXPORT_OPTIONS,
     ...options,
-    config: options.config || { encoding: "UTF-8" },
+    config: options.config || { encoding: 'UTF-8' },
   };
 
   const mapping = opts.mapping || DEFAULT_INVOICE_MAPPING;
@@ -217,9 +237,10 @@ export function previewExport(
       : mapInvoiceToDatevEntries(invoice, mapping);
     entries.push(...invoiceEntries);
 
-    const issueDate = invoice.issueDate instanceof Date
-      ? invoice.issueDate
-      : new Date(invoice.issueDate);
+    const issueDate =
+      invoice.issueDate instanceof Date
+        ? invoice.issueDate
+        : new Date(invoice.issueDate);
 
     if (!isNaN(issueDate.getTime())) {
       if (!minDate || issueDate < minDate) minDate = issueDate;
@@ -234,9 +255,13 @@ export function previewExport(
   return {
     entryCount: entries.length,
     totalAmount,
-    dateRange: minDate && maxDate
-      ? { from: minDate.toISOString().split("T")[0], to: maxDate.toISOString().split("T")[0] }
-      : null,
+    dateRange:
+      minDate && maxDate
+        ? {
+            from: minDate.toISOString().split('T')[0],
+            to: maxDate.toISOString().split('T')[0],
+          }
+        : null,
     invoiceCount: invoices.length,
   };
 }

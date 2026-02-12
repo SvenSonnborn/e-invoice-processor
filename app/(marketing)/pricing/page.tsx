@@ -8,34 +8,40 @@ import type { PlanId } from '@/src/lib/stripe/config';
 
 export const metadata: Metadata = {
   title: 'Preise | E-Invoice Hub',
-  description: 'Wählen Sie den passenden Plan für Ihr Unternehmen. Starten Sie kostenlos mit einer 14-tägigen Testphase.',
+  description:
+    'Wählen Sie den passenden Plan für Ihr Unternehmen. Starten Sie kostenlos mit einer 14-tägigen Testphase.',
 };
 
 const faqs = [
   {
     question: 'Kann ich später den Plan wechseln?',
-    answer: 'Ja, Sie können jederzeit upgraden oder downgraden. Änderungen werden sofort wirksam.',
+    answer:
+      'Ja, Sie können jederzeit upgraden oder downgraden. Änderungen werden sofort wirksam.',
   },
   {
     question: 'Was passiert nach der Testphase?',
-    answer: 'Nach 14 Tagen wird Ihre Zahlungsmethode belastet, sofern Sie nicht vorher kündigen.',
+    answer:
+      'Nach 14 Tagen wird Ihre Zahlungsmethode belastet, sofern Sie nicht vorher kündigen.',
   },
   {
     question: 'Gibt es eine Mindestlaufzeit?',
-    answer: 'Nein, Sie können monatlich kündigen. Es gibt keine versteckten Gebühren oder Mindestlaufzeiten.',
+    answer:
+      'Nein, Sie können monatlich kündigen. Es gibt keine versteckten Gebühren oder Mindestlaufzeiten.',
   },
   {
     question: 'Wie kann ich kündigen?',
-    answer: 'Sie können Ihr Abonnement jederzeit in den Einstellungen oder über das Stripe-Kundenportal kündigen.',
+    answer:
+      'Sie können Ihr Abonnement jederzeit in den Einstellungen oder über das Stripe-Kundenportal kündigen.',
   },
 ];
 
 export default async function PricingPage() {
   const user = await getCurrentUser();
 
-  const currentPlan = user?.subscriptionTier !== 'FREE'
-    ? (user?.subscriptionTier as PlanId | undefined)
-    : undefined;
+  const currentPlan =
+    user?.subscriptionTier !== 'FREE'
+      ? (user?.subscriptionTier as PlanId | undefined)
+      : undefined;
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -59,21 +65,17 @@ export default async function PricingPage() {
         {/* Hero */}
         <div className="mb-16 text-center">
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-neutral-900 md:text-5xl">
-            Einfache, transparente{' '}
-            <span className="text-primary">Preise</span>
+            Einfache, transparente <span className="text-primary">Preise</span>
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Wählen Sie den passenden Plan für Ihr Unternehmen. 
-            Alle Pläne beinhalten eine 14-tägige kostenlose Testphase.
+            Wählen Sie den passenden Plan für Ihr Unternehmen. Alle Pläne
+            beinhalten eine 14-tägige kostenlose Testphase.
           </p>
         </div>
 
         {/* Pricing Cards */}
         <div className="mx-auto max-w-4xl">
-          <Pricing 
-            currentPlan={currentPlan} 
-            isAuthenticated={!!user} 
-          />
+          <Pricing currentPlan={currentPlan} isAuthenticated={!!user} />
         </div>
 
         {/* Trust Badges */}

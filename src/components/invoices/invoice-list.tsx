@@ -4,9 +4,5 @@
  */
 
 export function InvoiceList() {
-  return (
-    <div>
-      {/* Invoice list implementation */}
-    </div>
-  );
+  return <div>{/* Invoice list implementation */}</div>;
 }

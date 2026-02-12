@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Export Dialog
@@ -6,8 +6,8 @@
  * Dialog for creating an export with format selection and DATEV configuration options.
  */
 
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -15,21 +15,21 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/src/components/ui/dialog";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Separator } from "@/src/components/ui/separator";
+} from '@/src/components/ui/dialog';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Separator } from '@/src/components/ui/separator';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { createExportAction } from "@/app/actions/exports";
-import { validateDatevOptions } from "@/src/server/exporters/datev";
-import { Loader2, FileDown } from "lucide-react";
+} from '@/src/components/ui/select';
+import { createExportAction } from '@/app/actions/exports';
+import { validateDatevOptions } from '@/src/server/exporters/datev';
+import { Loader2, FileDown } from 'lucide-react';
 
 interface ExportDialogProps {
   invoiceIds: string[];
@@ -44,21 +44,21 @@ export const ExportDialog = ({
   onOpenChange,
   onExportCreated,
 }: ExportDialogProps) => {
-  const [format, setFormat] = useState<"CSV" | "DATEV">("DATEV");
+  const [format, setFormat] = useState<'CSV' | 'DATEV'>('DATEV');
   const [isPending, startTransition] = useTransition();
 
   // DATEV options state
-  const [consultantNumber, setConsultantNumber] = useState("");
-  const [clientNumber, setClientNumber] = useState("");
-  const [fiscalYearStart, setFiscalYearStart] = useState("0101");
-  const [defaultExpenseAccount, setDefaultExpenseAccount] = useState("4900");
-  const [defaultRevenueAccount, setDefaultRevenueAccount] = useState("8400");
-  const [defaultContraAccount, setDefaultContraAccount] = useState("1200");
-  const [batchName, setBatchName] = useState("");
+  const [consultantNumber, setConsultantNumber] = useState('');
+  const [clientNumber, setClientNumber] = useState('');
+  const [fiscalYearStart, setFiscalYearStart] = useState('0101');
+  const [defaultExpenseAccount, setDefaultExpenseAccount] = useState('4900');
+  const [defaultRevenueAccount, setDefaultRevenueAccount] = useState('8400');
+  const [defaultContraAccount, setDefaultContraAccount] = useState('1200');
+  const [batchName, setBatchName] = useState('');
 
   const handleSubmit = () => {
     // Client-side validation for DATEV options
-    if (format === "DATEV") {
+    if (format === 'DATEV') {
       const datevOpts = {
         ...(consultantNumber && { consultantNumber }),
         ...(clientNumber && { clientNumber }),
@@ -67,8 +67,8 @@ export const ExportDialog = ({
 
       const errors = validateDatevOptions(datevOpts);
       if (errors.length > 0) {
-        toast.error("Validierungsfehler", {
-          description: errors.join(", "),
+        toast.error('Validierungsfehler', {
+          description: errors.join(', '),
         });
         return;
       }
@@ -76,7 +76,7 @@ export const ExportDialog = ({
 
     startTransition(async () => {
       const datevOptions =
-        format === "DATEV"
+        format === 'DATEV'
           ? {
               ...(consultantNumber && { consultantNumber }),
               ...(clientNumber && { clientNumber }),
@@ -95,14 +95,14 @@ export const ExportDialog = ({
       });
 
       if (result.success) {
-        toast.success("Export erstellt", {
+        toast.success('Export erstellt', {
           description: `${result.export.filename} (${result.export.invoiceCount} Rechnungen)`,
           action: {
-            label: "Herunterladen",
+            label: 'Herunterladen',
             onClick: () => {
               window.open(
                 `/api/exports/${result.export.id}/download`,
-                "_blank"
+                '_blank'
               );
             },
           },
@@ -110,7 +110,7 @@ export const ExportDialog = ({
         onOpenChange(false);
         onExportCreated?.();
       } else {
-        toast.error("Export fehlgeschlagen", {
+        toast.error('Export fehlgeschlagen', {
           description: result.error,
         });
       }
@@ -126,7 +126,7 @@ export const ExportDialog = ({
             Neuer Export
           </DialogTitle>
           <DialogDescription>
-            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? "en" : ""}{" "}
+            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? 'en' : ''}{' '}
             exportieren
           </DialogDescription>
         </DialogHeader>
@@ -137,22 +137,20 @@ export const ExportDialog = ({
             <Label htmlFor="export-format">Format</Label>
             <Select
               value={format}
-              onValueChange={(val) => setFormat(val as "CSV" | "DATEV")}
+              onValueChange={(val) => setFormat(val as 'CSV' | 'DATEV')}
             >
               <SelectTrigger id="export-format">
                 <SelectValue placeholder="Format wählen" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="CSV">CSV (Standard)</SelectItem>
-                <SelectItem value="DATEV">
-                  DATEV Buchungsstapel
-                </SelectItem>
+                <SelectItem value="DATEV">DATEV Buchungsstapel</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* DATEV Configuration Options */}
-          {format === "DATEV" && (
+          {format === 'DATEV' && (
             <>
               <Separator />
               <div className="space-y-4">
@@ -244,7 +242,7 @@ export const ExportDialog = ({
                 {/* Batch Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="batch-name">
-                    Buchungsstapel-Bezeichnung{" "}
+                    Buchungsstapel-Bezeichnung{' '}
                     <span className="text-muted-foreground font-normal">
                       (optional)
                     </span>

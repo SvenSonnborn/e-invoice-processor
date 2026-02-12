@@ -1,15 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
   DATABASE_URL: z.string().min(1),
   DIRECT_URL: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   LOG_LEVEL: z
-    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
-    .default("info"),
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
 });
 
 // In Next.js, env vars are available on the server at runtime.
@@ -19,18 +21,20 @@ export type Env = z.infer<typeof envSchema>;
 let cachedEnv: Env | null = null;
 
 function buildRawEnv() {
-  const isTest = process.env.NODE_ENV === "test";
+  const isTest = process.env.NODE_ENV === 'test';
 
   return {
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
     NEXT_PUBLIC_SUPABASE_URL:
-      process.env.NEXT_PUBLIC_SUPABASE_URL || (isTest ? "http://localhost" : undefined),
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      (isTest ? 'http://localhost' : undefined),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || (isTest ? "test" : undefined),
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      (isTest ? 'test' : undefined),
     SUPABASE_SERVICE_ROLE_KEY:
-      process.env.SUPABASE_SERVICE_ROLE_KEY || (isTest ? "test" : undefined),
+      process.env.SUPABASE_SERVICE_ROLE_KEY || (isTest ? 'test' : undefined),
     LOG_LEVEL: process.env.LOG_LEVEL,
   };
 }
@@ -46,7 +50,7 @@ function getEnv(): Env {
 
 export const env: Env = new Proxy({} as Env, {
   get(_target, prop: keyof Env | symbol) {
-    if (typeof prop !== "string") {
+    if (typeof prop !== 'string') {
       return undefined;
     }
 

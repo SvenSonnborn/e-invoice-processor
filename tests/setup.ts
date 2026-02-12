@@ -12,10 +12,10 @@ function setDefault(key: string, value: string): void {
   }
 }
 
-setDefault("NODE_ENV", "test");
-setDefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test");
-setDefault("DIRECT_URL", "postgresql://test:test@localhost:5432/test");
-setDefault("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
-setDefault("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "test-anon-key");
-setDefault("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
-setDefault("LOG_LEVEL", "silent");
+setDefault('NODE_ENV', 'test');
+setDefault('DATABASE_URL', 'postgresql://test:test@localhost:5432/test');
+setDefault('DIRECT_URL', 'postgresql://test:test@localhost:5432/test');
+setDefault('NEXT_PUBLIC_SUPABASE_URL', 'http://localhost:54321');
+setDefault('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'test-anon-key');
+setDefault('SUPABASE_SERVICE_ROLE_KEY', 'test-service-role-key');
+setDefault('LOG_LEVEL', 'silent');

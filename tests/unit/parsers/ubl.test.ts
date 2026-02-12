@@ -1,7 +1,7 @@
-import { describe, it, expect } from "bun:test";
-import { parseUBL } from "@/src/lib/zugferd";
+import { describe, it, expect } from 'bun:test';
+import { parseUBL } from '@/src/lib/zugferd';
 
-describe("UBL Parser", () => {
+describe('UBL Parser', () => {
   const validUblXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -66,51 +66,53 @@ describe("UBL Parser", () => {
   </cac:InvoiceLine>
 </Invoice>`;
 
-  describe("parseUBL", () => {
-    it("should parse document metadata", () => {
+  describe('parseUBL', () => {
+    it('should parse document metadata', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.documentId).toBe("INV-2024-001");
-      expect(result.invoice?.documentDate).toBe("2024-01-15");
-      expect(result.invoice?.currency).toBe("EUR");
+      expect(result.invoice?.documentId).toBe('INV-2024-001');
+      expect(result.invoice?.documentDate).toBe('2024-01-15');
+      expect(result.invoice?.currency).toBe('EUR');
     });
 
-    it("should parse supplier party", () => {
+    it('should parse supplier party', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.seller ?? result.invoice?.documentId).toBeDefined();
+      expect(
+        result.invoice?.seller ?? result.invoice?.documentId
+      ).toBeDefined();
     });
 
-    it("should parse customer party", () => {
+    it('should parse customer party', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
       expect(result.invoice?.buyer ?? result.invoice?.seller).toBeDefined();
     });
 
-    it("should parse totals", () => {
+    it('should parse totals', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
       expect(result.invoice?.monetarySummation?.grandTotalAmount).toBeDefined();
     });
 
-    it("should parse line items", () => {
+    it('should parse line items', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
       expect(result.invoice?.lineItems?.length).toBeGreaterThanOrEqual(0);
     });
 
-    it("should return success false for invalid root element", () => {
+    it('should return success false for invalid root element', () => {
       const invalidXml = `<?xml version="1.0"?><InvalidRoot xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"></InvalidRoot>`;
       const result = parseUBL(invalidXml);
       expect(result.success).toBe(false);
     });
 
-    it("should return success false for malformed XML", () => {
-      const result = parseUBL("<not valid xml");
+    it('should return success false for malformed XML', () => {
+      const result = parseUBL('<not valid xml');
       expect(result.success).toBe(false);
     });
 
-    it("should handle minimal UBL structure", () => {
+    it('should handle minimal UBL structure', () => {
       const minimalXml = `<?xml version="1.0"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -127,7 +129,7 @@ describe("UBL Parser", () => {
 </Invoice>`;
       const result = parseUBL(minimalXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.documentId).toBe("INV-001");
+      expect(result.invoice?.documentId).toBe('INV-001');
     });
   });
 });

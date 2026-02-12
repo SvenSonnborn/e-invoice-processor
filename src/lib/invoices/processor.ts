@@ -1,7 +1,7 @@
-import { prisma } from '@/src/lib/db/client'
-import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client'
-import { isValidStatusTransition } from './status'
-import { CURRENT_PROCESSOR_VERSION } from './revisions'
+import { prisma } from '@/src/lib/db/client';
+import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client';
+import { isValidStatusTransition } from './status';
+import { CURRENT_PROCESSOR_VERSION } from './revisions';
 
 /**
  * Invoice Processor Utilities
@@ -11,9 +11,9 @@ import { CURRENT_PROCESSOR_VERSION } from './revisions'
  */
 
 export interface UpdateStatusParams {
-  invoiceId: string
-  newStatus: InvoiceStatus
-  _error?: string
+  invoiceId: string;
+  newStatus: InvoiceStatus;
+  _error?: string;
 }
 
 /**
@@ -30,17 +30,17 @@ export async function updateInvoiceStatus({
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     select: { status: true },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   // Validate status transition
   if (!isValidStatusTransition(invoice.status, newStatus)) {
     throw new Error(
       `Invalid status transition: ${invoice.status} -> ${newStatus}`
-    )
+    );
   }
 
   // Update invoice
@@ -52,7 +52,7 @@ export async function updateInvoiceStatus({
       processingVersion: { increment: 1 },
       // If failed, store error in a separate error log (you might add an errors relation)
     },
-  })
+  });
 }
 
 /**
@@ -69,17 +69,15 @@ export async function markAsParsed(
     const invoice = await tx.invoice.findUnique({
       where: { id: invoiceId },
       select: { status: true },
-    })
+    });
 
     if (!invoice) {
-      throw new Error(`Invoice ${invoiceId} not found`)
+      throw new Error(`Invoice ${invoiceId} not found`);
     }
 
     // Validate status transition
     if (!isValidStatusTransition(invoice.status, 'PARSED')) {
-      throw new Error(
-        `Invalid status transition: ${invoice.status} -> PARSED`
-      )
+      throw new Error(`Invalid status transition: ${invoice.status} -> PARSED`);
     }
 
     // Create revision
@@ -89,7 +87,7 @@ export async function markAsParsed(
         rawJson: rawData,
         processorVersion,
       },
-    })
+    });
 
     // Update invoice
     return await tx.invoice.update({
@@ -100,8 +98,8 @@ export async function markAsParsed(
         lastProcessedAt: new Date(),
         processingVersion: { increment: 1 },
       },
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -110,31 +108,31 @@ export async function markAsParsed(
 export async function markAsValidated(
   invoiceId: string,
   validatedData: {
-    number?: string
-    supplierName?: string
-    customerName?: string
-    issueDate?: Date
-    dueDate?: Date
-    netAmount?: number
-    taxAmount?: number
-    grossAmount?: number
+    number?: string;
+    supplierName?: string;
+    customerName?: string;
+    issueDate?: Date;
+    dueDate?: Date;
+    netAmount?: number;
+    taxAmount?: number;
+    grossAmount?: number;
   }
 ) {
   // Get current invoice status
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     select: { status: true },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   // Validate status transition
   if (!isValidStatusTransition(invoice.status, 'VALIDATED')) {
     throw new Error(
       `Invalid status transition: ${invoice.status} -> VALIDATED`
-    )
+    );
   }
 
   return await prisma.invoice.update({
@@ -145,7 +143,7 @@ export async function markAsValidated(
       lastProcessedAt: new Date(),
       processingVersion: { increment: 1 },
     },
-  })
+  });
 }
 
 /**
@@ -156,17 +154,15 @@ export async function markAsExported(invoiceId: string) {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     select: { status: true },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   // Validate status transition
   if (!isValidStatusTransition(invoice.status, 'EXPORTED')) {
-    throw new Error(
-      `Invalid status transition: ${invoice.status} -> EXPORTED`
-    )
+    throw new Error(`Invalid status transition: ${invoice.status} -> EXPORTED`);
   }
 
   return await prisma.invoice.update({
@@ -176,7 +172,7 @@ export async function markAsExported(invoiceId: string) {
       lastProcessedAt: new Date(),
       processingVersion: { increment: 1 },
     },
-  })
+  });
 }
 
 /**
@@ -187,17 +183,15 @@ export async function markAsFailed(invoiceId: string, _errorMessage: string) {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     select: { status: true },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   // Validate status transition
   if (!isValidStatusTransition(invoice.status, 'FAILED')) {
-    throw new Error(
-      `Invalid status transition: ${invoice.status} -> FAILED`
-    )
+    throw new Error(`Invalid status transition: ${invoice.status} -> FAILED`);
   }
 
   return await prisma.invoice.update({
@@ -208,7 +202,7 @@ export async function markAsFailed(invoiceId: string, _errorMessage: string) {
       processingVersion: { increment: 1 },
       // Store error message somewhere (you might want to add an errorMessage field)
     },
-  })
+  });
 }
 
 /**
@@ -218,14 +212,14 @@ export async function retryFailedInvoice(invoiceId: string) {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     select: { status: true },
-  })
+  });
 
   if (!invoice) {
-    throw new Error(`Invoice ${invoiceId} not found`)
+    throw new Error(`Invoice ${invoiceId} not found`);
   }
 
   if (invoice.status !== 'FAILED') {
-    throw new Error('Invoice must be in FAILED status to retry')
+    throw new Error('Invoice must be in FAILED status to retry');
   }
 
   return await prisma.invoice.update({
@@ -235,7 +229,7 @@ export async function retryFailedInvoice(invoiceId: string) {
       lastProcessedAt: new Date(),
       processingVersion: { increment: 1 },
     },
-  })
+  });
 }
 
 /**
@@ -253,21 +247,22 @@ export async function getInvoicesByStatus(
     orderBy: {
       createdAt: 'desc',
     },
-  })
+  });
 }
 
 /**
  * Get processing statistics for an organization
  */
 export async function getProcessingStats(organizationId: string) {
-  const [total, created, parsed, validated, exported, failed] = await Promise.all([
-    prisma.invoice.count({ where: { organizationId } }),
-    prisma.invoice.count({ where: { organizationId, status: 'CREATED' } }),
-    prisma.invoice.count({ where: { organizationId, status: 'PARSED' } }),
-    prisma.invoice.count({ where: { organizationId, status: 'VALIDATED' } }),
-    prisma.invoice.count({ where: { organizationId, status: 'EXPORTED' } }),
-    prisma.invoice.count({ where: { organizationId, status: 'FAILED' } }),
-  ])
+  const [total, created, parsed, validated, exported, failed] =
+    await Promise.all([
+      prisma.invoice.count({ where: { organizationId } }),
+      prisma.invoice.count({ where: { organizationId, status: 'CREATED' } }),
+      prisma.invoice.count({ where: { organizationId, status: 'PARSED' } }),
+      prisma.invoice.count({ where: { organizationId, status: 'VALIDATED' } }),
+      prisma.invoice.count({ where: { organizationId, status: 'EXPORTED' } }),
+      prisma.invoice.count({ where: { organizationId, status: 'FAILED' } }),
+    ]);
 
   return {
     total,
@@ -280,5 +275,5 @@ export async function getProcessingStats(organizationId: string) {
     },
     successRate: total > 0 ? (exported / total) * 100 : 0,
     failureRate: total > 0 ? (failed / total) * 100 : 0,
-  }
+  };
 }

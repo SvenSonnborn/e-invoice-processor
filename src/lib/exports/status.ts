@@ -1,4 +1,4 @@
-import type { ExportStatus } from '@/src/generated/prisma/client'
+import type { ExportStatus } from '@/src/generated/prisma/client';
 
 /**
  * Export Status Utilities
@@ -10,12 +10,15 @@ import type { ExportStatus } from '@/src/generated/prisma/client'
  * Valid status transitions
  * Defines which status changes are allowed
  */
-export const VALID_EXPORT_STATUS_TRANSITIONS: Record<ExportStatus, ExportStatus[]> = {
+export const VALID_EXPORT_STATUS_TRANSITIONS: Record<
+  ExportStatus,
+  ExportStatus[]
+> = {
   CREATED: ['GENERATING', 'FAILED'],
   GENERATING: ['READY', 'FAILED'],
   READY: ['GENERATING'], // Allow re-generation
   FAILED: ['CREATED'], // Allow retry
-}
+};
 
 /**
  * Check if a status transition is valid
@@ -24,34 +27,38 @@ export function isValidExportStatusTransition(
   from: ExportStatus,
   to: ExportStatus
 ): boolean {
-  return VALID_EXPORT_STATUS_TRANSITIONS[from].includes(to)
+  return VALID_EXPORT_STATUS_TRANSITIONS[from].includes(to);
 }
 
 /**
  * Get the next expected status in the export pipeline
  */
-export function getNextExportStatus(current: ExportStatus): ExportStatus | null {
+export function getNextExportStatus(
+  current: ExportStatus
+): ExportStatus | null {
   const transitions: Record<ExportStatus, ExportStatus | null> = {
     CREATED: 'GENERATING',
     GENERATING: 'READY',
     READY: null, // Terminal state
     FAILED: null, // Terminal state (requires manual retry)
-  }
-  return transitions[current]
+  };
+  return transitions[current];
 }
 
 /**
  * Check if an export is in a terminal state
  */
 export function isTerminalExportStatus(status: ExportStatus): boolean {
-  return status === 'READY' || status === 'FAILED'
+  return status === 'READY' || status === 'FAILED';
 }
 
 /**
  * Check if an export can be processed
  */
 export function canProcessExport(status: ExportStatus): boolean {
-  return !isTerminalExportStatus(status) || status === 'FAILED' || status === 'READY'
+  return (
+    !isTerminalExportStatus(status) || status === 'FAILED' || status === 'READY'
+  );
 }
 
 /**
@@ -63,8 +70,8 @@ export function getExportStatusLabel(status: ExportStatus): string {
     GENERATING: 'Wird generiert',
     READY: 'Bereit',
     FAILED: 'Fehlgeschlagen',
-  }
-  return labels[status]
+  };
+  return labels[status];
 }
 
 /**
@@ -76,8 +83,8 @@ export function getExportStatusColor(status: ExportStatus): string {
     GENERATING: 'blue',
     READY: 'green',
     FAILED: 'red',
-  }
-  return colors[status]
+  };
+  return colors[status];
 }
 
 /**
@@ -89,22 +96,23 @@ export function getExportStatusDescription(status: ExportStatus): string {
     GENERATING: 'Export wird gerade generiert',
     READY: 'Export wurde erfolgreich erstellt und steht zum Download bereit',
     FAILED: 'Generierung ist fehlgeschlagen',
-  }
-  return descriptions[status]
+  };
+  return descriptions[status];
 }
 
 /**
  * Status badge for UI (Tailwind classes)
  */
 export function getExportStatusBadgeClasses(status: ExportStatus): string {
-  const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
+  const baseClasses =
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
   const colorClasses: Record<ExportStatus, string> = {
     CREATED: 'bg-gray-100 text-gray-800',
     GENERATING: 'bg-blue-100 text-blue-800',
     READY: 'bg-green-100 text-green-800',
     FAILED: 'bg-red-100 text-red-800',
-  }
+  };
 
-  return `${baseClasses} ${colorClasses[status]}`
+  return `${baseClasses} ${colorClasses[status]}`;
 }

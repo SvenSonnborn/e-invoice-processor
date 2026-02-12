@@ -1,31 +1,31 @@
 /**
  * OCR Error Classes
- * 
+ *
  * Custom error types for OCR processing with detailed error codes.
  */
 
 export enum OcrErrorCode {
   // Configuration errors
-  CONFIGURATION_ERROR = "CONFIGURATION_ERROR",
-  
+  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
+
   // File validation errors
-  UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE",
-  FILE_TOO_LARGE = "FILE_TOO_LARGE",
-  INVALID_FILE = "INVALID_FILE",
-  
+  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  INVALID_FILE = 'INVALID_FILE',
+
   // API errors
-  API_ERROR = "API_ERROR",
-  API_PERMISSION_DENIED = "API_PERMISSION_DENIED",
-  API_QUOTA_EXCEEDED = "API_QUOTA_EXCEEDED",
-  API_RATE_LIMITED = "API_RATE_LIMITED",
-  
+  API_ERROR = 'API_ERROR',
+  API_PERMISSION_DENIED = 'API_PERMISSION_DENIED',
+  API_QUOTA_EXCEEDED = 'API_QUOTA_EXCEEDED',
+  API_RATE_LIMITED = 'API_RATE_LIMITED',
+
   // Processing errors
-  PROCESSING_FAILED = "PROCESSING_FAILED",
-  TIMEOUT = "TIMEOUT",
-  NETWORK_ERROR = "NETWORK_ERROR",
-  
+  PROCESSING_FAILED = 'PROCESSING_FAILED',
+  TIMEOUT = 'TIMEOUT',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+
   // Unknown errors
-  UNKNOWN_ERROR = "UNKNOWN_ERROR",
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 
 export class OcrError extends Error {
@@ -39,7 +39,7 @@ export class OcrError extends Error {
     details: Record<string, unknown> = {}
   ) {
     super(message);
-    this.name = "OcrError";
+    this.name = 'OcrError';
     this.code = code;
     this.details = details;
     this.timestamp = new Date();
@@ -154,12 +154,9 @@ export async function withRetry<T>(
       if (attempt < config.maxRetries) {
         // Wait before retrying
         await new Promise((resolve) => setTimeout(resolve, delay));
-        
+
         // Increase delay for next attempt
-        delay = Math.min(
-          delay * config.backoffMultiplier,
-          config.maxDelayMs
-        );
+        delay = Math.min(delay * config.backoffMultiplier, config.maxDelayMs);
       }
     }
   }

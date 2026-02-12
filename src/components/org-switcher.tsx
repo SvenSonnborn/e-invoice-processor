@@ -1,32 +1,32 @@
-'use client'
+'use client';
 
-import { switchOrganization } from '@/app/actions/organizations'
-import { signOut } from '@/app/actions/auth'
-import { useState } from 'react'
-import Link from 'next/link'
+import { switchOrganization } from '@/app/actions/organizations';
+import { signOut } from '@/app/actions/auth';
+import { useState } from 'react';
+import Link from 'next/link';
 
 interface Organization {
-  id: string
-  name: string
-  role: 'OWNER' | 'ADMIN' | 'MEMBER'
+  id: string;
+  name: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
 }
 
 interface OrgSwitcherProps {
-  organizations: Organization[]
-  activeOrgId: string
+  organizations: Organization[];
+  activeOrgId: string;
 }
 
 export function OrgSwitcher({ organizations, activeOrgId }: OrgSwitcherProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const activeOrg = organizations.find((org) => org.id === activeOrgId)
+  const [isOpen, setIsOpen] = useState(false);
+  const activeOrg = organizations.find((org) => org.id === activeOrgId);
 
   async function handleSwitch(orgId: string) {
-    setIsOpen(false)
-    await switchOrganization(orgId)
+    setIsOpen(false);
+    await switchOrganization(orgId);
   }
 
   async function handleSignOut() {
-    await signOut()
+    await signOut();
   }
 
   return (
@@ -72,7 +72,9 @@ export function OrgSwitcher({ organizations, activeOrgId }: OrgSwitcherProps) {
                 key={org.id}
                 onClick={() => handleSwitch(org.id)}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
-                  org.id === activeOrgId ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                  org.id === activeOrgId
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-gray-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -117,5 +119,5 @@ export function OrgSwitcher({ organizations, activeOrgId }: OrgSwitcherProps) {
         </>
       )}
     </div>
-  )
+  );
 }

@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { ArrowRight, Sparkles, Users, Zap } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/components/ui/dialog';
 import { WaitlistForm } from '../waitlist-form';
 
 export const FinalCTASection = () => {
@@ -42,7 +47,7 @@ export const FinalCTASection = () => {
 
           {/* Subheadline */}
           <p className="mx-auto mt-6 max-w-xl text-lg text-brand-100">
-            Join our waitlist today and get 50% off forever. Be among the first 
+            Join our waitlist today and get 50% off forever. Be among the first
             to experience the future of invoice processing.
           </p>
 

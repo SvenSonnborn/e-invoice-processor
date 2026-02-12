@@ -5,6 +5,7 @@ Dokumentation zur Nachverfolgbarkeit von Aktionen und Datenänderungen.
 ## Übersicht
 
 Das System trackt automatisch, welcher User bestimmte Aktionen durchgeführt hat:
+
 - Welcher User hat eine Rechnung hochgeladen/importiert?
 - Welcher User hat einen Export erstellt?
 
@@ -13,6 +14,7 @@ Das System trackt automatisch, welcher User bestimmte Aktionen durchgeführt hat
 ### Betroffene Tabellen
 
 **Invoice:**
+
 ```typescript
 {
   id: string
@@ -23,6 +25,7 @@ Das System trackt automatisch, welcher User bestimmte Aktionen durchgeführt hat
 ```
 
 **Export:**
+
 ```typescript
 {
   id: string
@@ -33,6 +36,7 @@ Das System trackt automatisch, welcher User bestimmte Aktionen durchgeführt hat
 ```
 
 **User:**
+
 ```typescript
 {
   id: string
@@ -65,30 +69,30 @@ ALTER TABLE "Export"
 ### Invoice mit Actor Tracking erstellen
 
 ```typescript
-import { getServerSession } from '@/src/lib/auth/session'
+import { getServerSession } from '@/src/lib/auth/session';
 
 // In Server Action oder API Route
-const session = await getServerSession()
+const session = await getServerSession();
 
 if (!session?.user) {
-  throw new Error('Unauthorized')
+  throw new Error('Unauthorized');
 }
 
 const invoice = await prisma.invoice.create({
   data: {
     organizationId: 'org_123',
-    createdBy: session.user.id,  // Actor tracking
+    createdBy: session.user.id, // Actor tracking
     uploadId: upload.id,
     format: 'ZUGFERD',
     // ...
-  }
-})
+  },
+});
 ```
 
 ### Export mit Actor Tracking erstellen
 
 ```typescript
-import { createExport } from '@/src/lib/exports/processor'
+import { createExport } from '@/src/lib/exports/processor';
 
 const exp = await createExport(
   {
@@ -97,8 +101,8 @@ const exp = await createExport(
     filename: 'export.csv',
     invoiceIds: ['inv_1', 'inv_2'],
   },
-  session.user.id  // Actor tracking
-)
+  session.user.id // Actor tracking
+);
 ```
 
 ### Creator-Informationen abrufen
@@ -113,16 +117,16 @@ const invoice = await prisma.invoice.findUnique({
         id: true,
         email: true,
         name: true,
-      }
-    }
-  }
-})
+      },
+    },
+  },
+});
 
 if (invoice.creator) {
-  console.log(`Hochgeladen von: ${invoice.creator.email}`)
-  console.log(`Name: ${invoice.creator.name}`)
+  console.log(`Hochgeladen von: ${invoice.creator.email}`);
+  console.log(`Name: ${invoice.creator.name}`);
 } else {
-  console.log('Creator unbekannt (User gelöscht oder Migration)')
+  console.log('Creator unbekannt (User gelöscht oder Migration)');
 }
 ```
 
@@ -132,12 +136,12 @@ const exp = await prisma.export.findUnique({
   where: { id: exportId },
   include: {
     creator: {
-      select: { email: true, name: true }
-    }
-  }
-})
+      select: { email: true, name: true },
+    },
+  },
+});
 
-console.log(`Export erstellt von: ${exp.creator?.email ?? 'Unbekannt'}`)
+console.log(`Export erstellt von: ${exp.creator?.email ?? 'Unbekannt'}`);
 ```
 
 ### Alle Invoices eines Users
@@ -145,10 +149,10 @@ console.log(`Export erstellt von: ${exp.creator?.email ?? 'Unbekannt'}`)
 ```typescript
 const invoices = await prisma.invoice.findMany({
   where: { createdBy: userId },
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: 'desc' },
+});
 
-console.log(`User hat ${invoices.length} Rechnungen hochgeladen`)
+console.log(`User hat ${invoices.length} Rechnungen hochgeladen`);
 ```
 
 ### Alle Exports eines Users
@@ -156,10 +160,10 @@ console.log(`User hat ${invoices.length} Rechnungen hochgeladen`)
 ```typescript
 const exports = await prisma.export.findMany({
   where: { createdBy: userId },
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: 'desc' },
+});
 
-console.log(`User hat ${exports.length} Exports erstellt`)
+console.log(`User hat ${exports.length} Exports erstellt`);
 ```
 
 ## Audit-Abfragen
@@ -167,7 +171,7 @@ console.log(`User hat ${exports.length} Exports erstellt`)
 ### Aktivitätslog eines Users
 
 ```typescript
-const userId = 'user_123'
+const userId = 'user_123';
 
 const [invoices, exports] = await Promise.all([
   prisma.invoice.findMany({
@@ -178,7 +182,7 @@ const [invoices, exports] = await Promise.all([
       supplierName: true,
       createdAt: true,
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   }),
   prisma.export.findMany({
     where: { createdBy: userId },
@@ -188,13 +192,13 @@ const [invoices, exports] = await Promise.all([
       format: true,
       createdAt: true,
     },
-    orderBy: { createdAt: 'desc' }
-  })
-])
+    orderBy: { createdAt: 'desc' },
+  }),
+]);
 
-console.log('User Activity:')
-console.log(`- ${invoices.length} Invoices hochgeladen`)
-console.log(`- ${exports.length} Exports erstellt`)
+console.log('User Activity:');
+console.log(`- ${invoices.length} Invoices hochgeladen`);
+console.log(`- ${exports.length} Exports erstellt`);
 ```
 
 ### Top Contributors (Organisation)
@@ -266,15 +270,15 @@ async function analyzeUserDeletion(userId: string) {
   const [invoiceCount, exportCount, orgMemberships] = await Promise.all([
     prisma.invoice.count({ where: { createdBy: userId } }),
     prisma.export.count({ where: { createdBy: userId } }),
-    prisma.organizationMember.count({ where: { userId } })
-  ])
+    prisma.organizationMember.count({ where: { userId } }),
+  ]);
 
   return {
     invoices: invoiceCount,
     exports: exportCount,
     organizations: orgMemberships,
-    impact: `User hat ${invoiceCount} Rechnungen und ${exportCount} Exports erstellt`
-  }
+    impact: `User hat ${invoiceCount} Rechnungen und ${exportCount} Exports erstellt`,
+  };
 }
 
 // Bei Löschung werden createdBy Felder auf NULL gesetzt (ON DELETE SET NULL)
@@ -285,13 +289,13 @@ async function analyzeUserDeletion(userId: string) {
 ### Creator Badge anzeigen
 
 ```tsx
-import { prisma } from '@/src/lib/db/client'
+import { prisma } from '@/src/lib/db/client';
 
 export async function InvoiceCard({ invoiceId }: { invoiceId: string }) {
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
-    include: { creator: { select: { email: true, name: true } } }
-  })
+    include: { creator: { select: { email: true, name: true } } },
+  });
 
   return (
     <div className="border rounded p-4">
@@ -304,7 +308,7 @@ export async function InvoiceCard({ invoiceId }: { invoiceId: string }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -322,7 +326,7 @@ export async function UserActivityFeed({ userId }: { userId: string }) {
         number: true,
         supplierName: true,
         createdAt: true,
-      }
+      },
     }),
     prisma.export.findMany({
       where: { createdBy: userId },
@@ -333,38 +337,46 @@ export async function UserActivityFeed({ userId }: { userId: string }) {
         filename: true,
         format: true,
         createdAt: true,
-      }
-    })
-  ])
+      },
+    }),
+  ]);
 
   // Merge and sort by date
   const activities = [
-    ...invoices.map(inv => ({ type: 'invoice', ...inv })),
-    ...exports.map(exp => ({ type: 'export', ...exp }))
-  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    ...invoices.map((inv) => ({ type: 'invoice', ...inv })),
+    ...exports.map((exp) => ({ type: 'export', ...exp })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
     <div className="space-y-2">
       <h3 className="font-bold">Letzte Aktivitäten</h3>
-      {activities.map(activity => (
+      {activities.map((activity) => (
         <div key={activity.id} className="border-l-2 pl-3 py-2">
           {activity.type === 'invoice' ? (
             <div>
               <span className="text-blue-600">Rechnung hochgeladen</span>
-              <p className="text-sm">{activity.number} - {activity.supplierName}</p>
-              <p className="text-xs text-gray-500">{activity.createdAt.toLocaleString()}</p>
+              <p className="text-sm">
+                {activity.number} - {activity.supplierName}
+              </p>
+              <p className="text-xs text-gray-500">
+                {activity.createdAt.toLocaleString()}
+              </p>
             </div>
           ) : (
             <div>
               <span className="text-green-600">Export erstellt</span>
-              <p className="text-sm">{activity.filename} ({activity.format})</p>
-              <p className="text-xs text-gray-500">{activity.createdAt.toLocaleString()}</p>
+              <p className="text-sm">
+                {activity.filename} ({activity.format})
+              </p>
+              <p className="text-xs text-gray-500">
+                {activity.createdAt.toLocaleString()}
+              </p>
             </div>
           )}
         </div>
       ))}
     </div>
-  )
+  );
 }
 ```
 
@@ -428,8 +440,8 @@ Bei User-Löschung (DSGVO Art. 17):
 ```typescript
 async function deleteUserGDPR(userId: string) {
   // 1. Impact Analysis
-  const analysis = await analyzeUserDeletion(userId)
-  console.log(`Lösche User mit Impact: ${analysis.impact}`)
+  const analysis = await analyzeUserDeletion(userId);
+  console.log(`Lösche User mit Impact: ${analysis.impact}`);
 
   // 2. Anonymisiere persönliche Daten
   await prisma.user.update({
@@ -438,8 +450,8 @@ async function deleteUserGDPR(userId: string) {
       email: `deleted-${userId}@example.com`,
       name: 'Gelöschter Nutzer',
       supabaseUserId: null,
-    }
-  })
+    },
+  });
 
   // 3. Foreign Keys setzen createdBy automatisch auf NULL (ON DELETE SET NULL)
   //    wenn User physisch gelöscht wird
@@ -449,7 +461,7 @@ async function deleteUserGDPR(userId: string) {
   // Invoices/Exports behalten Reference
 
   // Option B: Hard Delete
-  await prisma.user.delete({ where: { id: userId } })
+  await prisma.user.delete({ where: { id: userId } });
   // createdBy wird automatisch auf NULL gesetzt
 }
 ```
@@ -467,7 +479,7 @@ async function exportUserAuditLog(userId: string) {
           number: true,
           supplierName: true,
           createdAt: true,
-        }
+        },
       },
       createdExports: {
         select: {
@@ -475,10 +487,10 @@ async function exportUserAuditLog(userId: string) {
           filename: true,
           format: true,
           createdAt: true,
-        }
-      }
-    }
-  })
+        },
+      },
+    },
+  });
 
   return {
     user: {
@@ -489,8 +501,8 @@ async function exportUserAuditLog(userId: string) {
     activities: {
       invoices: user.createdInvoices,
       exports: user.createdExports,
-    }
-  }
+    },
+  };
 }
 ```
 
@@ -499,6 +511,7 @@ async function exportUserAuditLog(userId: string) {
 ### Zukünftige Audit-Felder
 
 **Mögliche Erweiterungen:**
+
 ```typescript
 // Invoice
 {
@@ -543,6 +556,7 @@ model AuditLog {
 ### Dashboards
 
 **Aktivitäts-Metriken:**
+
 ```sql
 -- Uploads pro User (letzte 30 Tage)
 SELECT
@@ -566,6 +580,7 @@ ORDER BY exports_last_30d DESC;
 ```
 
 **Compliance-Check:**
+
 ```sql
 -- Records ohne Creator (für Audit-Zwecke problematisch)
 SELECT
@@ -590,13 +605,13 @@ Falls bereits Invoices/Exports ohne `createdBy` existieren:
 ```typescript
 // Option 1: Setze auf System-User
 const systemUser = await prisma.user.findFirst({
-  where: { email: 'system@example.com' }
-})
+  where: { email: 'system@example.com' },
+});
 
 await prisma.invoice.updateMany({
   where: { createdBy: null },
-  data: { createdBy: systemUser.id }
-})
+  data: { createdBy: systemUser.id },
+});
 
 // Option 2: Lasse NULL (okay für Legacy-Daten)
 // Nur neue Records müssen createdBy haben

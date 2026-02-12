@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Invoice Selector
@@ -7,9 +7,9 @@
  * Shows a list with checkboxes, invoice number, supplier, amount, and date.
  */
 
-import { Checkbox } from "@/src/components/ui/checkbox";
-import { FileText, Loader2 } from "lucide-react";
-import type { InvoiceListItem } from "@/app/actions/exports";
+import { Checkbox } from '@/src/components/ui/checkbox';
+import { FileText, Loader2 } from 'lucide-react';
+import type { InvoiceListItem } from '@/app/actions/exports';
 
 interface InvoiceSelectorProps {
   invoices: InvoiceListItem[];
@@ -22,19 +22,19 @@ const formatCurrency = (
   amount: number | null,
   currency: string | null
 ): string => {
-  if (amount === null) return "–";
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency ?? "EUR",
+  if (amount === null) return '–';
+  return new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: currency ?? 'EUR',
   }).format(amount);
 };
 
 const formatDate = (isoString: string | null): string => {
-  if (!isoString) return "–";
-  return new Date(isoString).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+  if (!isoString) return '–';
+  return new Date(isoString).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   });
 };
 
@@ -97,7 +97,8 @@ export const InvoiceSelector = ({
             checked={allSelected}
             ref={(el) => {
               if (el) {
-                (el as unknown as HTMLInputElement).indeterminate = someSelected;
+                (el as unknown as HTMLInputElement).indeterminate =
+                  someSelected;
               }
             }}
             onCheckedChange={handleToggleAll}
@@ -109,7 +110,7 @@ export const InvoiceSelector = ({
           >
             {selectedIds.length > 0
               ? `${selectedIds.length} von ${invoices.length} ausgewählt`
-              : "Alle auswählen"}
+              : 'Alle auswählen'}
           </label>
         </div>
       </div>
@@ -119,13 +120,13 @@ export const InvoiceSelector = ({
         {invoices.map((invoice) => {
           const isSelected = selectedIds.includes(invoice.id);
           const displayName =
-            invoice.supplierName ?? invoice.customerName ?? "Unbekannt";
+            invoice.supplierName ?? invoice.customerName ?? 'Unbekannt';
 
           return (
             <label
               key={invoice.id}
               className={`flex items-center gap-3 py-2.5 px-3 cursor-pointer transition-colors hover:bg-gray-50 ${
-                isSelected ? "bg-blue-50/50" : ""
+                isSelected ? 'bg-blue-50/50' : ''
               }`}
               htmlFor={`invoice-${invoice.id}`}
             >
@@ -133,12 +134,12 @@ export const InvoiceSelector = ({
                 id={`invoice-${invoice.id}`}
                 checked={isSelected}
                 onCheckedChange={() => handleToggle(invoice.id)}
-                aria-label={`${invoice.number ?? "Rechnung"} auswählen`}
+                aria-label={`${invoice.number ?? 'Rechnung'} auswählen`}
               />
               <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto] gap-3 items-center">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {invoice.number ?? "Ohne Nummer"}
+                    {invoice.number ?? 'Ohne Nummer'}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
                     {displayName}

@@ -1,5 +1,5 @@
-import { prisma } from '@/src/lib/db/client'
-import type { InvoiceRevision, Prisma } from '@/src/generated/prisma/client'
+import { prisma } from '@/src/lib/db/client';
+import type { InvoiceRevision, Prisma } from '@/src/generated/prisma/client';
 
 /**
  * Invoice Revision Management
@@ -12,17 +12,17 @@ import type { InvoiceRevision, Prisma } from '@/src/generated/prisma/client'
  * Current processor version
  * Update this when parser logic changes
  */
-export const CURRENT_PROCESSOR_VERSION = '1.0.0'
+export const CURRENT_PROCESSOR_VERSION = '1.0.0';
 
 export interface CreateRevisionParams {
-  invoiceId: string
-  rawJson: Prisma.InputJsonValue
-  processorVersion?: string
+  invoiceId: string;
+  rawJson: Prisma.InputJsonValue;
+  processorVersion?: string;
 }
 
 export interface RevisionWithMetadata extends InvoiceRevision {
-  isLatest: boolean
-  revisionNumber: number
+  isLatest: boolean;
+  revisionNumber: number;
 }
 
 /**
@@ -44,7 +44,7 @@ export async function createRevision({
         rawJson,
         processorVersion,
       },
-    })
+    });
 
     // 2. Update invoice with latest rawJson
     await tx.invoice.update({
@@ -54,10 +54,10 @@ export async function createRevision({
         lastProcessedAt: new Date(),
         processingVersion: { increment: 1 },
       },
-    })
+    });
 
-    return revision
-  })
+    return revision;
+  });
 }
 
 /**
@@ -70,12 +70,12 @@ export async function createRevision({
 export async function getRevisions(
   invoiceId: string,
   options: {
-    limit?: number
-    offset?: number
-    processorVersion?: string
+    limit?: number;
+    offset?: number;
+    processorVersion?: string;
   } = {}
 ): Promise<RevisionWithMetadata[]> {
-  const { limit, offset = 0, processorVersion } = options
+  const { limit, offset = 0, processorVersion } = options;
 
   const [revisions, totalCount] = await Promise.all([
     prisma.invoiceRevision.findMany({
@@ -95,14 +95,14 @@ export async function getRevisions(
         ...(processorVersion && { processorVersion }),
       },
     }),
-  ])
+  ]);
 
   // Enrich with metadata relative to overall dataset
   return revisions.map((revision, index) => ({
     ...revision,
     isLatest: offset === 0 && index === 0,
     revisionNumber: totalCount - (offset + index),
-  }))
+  }));
 }
 
 /**
@@ -117,7 +117,7 @@ export async function getLatestRevision(
   return await prisma.invoiceRevision.findFirst({
     where: { invoiceId },
     orderBy: { createdAt: 'desc' },
-  })
+  });
 }
 
 /**
@@ -131,7 +131,7 @@ export async function getRevisionById(
 ): Promise<InvoiceRevision | null> {
   return await prisma.invoiceRevision.findUnique({
     where: { id: revisionId },
-  })
+  });
 }
 
 /**
@@ -143,7 +143,7 @@ export async function getRevisionById(
 export async function countRevisions(invoiceId: string): Promise<number> {
   return await prisma.invoiceRevision.count({
     where: { invoiceId },
-  })
+  });
 }
 
 /**
@@ -153,20 +153,19 @@ export async function countRevisions(invoiceId: string): Promise<number> {
  * @param revisionId - Revision ID to revert to
  * @returns Updated invoice
  */
-export async function revertToRevision(
-  invoiceId: string,
-  revisionId: string
-) {
+export async function revertToRevision(invoiceId: string, revisionId: string) {
   const revision = await prisma.invoiceRevision.findUnique({
     where: { id: revisionId },
-  })
+  });
 
   if (!revision) {
-    throw new Error(`Revision ${revisionId} not found`)
+    throw new Error(`Revision ${revisionId} not found`);
   }
 
   if (revision.invoiceId !== invoiceId) {
-    throw new Error(`Revision ${revisionId} does not belong to invoice ${invoiceId}`)
+    throw new Error(
+      `Revision ${revisionId} does not belong to invoice ${invoiceId}`
+    );
   }
 
   // Create a new revision from the old data
@@ -174,7 +173,7 @@ export async function revertToRevision(
     invoiceId,
     rawJson: revision.rawJson as Prisma.InputJsonValue,
     processorVersion: `${revision.processorVersion}-reverted`,
-  })
+  });
 }
 
 /**
@@ -191,10 +190,10 @@ export async function compareRevisions(
   const [rev1, rev2] = await Promise.all([
     getRevisionById(revisionId1),
     getRevisionById(revisionId2),
-  ])
+  ]);
 
   if (!rev1 || !rev2) {
-    throw new Error('One or both revisions not found')
+    throw new Error('One or both revisions not found');
   }
 
   return {
@@ -214,7 +213,7 @@ export async function compareRevisions(
     timeDifference: Math.abs(
       rev2.createdAt.getTime() - rev1.createdAt.getTime()
     ),
-  }
+  };
 }
 
 /**
@@ -234,9 +233,9 @@ export async function pruneOldRevisions(
     orderBy: { createdAt: 'desc' },
     take: keepCount,
     select: { id: true },
-  })
+  });
 
-  const keepIds = revisionsToKeep.map((r) => r.id)
+  const keepIds = revisionsToKeep.map((r) => r.id);
 
   // Delete old revisions
   const result = await prisma.invoiceRevision.deleteMany({
@@ -244,9 +243,9 @@ export async function pruneOldRevisions(
       invoiceId,
       id: { notIn: keepIds },
     },
-  })
+  });
 
-  return result.count
+  return result.count;
 }
 
 /**
@@ -259,7 +258,7 @@ export async function getRevisionStats(invoiceId: string) {
   const revisions = await prisma.invoiceRevision.findMany({
     where: { invoiceId },
     orderBy: { createdAt: 'asc' },
-  })
+  });
 
   if (revisions.length === 0) {
     return {
@@ -268,25 +267,25 @@ export async function getRevisionStats(invoiceId: string) {
       lastProcessedAt: null,
       processorVersions: [],
       averageTimeBetweenRevisions: 0,
-    }
+    };
   }
 
-  const firstRevision = revisions[0]
-  const lastRevision = revisions[revisions.length - 1]
+  const firstRevision = revisions[0];
+  const lastRevision = revisions[revisions.length - 1];
 
   // Calculate average time between revisions
-  let totalTimeDiff = 0
+  let totalTimeDiff = 0;
   for (let i = 1; i < revisions.length; i++) {
     totalTimeDiff +=
-      revisions[i].createdAt.getTime() - revisions[i - 1].createdAt.getTime()
+      revisions[i].createdAt.getTime() - revisions[i - 1].createdAt.getTime();
   }
   const avgTime =
-    revisions.length > 1 ? totalTimeDiff / (revisions.length - 1) : 0
+    revisions.length > 1 ? totalTimeDiff / (revisions.length - 1) : 0;
 
   // Get unique processor versions
   const processorVersions = Array.from(
     new Set(revisions.map((r) => r.processorVersion))
-  )
+  );
 
   return {
     totalRevisions: revisions.length,
@@ -294,7 +293,7 @@ export async function getRevisionStats(invoiceId: string) {
     lastProcessedAt: lastRevision.createdAt,
     processorVersions,
     averageTimeBetweenRevisions: avgTime,
-  }
+  };
 }
 
 /**
@@ -321,15 +320,15 @@ export async function getInvoicesNeedingReprocessing(
         take: 1,
       },
     },
-  })
+  });
 
   // Filter invoices where latest revision has old processor version
   return invoices.filter((invoice) => {
-    const latestRevision = invoice.revisions[0]
+    const latestRevision = invoice.revisions[0];
     // Only include invoices that have been processed (have revisions)
     // AND were processed with an old version
-    return latestRevision && latestRevision.processorVersion !== currentVersion
-  })
+    return latestRevision && latestRevision.processorVersion !== currentVersion;
+  });
 }
 
 /**
@@ -347,5 +346,5 @@ export async function reprocessInvoice(
     invoiceId,
     rawJson: rawData,
     processorVersion: CURRENT_PROCESSOR_VERSION,
-  })
+  });
 }

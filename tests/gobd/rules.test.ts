@@ -57,27 +57,41 @@ describe('GoBD Rules', () => {
       const invoice = { ...baseInvoice, number: '' };
       const result = validateRequiredFields(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations[0].code).toBe(GOB_ERROR_CODES.MISSING_INVOICE_NUMBER);
+      expect(result.violations[0].code).toBe(
+        GOB_ERROR_CODES.MISSING_INVOICE_NUMBER
+      );
     });
 
     it('should detect missing supplier name', () => {
       const invoice = { ...baseInvoice, supplierName: null };
       const result = validateRequiredFields(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_SUPPLIER)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_SUPPLIER
+        )
+      ).toBe(true);
     });
 
     it('should detect missing customer name', () => {
       const invoice = { ...baseInvoice, customerName: undefined };
       const result = validateRequiredFields(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_CUSTOMER)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_CUSTOMER
+        )
+      ).toBe(true);
     });
 
     it('should warn about missing due date', () => {
       const invoice = { ...baseInvoice, dueDate: null };
       const result = validateRequiredFields(createContext(invoice));
-      expect(result.warnings.some((w) => w.code === GOB_WARNING_CODES.MISSING_DUE_DATE)).toBe(true);
+      expect(
+        result.warnings.some(
+          (w) => w.code === GOB_WARNING_CODES.MISSING_DUE_DATE
+        )
+      ).toBe(true);
     });
   });
 
@@ -100,7 +114,9 @@ describe('GoBD Rules', () => {
       const invoice = { ...baseInvoice, issueDate: 'invalid-date' };
       const result = validateDateConstraints(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations[0].code).toBe(GOB_ERROR_CODES.INVALID_DATE_FORMAT);
+      expect(result.violations[0].code).toBe(
+        GOB_ERROR_CODES.INVALID_DATE_FORMAT
+      );
     });
   });
 
@@ -140,7 +156,14 @@ describe('GoBD Rules', () => {
     it('should pass for valid tax rate 7%', () => {
       const invoice = {
         ...baseInvoice,
-        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 7, taxAmount: 7.0, grossAmount: 107.0 }],
+        lineItems: [
+          {
+            ...baseInvoice.lineItems![0],
+            taxRate: 7,
+            taxAmount: 7.0,
+            grossAmount: 107.0,
+          },
+        ],
       };
       const result = validateTaxRates(createContext(invoice));
       expect(result.passed).toBe(true);
@@ -149,7 +172,14 @@ describe('GoBD Rules', () => {
     it('should pass for valid tax rate 0%', () => {
       const invoice = {
         ...baseInvoice,
-        lineItems: [{ ...baseInvoice.lineItems![0], taxRate: 0, taxAmount: 0, grossAmount: 100.0 }],
+        lineItems: [
+          {
+            ...baseInvoice.lineItems![0],
+            taxRate: 0,
+            taxAmount: 0,
+            grossAmount: 100.0,
+          },
+        ],
       };
       const result = validateTaxRates(createContext(invoice));
       expect(result.passed).toBe(true);
@@ -172,13 +202,17 @@ describe('GoBD Rules', () => {
       };
       const result = validateTaxRates(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations[0].code).toBe(GOB_ERROR_CODES.TAX_CALCULATION_ERROR);
+      expect(result.violations[0].code).toBe(
+        GOB_ERROR_CODES.TAX_CALCULATION_ERROR
+      );
     });
 
     it('should warn about no line items', () => {
       const invoice = { ...baseInvoice, lineItems: [] };
       const result = validateTaxRates(createContext(invoice));
-      expect(result.warnings.some((w) => w.code === GOB_WARNING_CODES.NO_LINE_ITEMS)).toBe(true);
+      expect(
+        result.warnings.some((w) => w.code === GOB_WARNING_CODES.NO_LINE_ITEMS)
+      ).toBe(true);
     });
   });
 
@@ -217,7 +251,9 @@ describe('GoBD Rules', () => {
       };
       const result = validateLineItems(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations[0].code).toBe(GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION);
+      expect(result.violations[0].code).toBe(
+        GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION
+      );
     });
 
     it('should detect line item sum mismatch', () => {
@@ -227,7 +263,9 @@ describe('GoBD Rules', () => {
       };
       const result = validateLineItems(createContext(invoice));
       expect(result.passed).toBe(false);
-      expect(result.violations[0].code).toBe(GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH);
+      expect(result.violations[0].code).toBe(
+        GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH
+      );
     });
 
     it('should skip if no line items', () => {

@@ -12,7 +12,9 @@ import { Pool } from 'pg';
 const DATABASE_URL = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL or DIRECT_URL environment variable is required');
+  console.error(
+    '❌ DATABASE_URL or DIRECT_URL environment variable is required'
+  );
   process.exit(1);
 }
 
@@ -24,7 +26,10 @@ async function setupRLS() {
   try {
     console.log('📊 Connecting to database...');
 
-    const sql = readFileSync('prisma/migrations/setup_rls_policies.sql', 'utf-8');
+    const sql = readFileSync(
+      'prisma/migrations/setup_rls_policies.sql',
+      'utf-8'
+    );
 
     console.log('🔒 Executing RLS policies...');
     await pool.query(sql);
@@ -37,7 +42,6 @@ async function setupRLS() {
     console.log('   - Bucket: exports (Private, 10MB limit)');
     console.log('2. Enable Email Auth in Supabase Dashboard');
     console.log('3. Configure Email Templates (German)');
-
   } catch (error) {
     console.error('❌ Error executing RLS policies:', error);
     process.exit(1);

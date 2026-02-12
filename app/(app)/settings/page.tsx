@@ -5,7 +5,13 @@ import { getCurrentUser } from '@/src/lib/auth/session';
 import { SubscriptionManagement } from '@/src/components/subscription/subscription-management';
 import { PaymentHistory } from '@/src/components/subscription/payment-history';
 import type { PaymentItem } from '@/src/components/subscription/payment-history';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/src/components/ui/card';
 import { User, Mail, Building2 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -90,9 +96,7 @@ export default async function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Profil</CardTitle>
-              <CardDescription>
-                Ihre persönlichen Informationen
-              </CardDescription>
+              <CardDescription>Ihre persönlichen Informationen</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
@@ -100,7 +104,9 @@ export default async function SettingsPage() {
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">{userData?.name || 'Kein Name angegeben'}</p>
+                  <p className="font-medium">
+                    {userData?.name || 'Kein Name angegeben'}
+                  </p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     {user.email}
@@ -129,7 +135,9 @@ export default async function SettingsPage() {
                       <div className="flex items-center gap-3">
                         <Building2 className="h-5 w-5 text-muted-foreground" />
                         <div>
-                          <p className="font-medium">{membership.organization.name}</p>
+                          <p className="font-medium">
+                            {membership.organization.name}
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             Rolle: {membership.role}
                           </p>

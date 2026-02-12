@@ -5,4 +5,4 @@
  * This file is kept for backward compatibility but the dialog is the primary UI.
  */
 
-export { ExportDialog as ExportForm } from "./export-dialog";
+export { ExportDialog as ExportForm } from './export-dialog';

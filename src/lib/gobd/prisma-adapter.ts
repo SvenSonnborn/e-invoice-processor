@@ -7,7 +7,9 @@ import type { GoBDComplianceStatus as PrismaGoBDStatus } from '@/src/generated/p
 import { InvoiceData, LineItemData } from './types';
 import type { GoBDComplianceStatus } from './constants';
 
-export function mapPrismaInvoiceToGoBD(invoice: Invoice & { lineItems?: InvoiceLineItem[] }): InvoiceData {
+export function mapPrismaInvoiceToGoBD(
+  invoice: Invoice & { lineItems?: InvoiceLineItem[] }
+): InvoiceData {
   return {
     id: invoice.id,
     number: invoice.number,
@@ -23,7 +25,9 @@ export function mapPrismaInvoiceToGoBD(invoice: Invoice & { lineItems?: InvoiceL
   };
 }
 
-export function mapPrismaLineItemToGoBD(lineItem: InvoiceLineItem): LineItemData {
+export function mapPrismaLineItemToGoBD(
+  lineItem: InvoiceLineItem
+): LineItemData {
   return {
     id: lineItem.id,
     positionIndex: lineItem.positionIndex,
@@ -40,7 +44,9 @@ export function mapPrismaLineItemToGoBD(lineItem: InvoiceLineItem): LineItemData
 /**
  * Map GoBD compliance status to Prisma enum
  */
-export function mapGoBDStatusToPrisma(status: GoBDComplianceStatus): PrismaGoBDStatus {
+export function mapGoBDStatusToPrisma(
+  status: GoBDComplianceStatus
+): PrismaGoBDStatus {
   switch (status) {
     case 'compliant':
       return 'COMPLIANT';
@@ -56,7 +62,9 @@ export function mapGoBDStatusToPrisma(status: GoBDComplianceStatus): PrismaGoBDS
 /**
  * Map Prisma GoBD status to GoBD compliance status
  */
-export function mapPrismaStatusToGoBD(status: PrismaGoBDStatus | null): GoBDComplianceStatus | null {
+export function mapPrismaStatusToGoBD(
+  status: PrismaGoBDStatus | null
+): GoBDComplianceStatus | null {
   switch (status) {
     case 'COMPLIANT':
       return 'compliant';

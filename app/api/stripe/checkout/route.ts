@@ -1,8 +1,8 @@
 /**
  * Stripe Checkout Session API Route
- * 
+ *
  * Creates a Stripe Checkout session for subscription signup.
- * 
+ *
  * POST /api/stripe/checkout
  * Body: { priceId: string, successUrl: string, cancelUrl: string }
  */
@@ -19,13 +19,12 @@ const log = logger.child({ module: 'stripe-checkout' });
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -44,10 +43,7 @@ export async function POST(request: NextRequest) {
     ].filter(Boolean);
 
     if (!validPriceIds.includes(priceId)) {
-      return NextResponse.json(
-        { error: 'Invalid price ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 });
     }
 
     const dbUser = await prisma.user.findUnique({
@@ -56,10 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!dbUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     let customerId = dbUser.subscriptions[0]?.stripeCustomerId;
@@ -100,15 +93,22 @@ export async function POST(request: NextRequest) {
           userId: dbUser.id,
         },
       },
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?checkout=success`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?checkout=canceled`,
+      success_url:
+        successUrl ||
+        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?checkout=success`,
+      cancel_url:
+        cancelUrl ||
+        `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?checkout=canceled`,
       metadata: {
         userId: dbUser.id,
         priceId: priceId,
       },
     });
 
-    log.info({ userId: dbUser.id, sessionId: session.id }, 'Checkout session created');
+    log.info(
+      { userId: dbUser.id, sessionId: session.id },
+      'Checkout session created'
+    );
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {

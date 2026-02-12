@@ -30,11 +30,7 @@ export const REQUIRED_FIELDS = {
     'supplierName',
     'customerName',
   ],
-  lineItem: [
-    'description',
-    'netAmount',
-    'taxRate',
-  ],
+  lineItem: ['description', 'netAmount', 'taxRate'],
 } as const;
 
 // GoBD validation error codes
@@ -48,23 +44,23 @@ export const GOB_ERROR_CODES = {
   MISSING_CURRENCY: 'GOB-006',
   MISSING_SUPPLIER: 'GOB-007',
   MISSING_CUSTOMER: 'GOB-008',
-  
+
   // Calculation violations
   SUM_MISMATCH: 'GOB-101',
   LINE_ITEM_SUM_MISMATCH: 'GOB-102',
   TAX_CALCULATION_ERROR: 'GOB-103',
-  
+
   // Date violations
   FUTURE_DATE: 'GOB-201',
   INVALID_DATE_FORMAT: 'GOB-202',
-  
+
   // Tax rate violations
   INVALID_TAX_RATE: 'GOB-301',
   TAX_RATE_MISMATCH: 'GOB-302',
-  
+
   // Currency violations
   INVALID_CURRENCY: 'GOB-401',
-  
+
   // Line item violations
   MISSING_LINE_ITEM_DESCRIPTION: 'GOB-501',
   MISSING_LINE_ITEM_NET_AMOUNT: 'GOB-502',
@@ -81,15 +77,21 @@ export const GOB_ERROR_MESSAGES: Record<string, string> = {
   [GOB_ERROR_CODES.MISSING_CURRENCY]: 'Währung fehlt',
   [GOB_ERROR_CODES.MISSING_SUPPLIER]: 'Lieferantenname fehlt',
   [GOB_ERROR_CODES.MISSING_CUSTOMER]: 'Kundenname fehlt',
-  [GOB_ERROR_CODES.SUM_MISMATCH]: 'Summenprüfung fehlgeschlagen (Netto + Steuer ≠ Brutto)',
-  [GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH]: 'Positionssumme stimmt nicht mit Rechnungssumme überein',
+  [GOB_ERROR_CODES.SUM_MISMATCH]:
+    'Summenprüfung fehlgeschlagen (Netto + Steuer ≠ Brutto)',
+  [GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH]:
+    'Positionssumme stimmt nicht mit Rechnungssumme überein',
   [GOB_ERROR_CODES.TAX_CALCULATION_ERROR]: 'Steuerberechnung fehlerhaft',
-  [GOB_ERROR_CODES.FUTURE_DATE]: 'Rechnungsdatum darf nicht in der Zukunft liegen',
+  [GOB_ERROR_CODES.FUTURE_DATE]:
+    'Rechnungsdatum darf nicht in der Zukunft liegen',
   [GOB_ERROR_CODES.INVALID_DATE_FORMAT]: 'Ungültiges Datumsformat',
-  [GOB_ERROR_CODES.INVALID_TAX_RATE]: 'Ungültiger Steuersatz (erlaubt: 0%, 7%, 19%)',
-  [GOB_ERROR_CODES.TAX_RATE_MISMATCH]: 'Steuersatz stimmt nicht mit Berechnung überein',
+  [GOB_ERROR_CODES.INVALID_TAX_RATE]:
+    'Ungültiger Steuersatz (erlaubt: 0%, 7%, 19%)',
+  [GOB_ERROR_CODES.TAX_RATE_MISMATCH]:
+    'Steuersatz stimmt nicht mit Berechnung überein',
   [GOB_ERROR_CODES.INVALID_CURRENCY]: 'Ungültige Währung',
-  [GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION]: 'Positionsbeschreibung fehlt',
+  [GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION]:
+    'Positionsbeschreibung fehlt',
   [GOB_ERROR_CODES.MISSING_LINE_ITEM_NET_AMOUNT]: 'Positions-Nettobetrag fehlt',
   [GOB_ERROR_CODES.MISSING_LINE_ITEM_TAX_RATE]: 'Positions-Steuersatz fehlt',
 };
@@ -102,7 +104,8 @@ export const GOB_WARNING_CODES = {
 } as const;
 
 export const GOB_WARNING_MESSAGES: Record<string, string> = {
-  [GOB_WARNING_CODES.UNCOMMON_CURRENCY]: 'Unübliche Währung für deutsche Rechnung',
+  [GOB_WARNING_CODES.UNCOMMON_CURRENCY]:
+    'Unübliche Währung für deutsche Rechnung',
   [GOB_WARNING_CODES.MISSING_DUE_DATE]: 'Zahlungsziel (Fälligkeitsdatum) fehlt',
   [GOB_WARNING_CODES.NO_LINE_ITEMS]: 'Keine Rechnungspositionen vorhanden',
 };

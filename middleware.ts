@@ -1,12 +1,21 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+
+/**
+ * Routes that require an authenticated session.
+ * Unauthenticated users hitting these paths are redirected to /login.
+ */
+const PROTECTED_PATHS = ['/dashboard', '/invoices', '/exports', '/settings'];
 
 /**
  * Next.js Middleware
  *
- * Keeps the Supabase auth session fresh on each request by validating and
- * refreshing JWTs via `auth.getClaims()`. This makes SSR-safe access to the
- * current user possible in Server Components, Server Actions and API routes.
+ * 1. Refreshes the Supabase JWT on every request (pages + API routes)
+ *    so that Server Components, Server Actions and API route handlers
+ *    always have a fresh session available via cookies.
+ *
+ * 2. Redirects unauthenticated users to /login when they hit protected
+ *    page routes (dashboard, invoices, etc.).
  */
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -20,38 +29,43 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
           });
         },
       },
     }
   );
 
-  // Validate and refresh the JWT. This must be called for the middleware to
-  // keep cookies in sync with Supabase auth.
-  await supabase.auth.getClaims();
+  // Validate and refresh the JWT. getUser() verifies the token server-side
+  // and triggers a token refresh if the access token has expired.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Redirect unauthenticated users away from protected page routes.
+  const { pathname } = request.nextUrl;
+  const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+
+  if (isProtected && !user) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
   return response;
 }
 
 export const config = {
   matcher: [
-    // Match all request paths except for API routes and static assets.
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    // Match all request paths except static assets.
+    // API routes are now included so their JWTs get refreshed too.
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
-

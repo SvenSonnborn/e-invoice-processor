@@ -103,7 +103,11 @@ export const MarketingHeader = () => {
               ))}
             </ul>
             <div className="mt-4 flex flex-col gap-2 border-t border-neutral-200 pt-4">
-              <Button variant="outline" className="w-full justify-center" asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-center"
+                asChild
+              >
                 <Link href="/login" onClick={handleCloseMenu}>
                   Sign in
                 </Link>

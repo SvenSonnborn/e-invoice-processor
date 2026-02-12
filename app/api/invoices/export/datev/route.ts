@@ -13,6 +13,7 @@ import {
   type DatevInvoiceMapping,
 } from '@/src/lib/export/datev';
 import { NextRequest, NextResponse } from 'next/server';
+import { requireApiAuthWithOrg } from '@/src/lib/auth/session';
 
 /**
  * Export request body
@@ -69,6 +70,10 @@ function convertToDatevInvoice(
  * POST handler - Generate DATEV export
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireApiAuthWithOrg();
+  if (authResult instanceof NextResponse) return authResult;
+  const { organizationId } = authResult;
+
   try {
     // Parse request body
     const body: ExportRequestBody = await request.json();
@@ -85,9 +90,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch invoices from database in a single set-based query
+    // Fetch invoices scoped to the user's organization
     const invoices = await prisma.invoice.findMany({
-      where: { id: { in: body.invoiceIds } },
+      where: { id: { in: body.invoiceIds }, organizationId },
       include: {
         lineItems: true,
       },
@@ -174,6 +179,10 @@ export async function POST(request: NextRequest) {
  * GET handler - Get export preview/info
  */
 export async function GET(request: NextRequest) {
+  const authResult = await requireApiAuthWithOrg();
+  if (authResult instanceof NextResponse) return authResult;
+  const { organizationId } = authResult;
+
   const { searchParams } = new URL(request.url);
   const invoiceIds = searchParams.getAll('invoiceId');
 
@@ -185,18 +194,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch invoices for preview
-    const invoices = await Promise.all(
-      invoiceIds.map(async (id) => {
-        const invoice = await prisma.invoice.findUnique({
-          where: { id },
-          include: {
-            lineItems: true,
-          },
-        });
-        return invoice;
-      })
-    );
+    // Fetch invoices scoped to the user's organization
+    const invoices = await prisma.invoice.findMany({
+      where: { id: { in: invoiceIds }, organizationId },
+      include: {
+        lineItems: true,
+      },
+    });
 
     const validInvoices = invoices
       .filter((inv): inv is NonNullable<typeof inv> => inv !== null)

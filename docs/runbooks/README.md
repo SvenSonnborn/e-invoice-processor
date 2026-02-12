@@ -12,6 +12,7 @@ This directory contains operational runbooks for common tasks and troubleshootin
 ## Adding New Runbooks
 
 When adding a new runbook:
+
 1. Use clear, step-by-step instructions
 2. Include prerequisites and assumptions
 3. Document expected outcomes

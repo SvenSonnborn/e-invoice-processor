@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 /**
  * Export Server Actions
@@ -7,11 +7,11 @@
  * and loading invoices for the export selector.
  */
 
-import { prisma } from "@/src/lib/db/client";
-import { getCurrentUser } from "@/src/lib/auth/session";
-import { generateExport } from "@/src/server/services/export-service";
-import { canCreateExport } from "@/src/lib/stripe/service";
-import type { DatevExportOptions } from "@/src/server/exporters/datev";
+import { prisma } from '@/src/lib/db/client';
+import { getCurrentUser } from '@/src/lib/auth/session';
+import { generateExport } from '@/src/server/services/export-service';
+import { canCreateExport } from '@/src/lib/stripe/service';
+import type { DatevExportOptions } from '@/src/server/exporters/datev';
 
 // ---------------------------------------------------------------------------
 // Helper: get the current user's organization membership
@@ -19,7 +19,7 @@ import type { DatevExportOptions } from "@/src/server/exporters/datev";
 async function requireOrgMembership() {
   const user = await getCurrentUser();
   if (!user) {
-    throw new Error("Unauthorized");
+    throw new Error('Unauthorized');
   }
 
   const membership = await prisma.organizationMember.findFirst({
@@ -28,7 +28,7 @@ async function requireOrgMembership() {
   });
 
   if (!membership) {
-    throw new Error("No organization found");
+    throw new Error('No organization found');
   }
 
   return { user, organizationId: membership.organizationId };
@@ -39,7 +39,7 @@ async function requireOrgMembership() {
 // ---------------------------------------------------------------------------
 
 export interface CreateExportActionInput {
-  format: "CSV" | "DATEV";
+  format: 'CSV' | 'DATEV';
   invoiceIds: string[];
   filename?: string;
   datevOptions?: DatevExportOptions;
@@ -75,7 +75,7 @@ export async function createExportAction(
     if (!exportCheck.allowed) {
       return {
         success: false,
-        error: exportCheck.reason ?? "Export limit reached",
+        error: exportCheck.reason ?? 'Export limit reached',
       };
     }
 
@@ -99,10 +99,10 @@ export async function createExportAction(
       },
     };
   } catch (error) {
-    console.error("Error creating export:", error);
+    console.error('Error creating export:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -131,7 +131,7 @@ export async function fetchExportsAction(): Promise<ExportListItem[]> {
 
     const exports = await prisma.export.findMany({
       where: { organizationId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
         invoices: true,
@@ -152,7 +152,7 @@ export async function fetchExportsAction(): Promise<ExportListItem[]> {
       createdAt: exp.createdAt.toISOString(),
     }));
   } catch (error) {
-    console.error("Error fetching exports:", error);
+    console.error('Error fetching exports:', error);
     return [];
   }
 }
@@ -181,7 +181,7 @@ export async function fetchInvoicesAction(): Promise<InvoiceListItem[]> {
 
     const invoices = await prisma.invoice.findMany({
       where: { organizationId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 200,
       select: {
         id: true,
@@ -206,7 +206,7 @@ export async function fetchInvoicesAction(): Promise<InvoiceListItem[]> {
       status: inv.status,
     }));
   } catch (error) {
-    console.error("Error fetching invoices:", error);
+    console.error('Error fetching invoices:', error);
     return [];
   }
 }

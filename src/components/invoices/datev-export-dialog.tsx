@@ -3,9 +3,9 @@
  * UI for configuring and executing DATEV exports
  */
 
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,12 +13,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Checkbox } from "@/src/components/ui/checkbox";
-import { Download, FileText, Loader2 } from "lucide-react";
+} from '@/src/components/ui/dialog';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Checkbox } from '@/src/components/ui/checkbox';
+import { Download, FileText, Loader2 } from 'lucide-react';
 
 interface DatevExportDialogProps {
   open: boolean;
@@ -32,7 +32,7 @@ interface ExportConfig {
   beraterNummer: string;
   mandantenNummer: string;
   bezeichnung: string;
-  format: "standard" | "extended";
+  format: 'standard' | 'extended';
   detailed: boolean;
 }
 
@@ -46,16 +46,16 @@ export function DatevExportDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<ExportConfig>({
-    beraterNummer: "",
-    mandantenNummer: "",
-    bezeichnung: "Buchungsstapel Export",
-    format: "standard",
+    beraterNummer: '',
+    mandantenNummer: '',
+    bezeichnung: 'Buchungsstapel Export',
+    format: 'standard',
     detailed: false,
   });
 
   const handleExport = async () => {
     if (invoiceIds.length === 0) {
-      setError("Keine Rechnungen ausgewählt");
+      setError('Keine Rechnungen ausgewählt');
       return;
     }
 
@@ -63,10 +63,10 @@ export function DatevExportDialog({
     setError(null);
 
     try {
-      const response = await fetch("/api/invoices/export/datev", {
-        method: "POST",
+      const response = await fetch('/api/invoices/export/datev', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           invoiceIds,
@@ -84,7 +84,7 @@ export function DatevExportDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Export fehlgeschlagen");
+        throw new Error(errorData.error || 'Export fehlgeschlagen');
       }
 
       const result = await response.json();
@@ -92,10 +92,10 @@ export function DatevExportDialog({
       if (result.success && result.csv) {
         // Create download
         const blob = new Blob([result.csv], {
-          type: "text/csv;charset=utf-8;",
+          type: 'text/csv;charset=utf-8;',
         });
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         link.href = url;
         link.download = result.filename;
         document.body.appendChild(link);
@@ -106,10 +106,10 @@ export function DatevExportDialog({
         onExportComplete?.();
         onOpenChange(false);
       } else {
-        throw new Error("Ungültige Antwort vom Server");
+        throw new Error('Ungültige Antwort vom Server');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export fehlgeschlagen");
+      setError(err instanceof Error ? err.message : 'Export fehlgeschlagen');
     } finally {
       setLoading(false);
     }
@@ -182,9 +182,12 @@ export function DatevExportDialog({
                   type="radio"
                   name="format"
                   value="standard"
-                  checked={config.format === "standard"}
+                  checked={config.format === 'standard'}
                   onChange={(e) =>
-                    setConfig({ ...config, format: e.target.value as "standard" })
+                    setConfig({
+                      ...config,
+                      format: e.target.value as 'standard',
+                    })
                   }
                   className="h-4 w-4"
                 />
@@ -195,9 +198,12 @@ export function DatevExportDialog({
                   type="radio"
                   name="format"
                   value="extended"
-                  checked={config.format === "extended"}
+                  checked={config.format === 'extended'}
                   onChange={(e) =>
-                    setConfig({ ...config, format: e.target.value as "extended" })
+                    setConfig({
+                      ...config,
+                      format: e.target.value as 'extended',
+                    })
                   }
                   className="h-4 w-4"
                 />
@@ -214,7 +220,10 @@ export function DatevExportDialog({
                 setConfig({ ...config, detailed: checked as boolean })
               }
             />
-            <Label htmlFor="detailed" className="text-sm font-normal cursor-pointer">
+            <Label
+              htmlFor="detailed"
+              className="text-sm font-normal cursor-pointer"
+            >
               Detaillierter Export (einzelne Positionen)
             </Label>
           </div>
@@ -237,7 +246,10 @@ export function DatevExportDialog({
           >
             Abbrechen
           </Button>
-          <Button onClick={handleExport} disabled={loading || invoiceIds.length === 0}>
+          <Button
+            onClick={handleExport}
+            disabled={loading || invoiceIds.length === 0}
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

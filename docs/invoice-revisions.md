@@ -5,6 +5,7 @@ Dokumentation zum Revision-System für Invoice-Verarbeitung.
 ## Übersicht
 
 Das Revision-System ermöglicht:
+
 - **Re-Processing:** Invoices können mit aktualisiertem Parser erneut verarbeitet werden
 - **Audit-Trail:** Jede Verarbeitung wird als Revision gespeichert
 - **Versionierung:** Processor-Version wird getrackt
@@ -16,11 +17,11 @@ Das Revision-System ermöglicht:
 
 ```typescript
 {
-  id: string                // Unique ID
-  invoiceId: string         // FK to Invoice
-  rawJson: JSON             // Extrahierte Rohdaten
-  processorVersion: string  // z.B. "1.0.0"
-  createdAt: DateTime       // Wann verarbeitet
+  id: string; // Unique ID
+  invoiceId: string; // FK to Invoice
+  rawJson: JSON; // Extrahierte Rohdaten
+  processorVersion: string; // z.B. "1.0.0"
+  createdAt: DateTime; // Wann verarbeitet
 }
 ```
 
@@ -33,6 +34,7 @@ Invoice 1 ─── N InvoiceRevision
 ```
 
 **Regeln:**
+
 1. Jede Verarbeitung erstellt neue Revision
 2. `Invoice.rawJson` enthält immer die aktuellste Version
 3. Alte Revisionen bleiben erhalten (Audit)
@@ -43,12 +45,12 @@ Invoice 1 ─── N InvoiceRevision
 ### 1. Initial Processing
 
 ```typescript
-import { markAsParsed } from '@/src/lib/invoices/processor'
+import { markAsParsed } from '@/src/lib/invoices/processor';
 
 // Upload → Parse → Create Revision
-const rawData = await parseInvoiceFile(upload.storageKey)
+const rawData = await parseInvoiceFile(upload.storageKey);
 
-await markAsParsed(invoice.id, rawData, '1.0.0')
+await markAsParsed(invoice.id, rawData, '1.0.0');
 
 // Erstellt:
 // - InvoiceRevision { rawJson: rawData, processorVersion: '1.0.0' }
@@ -59,14 +61,17 @@ await markAsParsed(invoice.id, rawData, '1.0.0')
 ### 2. Re-Processing (neue Parser-Version)
 
 ```typescript
-import { reprocessInvoice, CURRENT_PROCESSOR_VERSION } from '@/src/lib/invoices/revisions'
+import {
+  reprocessInvoice,
+  CURRENT_PROCESSOR_VERSION,
+} from '@/src/lib/invoices/revisions';
 
 // Parser wurde von 1.0.0 auf 1.1.0 aktualisiert
 // CURRENT_PROCESSOR_VERSION = '1.1.0'
 
-const newRawData = await parseInvoiceFile(upload.storageKey)
+const newRawData = await parseInvoiceFile(upload.storageKey);
 
-await reprocessInvoice(invoice.id, newRawData)
+await reprocessInvoice(invoice.id, newRawData);
 
 // Erstellt:
 // - Neue InvoiceRevision { rawJson: newRawData, processorVersion: '1.1.0' }
@@ -75,6 +80,7 @@ await reprocessInvoice(invoice.id, newRawData)
 ```
 
 **Alte Revision bleibt erhalten:**
+
 ```sql
 SELECT * FROM "InvoiceRevision" WHERE "invoiceId" = 'inv_123'
 ORDER BY "createdAt" DESC;
@@ -95,11 +101,12 @@ Semantic Versioning: `MAJOR.MINOR.PATCH`
 - **PATCH:** Bug-Fixes (z.B. besseres Parsing)
 
 **Beispiele:**
+
 ```typescript
-'1.0.0'  // Initial release
-'1.0.1'  // Bug-Fix: Datumsparsing korrigiert
-'1.1.0'  // Feature: Neue Felder extrahiert
-'2.0.0'  // Breaking: Komplett neues Parsing-System
+'1.0.0'; // Initial release
+'1.0.1'; // Bug-Fix: Datumsparsing korrigiert
+'1.1.0'; // Feature: Neue Felder extrahiert
+'2.0.0'; // Breaking: Komplett neues Parsing-System
 ```
 
 ### Aktuelle Version setzen
@@ -107,10 +114,11 @@ Semantic Versioning: `MAJOR.MINOR.PATCH`
 **Datei:** [src/lib/invoices/revisions.ts](../src/lib/invoices/revisions.ts)
 
 ```typescript
-export const CURRENT_PROCESSOR_VERSION = '1.1.0'
+export const CURRENT_PROCESSOR_VERSION = '1.1.0';
 ```
 
 **Wann aktualisieren:**
+
 - ✅ Parser-Logik geändert
 - ✅ Neue Felder extrahiert
 - ✅ Bug-Fixes in Parsing
@@ -122,13 +130,15 @@ export const CURRENT_PROCESSOR_VERSION = '1.1.0'
 ### Revision erstellen
 
 ```typescript
-import { createRevision } from '@/src/lib/invoices/revisions'
+import { createRevision } from '@/src/lib/invoices/revisions';
 
 const revision = await createRevision({
   invoiceId: 'inv_123',
-  rawJson: { /* parsed data */ },
-  processorVersion: '1.0.0'  // optional, default: CURRENT_PROCESSOR_VERSION
-})
+  rawJson: {
+    /* parsed data */
+  },
+  processorVersion: '1.0.0', // optional, default: CURRENT_PROCESSOR_VERSION
+});
 
 // Erstellt Revision UND updated Invoice.rawJson
 ```
@@ -136,30 +146,30 @@ const revision = await createRevision({
 ### Revisionen abrufen
 
 ```typescript
-import { getRevisions, getLatestRevision } from '@/src/lib/invoices/revisions'
+import { getRevisions, getLatestRevision } from '@/src/lib/invoices/revisions';
 
 // Alle Revisionen (neueste zuerst)
-const revisions = await getRevisions('inv_123')
+const revisions = await getRevisions('inv_123');
 
-revisions.forEach(rev => {
-  console.log(rev.processorVersion, rev.isLatest, rev.revisionNumber)
-})
+revisions.forEach((rev) => {
+  console.log(rev.processorVersion, rev.isLatest, rev.revisionNumber);
+});
 // Output:
 // '1.1.0', true,  2  (neueste)
 // '1.0.0', false, 1
 
 // Nur neueste
-const latest = await getLatestRevision('inv_123')
+const latest = await getLatestRevision('inv_123');
 ```
 
 ### Revision-Statistiken
 
 ```typescript
-import { getRevisionStats } from '@/src/lib/invoices/revisions'
+import { getRevisionStats } from '@/src/lib/invoices/revisions';
 
-const stats = await getRevisionStats('inv_123')
+const stats = await getRevisionStats('inv_123');
 
-console.log(stats)
+console.log(stats);
 // {
 //   totalRevisions: 3,
 //   firstProcessedAt: '2024-01-20T10:00:00Z',
@@ -172,11 +182,11 @@ console.log(stats)
 ### Revisionen vergleichen
 
 ```typescript
-import { compareRevisions } from '@/src/lib/invoices/revisions'
+import { compareRevisions } from '@/src/lib/invoices/revisions';
 
-const comparison = await compareRevisions('rev_001', 'rev_002')
+const comparison = await compareRevisions('rev_001', 'rev_002');
 
-console.log(comparison)
+console.log(comparison);
 // {
 //   revision1: { id: 'rev_001', processorVersion: '1.0.0', data: {...} },
 //   revision2: { id: 'rev_002', processorVersion: '1.1.0', data: {...} },
@@ -188,10 +198,10 @@ console.log(comparison)
 ### Zu Revision zurückkehren
 
 ```typescript
-import { revertToRevision } from '@/src/lib/invoices/revisions'
+import { revertToRevision } from '@/src/lib/invoices/revisions';
 
 // Zurück zu alter Version (z.B. Debug)
-await revertToRevision('inv_123', 'rev_001')
+await revertToRevision('inv_123', 'rev_001');
 
 // Erstellt neue Revision mit Daten von rev_001
 // processorVersion: '1.0.0-reverted'
@@ -200,12 +210,12 @@ await revertToRevision('inv_123', 'rev_001')
 ### Alte Revisionen löschen
 
 ```typescript
-import { pruneOldRevisions } from '@/src/lib/invoices/revisions'
+import { pruneOldRevisions } from '@/src/lib/invoices/revisions';
 
 // Nur letzte 10 Revisionen behalten
-const deletedCount = await pruneOldRevisions('inv_123', 10)
+const deletedCount = await pruneOldRevisions('inv_123', 10);
 
-console.log(`${deletedCount} Revisionen gelöscht`)
+console.log(`${deletedCount} Revisionen gelöscht`);
 ```
 
 ## Re-Processing-Strategien
@@ -213,30 +223,30 @@ console.log(`${deletedCount} Revisionen gelöscht`)
 ### 1. Einzelne Invoice re-processen
 
 ```typescript
-import { reprocessInvoice } from '@/src/lib/invoices/revisions'
+import { reprocessInvoice } from '@/src/lib/invoices/revisions';
 
 // Datei erneut parsen
-const rawData = await parseInvoiceFile(upload.storageKey)
+const rawData = await parseInvoiceFile(upload.storageKey);
 
 // Neue Revision erstellen
-await reprocessInvoice(invoice.id, rawData)
+await reprocessInvoice(invoice.id, rawData);
 ```
 
 ### 2. Alle Invoices mit alter Version
 
 ```typescript
-import { getInvoicesNeedingReprocessing } from '@/src/lib/invoices/revisions'
+import { getInvoicesNeedingReprocessing } from '@/src/lib/invoices/revisions';
 
 // Alle Invoices mit Version < 1.1.0
-const invoices = await getInvoicesNeedingReprocessing('org_123', '1.1.0')
+const invoices = await getInvoicesNeedingReprocessing('org_123', '1.1.0');
 
 for (const invoice of invoices) {
   try {
-    const rawData = await parseInvoiceFile(invoice.upload.storageKey)
-    await reprocessInvoice(invoice.id, rawData)
-    console.log(`✓ Invoice ${invoice.id} re-processed`)
+    const rawData = await parseInvoiceFile(invoice.upload.storageKey);
+    await reprocessInvoice(invoice.id, rawData);
+    console.log(`✓ Invoice ${invoice.id} re-processed`);
   } catch (error) {
-    console.error(`✗ Invoice ${invoice.id} failed:`, error)
+    console.error(`✗ Invoice ${invoice.id} failed:`, error);
   }
 }
 ```
@@ -244,23 +254,23 @@ for (const invoice of invoices) {
 ### 3. Batch Re-Processing mit Queue
 
 ```typescript
-import { getInvoicesNeedingReprocessing } from '@/src/lib/invoices/revisions'
+import { getInvoicesNeedingReprocessing } from '@/src/lib/invoices/revisions';
 
 async function reprocessBatch(organizationId: string, batchSize = 10) {
-  const invoices = await getInvoicesNeedingReprocessing(organizationId)
+  const invoices = await getInvoicesNeedingReprocessing(organizationId);
 
   // Batches von 10
   for (let i = 0; i < invoices.length; i += batchSize) {
-    const batch = invoices.slice(i, i + batchSize)
+    const batch = invoices.slice(i, i + batchSize);
 
     await Promise.allSettled(
       batch.map(async (invoice) => {
-        const rawData = await parseInvoiceFile(invoice.upload.storageKey)
-        await reprocessInvoice(invoice.id, rawData)
+        const rawData = await parseInvoiceFile(invoice.upload.storageKey);
+        await reprocessInvoice(invoice.id, rawData);
       })
-    )
+    );
 
-    console.log(`Batch ${i / batchSize + 1} processed`)
+    console.log(`Batch ${i / batchSize + 1} processed`);
   }
 }
 ```
@@ -276,11 +286,11 @@ async function reprocessBatch(organizationId: string, batchSize = 10) {
 // CURRENT_PROCESSOR_VERSION = '1.0.1'
 
 // 2. Alle Invoices re-processen
-const invoices = await getInvoicesNeedingReprocessing('org_123', '1.0.1')
+const invoices = await getInvoicesNeedingReprocessing('org_123', '1.0.1');
 
 for (const invoice of invoices) {
-  const rawData = await parseInvoiceFile(invoice.upload.storageKey)
-  await reprocessInvoice(invoice.id, rawData)
+  const rawData = await parseInvoiceFile(invoice.upload.storageKey);
+  await reprocessInvoice(invoice.id, rawData);
 }
 
 // Alte Daten bleiben erhalten, neue sind in Invoice.rawJson
@@ -298,12 +308,12 @@ for (const invoice of invoices) {
 function parseInvoice(file) {
   return {
     // ... bestehende Felder
-    paymentTerms: extractPaymentTerms(file)  // NEU
-  }
+    paymentTerms: extractPaymentTerms(file), // NEU
+  };
 }
 
 // 3. Alle Invoices re-processen
-const invoices = await getInvoicesNeedingReprocessing('org_123', '1.1.0')
+const invoices = await getInvoicesNeedingReprocessing('org_123', '1.1.0');
 // ... re-process
 ```
 
@@ -312,20 +322,20 @@ const invoices = await getInvoicesNeedingReprocessing('org_123', '1.1.0')
 **Szenario:** Invoice ist FAILED, Grund unklar.
 
 ```typescript
-import { getRevisions } from '@/src/lib/invoices/revisions'
+import { getRevisions } from '@/src/lib/invoices/revisions';
 
 // Alle Revisionen abrufen
-const revisions = await getRevisions('inv_123')
+const revisions = await getRevisions('inv_123');
 
 // Verschiedene Versionen vergleichen
-revisions.forEach(rev => {
-  console.log('Version:', rev.processorVersion)
-  console.log('Data:', rev.rawJson)
-  console.log('---')
-})
+revisions.forEach((rev) => {
+  console.log('Version:', rev.processorVersion);
+  console.log('Data:', rev.rawJson);
+  console.log('---');
+});
 
 // Bei Bedarf zu alter Version zurück
-await revertToRevision('inv_123', revisions[revisions.length - 1].id)
+await revertToRevision('inv_123', revisions[revisions.length - 1].id);
 ```
 
 ### 4. A/B Testing verschiedener Parser
@@ -334,19 +344,21 @@ await revertToRevision('inv_123', revisions[revisions.length - 1].id)
 
 ```typescript
 // Parser A (Produktiv)
-await markAsParsed(invoice.id, dataA, '1.0.0')
+await markAsParsed(invoice.id, dataA, '1.0.0');
 
 // Parser B (Experimental)
 await createRevision({
   invoiceId: invoice.id,
   rawJson: dataB,
-  processorVersion: '2.0.0-beta'
-})
+  processorVersion: '2.0.0-beta',
+});
 
 // Beide Versionen vergleichen
-const revisions = await getRevisions(invoice.id)
-const dataA = revisions.find(r => r.processorVersion === '1.0.0').rawJson
-const dataB = revisions.find(r => r.processorVersion === '2.0.0-beta').rawJson
+const revisions = await getRevisions(invoice.id);
+const dataA = revisions.find((r) => r.processorVersion === '1.0.0').rawJson;
+const dataB = revisions.find(
+  (r) => r.processorVersion === '2.0.0-beta'
+).rawJson;
 
 // Bei Zufriedenheit: Version 2.0.0 als Standard setzen
 ```
@@ -358,25 +370,28 @@ const dataB = revisions.find(r => r.processorVersion === '2.0.0-beta').rawJson
 **Problem:** Jede Revision speichert vollständige rawJson.
 
 **Lösung 1: Pruning**
+
 ```typescript
 // Alte Revisionen regelmäßig löschen
-await pruneOldRevisions(invoice.id, 5)  // Nur 5 behalten
+await pruneOldRevisions(invoice.id, 5); // Nur 5 behalten
 ```
 
 **Lösung 2: Selective Revision**
+
 ```typescript
 // Nur bei Major/Minor-Version neue Revision
 function shouldCreateRevision(oldVersion: string, newVersion: string) {
-  const [oldMajor, oldMinor] = oldVersion.split('.')
-  const [newMajor, newMinor] = newVersion.split('.')
+  const [oldMajor, oldMinor] = oldVersion.split('.');
+  const [newMajor, newMinor] = newVersion.split('.');
 
-  return oldMajor !== newMajor || oldMinor !== newMinor
+  return oldMajor !== newMajor || oldMinor !== newMinor;
 }
 ```
 
 ### Query-Performance
 
 **Indizes:**
+
 ```sql
 -- Bereits vorhanden
 CREATE INDEX "InvoiceRevision_invoiceId_idx" ON "InvoiceRevision"("invoiceId");
@@ -385,18 +400,19 @@ CREATE INDEX "InvoiceRevision_processorVersion_idx" ON "InvoiceRevision"("proces
 ```
 
 **Optimierte Queries:**
+
 ```typescript
 // Nur IDs und Versionen laden
 const versions = await prisma.invoiceRevision.findMany({
   where: { invoiceId },
   select: { id: true, processorVersion: true, createdAt: true },
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: 'desc' },
+});
 
 // rawJson nur bei Bedarf
 const fullRevision = await prisma.invoiceRevision.findUnique({
-  where: { id: revisionId }
-})
+  where: { id: revisionId },
+});
 ```
 
 ## Best Practices
@@ -480,17 +496,17 @@ bunx prisma migrate deploy
 const invoices = await prisma.invoice.findMany({
   where: {
     rawJson: { not: null },
-    revisions: { none: {} }
-  }
-})
+    revisions: { none: {} },
+  },
+});
 
 // Initial-Revision erstellen
 for (const invoice of invoices) {
   await createRevision({
     invoiceId: invoice.id,
     rawJson: invoice.rawJson,
-    processorVersion: '1.0.0'  // Initial version
-  })
+    processorVersion: '1.0.0', // Initial version
+  });
 }
 ```
 

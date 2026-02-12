@@ -13,13 +13,13 @@ export class ApiClient {
   private headers: Record<string, string>;
 
   constructor(options: ApiClientOptions = {}) {
-    this.baseUrl = options.baseUrl || "";
+    this.baseUrl = options.baseUrl || '';
     this.headers = options.headers || {};
   }
 
   async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "GET",
+      method: 'GET',
       headers: this.headers,
     });
     if (!response.ok) {
@@ -30,8 +30,8 @@ export class ApiClient {
 
   async post<T>(path: string, data: unknown): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: { ...this.headers, "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { ...this.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     if (!response.ok) {

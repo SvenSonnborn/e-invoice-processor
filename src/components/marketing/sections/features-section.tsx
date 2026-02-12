@@ -77,7 +77,10 @@ const highlights = [
 
 export const FeaturesSection = () => {
   return (
-    <section id="features" className="relative overflow-hidden bg-white py-20 md:py-28">
+    <section
+      id="features"
+      className="relative overflow-hidden bg-white py-20 md:py-28"
+    >
       {/* Background gradient */}
       <div
         className="absolute inset-0 bg-gradient-to-b from-white via-brand-50/30 to-white"

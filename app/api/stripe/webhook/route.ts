@@ -1,8 +1,8 @@
 /**
  * Stripe Webhook Handler
- * 
+ *
  * Handles incoming webhook events from Stripe.
- * 
+ *
  * POST /api/stripe/webhook
  */
 
@@ -11,7 +11,10 @@ import { getStripe } from '@/src/lib/stripe/client';
 import { STRIPE_CONFIG, getPlanByPriceId } from '@/src/lib/stripe/config';
 import { prisma } from '@/src/lib/db/client';
 import { Prisma } from '@/src/generated/prisma/client';
-import type { SubscriptionStatus, SubscriptionTier } from '@/src/generated/prisma/client';
+import type {
+  SubscriptionStatus,
+  SubscriptionTier,
+} from '@/src/generated/prisma/client';
 import Stripe from 'stripe';
 import { logger } from '@/src/lib/logging/logger';
 
@@ -20,7 +23,7 @@ const log = logger.child({ module: 'stripe-webhook' });
 async function getRawBody(request: NextRequest): Promise<string> {
   const chunks: Buffer[] = [];
   const reader = request.body?.getReader();
-  
+
   if (!reader) {
     throw new Error('No request body');
   }
@@ -42,7 +45,9 @@ async function getRawBody(request: NextRequest): Promise<string> {
  * Safely extract a Stripe object ID from a field that could be
  * a string ID or an expanded object.
  */
-const resolveId = (value: string | { id: string } | null | undefined): string | undefined => {
+const resolveId = (
+  value: string | { id: string } | null | undefined
+): string | undefined => {
   if (!value) return undefined;
   return typeof value === 'string' ? value : value.id;
 };
@@ -63,7 +68,9 @@ const getSubscriptionPeriod = (subscription: Stripe.Subscription) => {
  * In Stripe API 2026-01-28+ `Invoice.subscription` was replaced by
  * `Invoice.parent.subscription_details.subscription`.
  */
-const getInvoiceSubscriptionId = (invoice: Stripe.Invoice): string | undefined => {
+const getInvoiceSubscriptionId = (
+  invoice: Stripe.Invoice
+): string | undefined => {
   const raw = invoice.parent?.subscription_details?.subscription;
   return resolveId(raw);
 };
@@ -84,14 +91,22 @@ const centsToPrismaDecimal = (cents: number): Prisma.Decimal => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
-  const subscriptionId = resolveId(session.subscription as string | Stripe.Subscription | null);
+  const subscriptionId = resolveId(
+    session.subscription as string | Stripe.Subscription | null
+  );
 
   if (!userId || !subscriptionId) {
-    log.error({ sessionId: session.id }, 'Missing userId or subscriptionId in session metadata');
+    log.error(
+      { sessionId: session.id },
+      'Missing userId or subscriptionId in session metadata'
+    );
     return;
   }
 
-  log.info({ sessionId: session.id, userId, subscriptionId }, 'Handling checkout.session.completed');
+  log.info(
+    { sessionId: session.id, userId, subscriptionId },
+    'Handling checkout.session.completed'
+  );
 
   const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
@@ -103,7 +118,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const period = getSubscriptionPeriod(subscription);
-  const customerId = resolveId(session.customer as string | Stripe.Customer | null);
+  const customerId = resolveId(
+    session.customer as string | Stripe.Customer | null
+  );
 
   if (!customerId) {
     log.error({ sessionId: session.id }, 'Missing customer ID in session');
@@ -123,11 +140,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       tier: plan.id.toUpperCase() as SubscriptionTier,
       currentPeriodStart: period.start ? new Date(period.start * 1000) : null,
       currentPeriodEnd: period.end ? new Date(period.end * 1000) : null,
-      trialStart: subscription.trial_start 
-        ? new Date(subscription.trial_start * 1000) 
+      trialStart: subscription.trial_start
+        ? new Date(subscription.trial_start * 1000)
         : null,
-      trialEnd: subscription.trial_end 
-        ? new Date(subscription.trial_end * 1000) 
+      trialEnd: subscription.trial_end
+        ? new Date(subscription.trial_end * 1000)
         : null,
     },
     update: {
@@ -136,11 +153,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       tier: plan.id.toUpperCase() as SubscriptionTier,
       currentPeriodStart: period.start ? new Date(period.start * 1000) : null,
       currentPeriodEnd: period.end ? new Date(period.end * 1000) : null,
-      trialStart: subscription.trial_start 
-        ? new Date(subscription.trial_start * 1000) 
+      trialStart: subscription.trial_start
+        ? new Date(subscription.trial_start * 1000)
         : null,
-      trialEnd: subscription.trial_end 
-        ? new Date(subscription.trial_end * 1000) 
+      trialEnd: subscription.trial_end
+        ? new Date(subscription.trial_end * 1000)
         : null,
     },
   });
@@ -154,14 +171,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  log.info({ subscriptionId: subscription.id }, 'Handling customer.subscription.updated');
+  log.info(
+    { subscriptionId: subscription.id },
+    'Handling customer.subscription.updated'
+  );
 
   const dbSubscription = await prisma.subscription.findUnique({
     where: { stripeSubscriptionId: subscription.id },
   });
 
   if (!dbSubscription) {
-    log.error({ subscriptionId: subscription.id }, 'Subscription not found in database');
+    log.error(
+      { subscriptionId: subscription.id },
+      'Subscription not found in database'
+    );
     return;
   }
 
@@ -174,12 +197,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     data: {
       stripePriceId: priceId,
       status: mapStripeStatus(subscription.status),
-      tier: plan ? (plan.id.toUpperCase() as SubscriptionTier) : dbSubscription.tier,
+      tier: plan
+        ? (plan.id.toUpperCase() as SubscriptionTier)
+        : dbSubscription.tier,
       currentPeriodStart: period.start ? new Date(period.start * 1000) : null,
       currentPeriodEnd: period.end ? new Date(period.end * 1000) : null,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      canceledAt: subscription.canceled_at 
-        ? new Date(subscription.canceled_at * 1000) 
+      canceledAt: subscription.canceled_at
+        ? new Date(subscription.canceled_at * 1000)
         : null,
     },
   });
@@ -195,14 +220,20 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  log.info({ subscriptionId: subscription.id }, 'Handling customer.subscription.deleted');
+  log.info(
+    { subscriptionId: subscription.id },
+    'Handling customer.subscription.deleted'
+  );
 
   const dbSubscription = await prisma.subscription.findUnique({
     where: { stripeSubscriptionId: subscription.id },
   });
 
   if (!dbSubscription) {
-    log.error({ subscriptionId: subscription.id }, 'Subscription not found in database');
+    log.error(
+      { subscriptionId: subscription.id },
+      'Subscription not found in database'
+    );
     return;
   }
 
@@ -219,13 +250,18 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     data: { subscriptionTier: 'FREE' },
   });
 
-  log.info({ subscriptionId: subscription.id, userId: dbSubscription.userId }, 'Subscription canceled, user downgraded to FREE');
+  log.info(
+    { subscriptionId: subscription.id, userId: dbSubscription.userId },
+    'Subscription canceled, user downgraded to FREE'
+  );
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   log.info({ invoiceId: invoice.id }, 'Handling invoice.payment_succeeded');
 
-  const customerId = resolveId(invoice.customer as string | Stripe.Customer | null);
+  const customerId = resolveId(
+    invoice.customer as string | Stripe.Customer | null
+  );
   const subscriptionId = getInvoiceSubscriptionId(invoice);
 
   if (!customerId) {
@@ -243,13 +279,18 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   });
 
   if (!dbSubscription) {
-    log.error({ invoiceId: invoice.id, customerId }, 'Subscription not found for invoice');
+    log.error(
+      { invoiceId: invoice.id, customerId },
+      'Subscription not found for invoice'
+    );
     return;
   }
 
   // In Stripe SDK v20+, payment_intent is accessed via invoice.payments
   const paymentIntentId =
-    (invoice.payments?.data[0]?.payment?.payment_intent as string | undefined) ?? null;
+    (invoice.payments?.data[0]?.payment?.payment_intent as
+      | string
+      | undefined) ?? null;
 
   // Idempotent: check if a payment for this Stripe invoice already exists
   const existingPayment = await prisma.payment.findFirst({
@@ -283,13 +324,18 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     });
   }
 
-  log.info({ invoiceId: invoice.id, userId: dbSubscription.userId }, 'Payment recorded');
+  log.info(
+    { invoiceId: invoice.id, userId: dbSubscription.userId },
+    'Payment recorded'
+  );
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   log.info({ invoiceId: invoice.id }, 'Handling invoice.payment_failed');
 
-  const customerId = resolveId(invoice.customer as string | Stripe.Customer | null);
+  const customerId = resolveId(
+    invoice.customer as string | Stripe.Customer | null
+  );
   const subscriptionId = getInvoiceSubscriptionId(invoice);
 
   if (!customerId) {
@@ -307,7 +353,10 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   });
 
   if (!dbSubscription) {
-    log.error({ invoiceId: invoice.id, customerId }, 'Subscription not found for invoice');
+    log.error(
+      { invoiceId: invoice.id, customerId },
+      'Subscription not found for invoice'
+    );
     return;
   }
 
@@ -343,19 +392,24 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     data: { status: 'PAST_DUE' },
   });
 
-  log.info({ invoiceId: invoice.id, userId: dbSubscription.userId }, 'Failed payment recorded, subscription marked PAST_DUE');
+  log.info(
+    { invoiceId: invoice.id, userId: dbSubscription.userId },
+    'Failed payment recorded, subscription marked PAST_DUE'
+  );
 }
 
-function mapStripeStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus {
+function mapStripeStatus(
+  stripeStatus: Stripe.Subscription.Status
+): SubscriptionStatus {
   const statusMap: Record<Stripe.Subscription.Status, SubscriptionStatus> = {
-    'incomplete': 'INCOMPLETE',
-    'incomplete_expired': 'INCOMPLETE_EXPIRED',
-    'trialing': 'TRIALING',
-    'active': 'ACTIVE',
-    'past_due': 'PAST_DUE',
-    'canceled': 'CANCELED',
-    'unpaid': 'UNPAID',
-    'paused': 'PAUSED',
+    incomplete: 'INCOMPLETE',
+    incomplete_expired: 'INCOMPLETE_EXPIRED',
+    trialing: 'TRIALING',
+    active: 'ACTIVE',
+    past_due: 'PAST_DUE',
+    canceled: 'CANCELED',
+    unpaid: 'UNPAID',
+    paused: 'PAUSED',
   };
 
   return statusMap[stripeStatus] || 'INCOMPLETE';
@@ -390,30 +444,41 @@ export async function POST(request: NextRequest) {
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      log.error({ error: errorMessage }, 'Webhook signature verification failed');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 400 }
+      log.error(
+        { error: errorMessage },
+        'Webhook signature verification failed'
       );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    log.info({ eventType: event.type, eventId: event.id }, 'Received Stripe webhook event');
+    log.info(
+      { eventType: event.type, eventId: event.id },
+      'Received Stripe webhook event'
+    );
 
     switch (event.type) {
       case STRIPE_CONFIG.WEBHOOK_EVENTS.CHECKOUT_COMPLETED:
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        await handleCheckoutCompleted(
+          event.data.object as Stripe.Checkout.Session
+        );
         break;
 
       case STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_UPDATED:
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        await handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription
+        );
         break;
 
       case STRIPE_CONFIG.WEBHOOK_EVENTS.SUBSCRIPTION_DELETED:
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        await handleSubscriptionDeleted(
+          event.data.object as Stripe.Subscription
+        );
         break;
 
       case STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED:
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        await handleInvoicePaymentSucceeded(
+          event.data.object as Stripe.Invoice
+        );
         break;
 
       case STRIPE_CONFIG.WEBHOOK_EVENTS.INVOICE_PAYMENT_FAILED:

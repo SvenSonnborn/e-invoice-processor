@@ -409,7 +409,7 @@ describe('ZUGFeRD Parser', () => {
     </ram:ApplicableHeaderTradeSettlement>
   </rsm:SupplyChainTradeTransaction>
 </rsm:CrossIndustryInvoice>`;
-      
+
       const result = parseCII(minimalCII);
       expect(result.success).toBe(true);
       expect(result.invoice?.documentId).toBe('MIN-001');

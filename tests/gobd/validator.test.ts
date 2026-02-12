@@ -54,7 +54,11 @@ describe('GoBD Validator', () => {
 
       expect(result.isCompliant).toBe(false);
       expect(result.badge).toBe('non-compliant');
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_INVOICE_NUMBER)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_INVOICE_NUMBER
+        )
+      ).toBe(true);
     });
 
     it('should detect missing issue date', () => {
@@ -62,7 +66,11 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_ISSUE_DATE)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_ISSUE_DATE
+        )
+      ).toBe(true);
     });
 
     it('should detect future issue date', () => {
@@ -73,7 +81,9 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.FUTURE_DATE)).toBe(true);
+      expect(
+        result.violations.some((v) => v.code === GOB_ERROR_CODES.FUTURE_DATE)
+      ).toBe(true);
     });
 
     it('should detect sum mismatch', () => {
@@ -81,14 +91,18 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.SUM_MISMATCH)).toBe(true);
+      expect(
+        result.violations.some((v) => v.code === GOB_ERROR_CODES.SUM_MISMATCH)
+      ).toBe(true);
     });
 
     it('should allow sum within tolerance', () => {
       const invoice = { ...validInvoice, grossAmount: 119.005 };
       const result = validateGoBDCompliance(invoice);
 
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.SUM_MISMATCH)).toBe(false);
+      expect(
+        result.violations.some((v) => v.code === GOB_ERROR_CODES.SUM_MISMATCH)
+      ).toBe(false);
     });
 
     it('should detect invalid tax rate', () => {
@@ -104,7 +118,11 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.INVALID_TAX_RATE)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.INVALID_TAX_RATE
+        )
+      ).toBe(true);
     });
 
     it('should accept valid tax rates', () => {
@@ -122,7 +140,11 @@ describe('GoBD Validator', () => {
         };
         const result = validateGoBDCompliance(invoice);
 
-        expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.INVALID_TAX_RATE)).toBe(false);
+        expect(
+          result.violations.some(
+            (v) => v.code === GOB_ERROR_CODES.INVALID_TAX_RATE
+          )
+        ).toBe(false);
       }
     });
 
@@ -131,7 +153,11 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_SUPPLIER)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_SUPPLIER
+        )
+      ).toBe(true);
     });
 
     it('should detect missing customer name', () => {
@@ -139,7 +165,11 @@ describe('GoBD Validator', () => {
       const result = validateGoBDCompliance(invoice);
 
       expect(result.isCompliant).toBe(false);
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_CUSTOMER)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_CUSTOMER
+        )
+      ).toBe(true);
     });
 
     it('should warn about missing due date', () => {
@@ -148,7 +178,11 @@ describe('GoBD Validator', () => {
 
       expect(result.isCompliant).toBe(true);
       expect(result.badge).toBe('warning');
-      expect(result.warnings.some((w) => w.code === GOB_WARNING_CODES.MISSING_DUE_DATE)).toBe(true);
+      expect(
+        result.warnings.some(
+          (w) => w.code === GOB_WARNING_CODES.MISSING_DUE_DATE
+        )
+      ).toBe(true);
     });
 
     it('should warn about non-EUR currency', () => {
@@ -157,7 +191,11 @@ describe('GoBD Validator', () => {
 
       expect(result.isCompliant).toBe(true);
       expect(result.badge).toBe('warning');
-      expect(result.warnings.some((w) => w.code === GOB_WARNING_CODES.UNCOMMON_CURRENCY)).toBe(true);
+      expect(
+        result.warnings.some(
+          (w) => w.code === GOB_WARNING_CODES.UNCOMMON_CURRENCY
+        )
+      ).toBe(true);
     });
 
     it('should validate line item totals', () => {
@@ -172,7 +210,11 @@ describe('GoBD Validator', () => {
       };
       const result = validateGoBDCompliance(invoice);
 
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.LINE_ITEM_SUM_MISMATCH
+        )
+      ).toBe(true);
     });
 
     it('should detect missing line item description', () => {
@@ -187,7 +229,11 @@ describe('GoBD Validator', () => {
       };
       const result = validateGoBDCompliance(invoice);
 
-      expect(result.violations.some((v) => v.code === GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION)).toBe(true);
+      expect(
+        result.violations.some(
+          (v) => v.code === GOB_ERROR_CODES.MISSING_LINE_ITEM_DESCRIPTION
+        )
+      ).toBe(true);
     });
   });
 
@@ -208,11 +254,15 @@ describe('GoBD Validator', () => {
     });
 
     it('should return correct text for non-compliant', () => {
-      expect(getComplianceStatusText('non-compliant')).toBe('Nicht GoBD-konform');
+      expect(getComplianceStatusText('non-compliant')).toBe(
+        'Nicht GoBD-konform'
+      );
     });
 
     it('should return correct text for warning', () => {
-      expect(getComplianceStatusText('warning')).toBe('GoBD-konform mit Hinweisen');
+      expect(getComplianceStatusText('warning')).toBe(
+        'GoBD-konform mit Hinweisen'
+      );
     });
   });
 
@@ -238,7 +288,9 @@ describe('GoBD Validator', () => {
 
     it('should throw error for invalid invoice', () => {
       const invoice = { ...validInvoice, number: '' };
-      expect(() => validateBeforeExport(invoice)).toThrow('GoBD-Validierung fehlgeschlagen');
+      expect(() => validateBeforeExport(invoice)).toThrow(
+        'GoBD-Validierung fehlgeschlagen'
+      );
     });
   });
 });

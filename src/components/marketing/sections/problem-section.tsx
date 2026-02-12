@@ -122,9 +122,7 @@ export const ProblemSection = () => {
             <TrendingDown className="h-5 w-5 text-error" />
             <span className="text-sm text-neutral-300">
               These inefficiencies cost small businesses{' '}
-              <span className="font-semibold text-white">
-                €2,000+ per year
-              </span>{' '}
+              <span className="font-semibold text-white">€2,000+ per year</span>{' '}
               in wasted time
             </span>
           </div>

@@ -2,6 +2,44 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-12: Middleware Auth Guard & API Route Protection
+
+### Changes
+
+#### Middleware (`middleware.ts`)
+
+- **Token refresh for API routes** — Expanded middleware matcher to include `/api/*` routes. Previously only page routes got JWT refresh; now API calls also trigger automatic token refresh, preventing silent auth failures when access tokens expire between page loads.
+- **Route protection** — Middleware now redirects unauthenticated users to `/login` for protected paths (`/dashboard`, `/invoices`, `/exports`, `/settings`). Passes `redirectTo` query param for post-login redirect.
+- **Updated to `getUser()`** — Replaced `getClaims()` with `getUser()` per Supabase SSR best practices. This verifies the JWT server-side and triggers refresh if expired.
+- **Cookie handling** — Updated to `getAll/setAll` pattern matching the server client.
+
+#### Shared Auth Helpers (`src/lib/auth/session.ts`)
+
+- **`requireApiAuth()`** — New helper for API route handlers. Returns the authenticated Prisma `User` or a `401 Unauthorized` JSON response. Replaces duplicated auth checks across routes.
+- **`requireApiAuthWithOrg()`** — Same as above but also resolves the user's `organizationId` via `OrganizationMember`. Returns `403` if user has no org membership. Used for routes that need org-scoped data access.
+
+#### API Route Auth Guards
+
+- **`/api/ocr` (POST)** — Now requires JWT auth. Removed trust of `x-user-id` header; rate limiting now uses the authenticated `user.id` instead.
+- **`/api/invoices/import/zugferd` (POST)** — Now requires auth + org membership.
+- **`/api/invoices/validate/gobd` (POST)** — Now requires auth.
+- **`/api/invoices/export/datev` (POST, GET)** — Now requires auth + org membership. DB queries scoped to user's organization (prevents cross-org data access).
+- **`/api/invoices/[invoiceId]` (GET, PUT, DELETE)** — Placeholder routes now have auth scaffolding.
+- **`/api/uploads/[uploadId]` (GET, DELETE)** — Placeholder routes now have auth scaffolding.
+
+#### Routes intentionally left public
+
+- `/api/health` — Health check
+- `/api/waitlist/join` — Public waitlist signup
+- `/api/stripe/webhook` — Stripe signature verification
+- `/auth/callback` — OAuth/email confirmation handler
+
+### Documentation
+
+- **`docs/architecture.md`** — Authentication section expanded with middleware behavior, session helpers, client types, and protected route documentation.
+
+---
+
 ## 2025-02-10: ZUGFeRD Parser Gaps & Consolidation
 
 ### Changes
@@ -62,22 +100,26 @@
 Exports durchlaufen jetzt explizite Status-Zustände für bessere Fehlerbehandlung und Monitoring:
 
 **ExportStatus Enum:**
+
 - `CREATED` - Export erstellt, Generierung steht aus
 - `GENERATING` - Export wird gerade generiert
 - `READY` - Export erfolgreich erstellt, bereit zum Download
 - `FAILED` - Generierung fehlgeschlagen
 
 **Neue Felder in Export Tabelle:**
+
 - `status: ExportStatus` - Aktueller Status (Default: CREATED)
 - `errorMessage: string?` - Fehlermeldung bei FAILED Status
 
 **Neue Funktionen:**
+
 - Status-Validierung mit erlaubten Transitionen
 - Stuck Export Detection (automatisches Failover nach Timeout)
 - Export Statistiken und Monitoring
 - UI Helpers für Status-Anzeige
 
 **Dateien:**
+
 - `src/lib/exports/status.ts` - Status Utilities
 - `src/lib/exports/processor.ts` - Export Lifecycle Management
 - `docs/export-processing.md` - Vollständige Dokumentation
@@ -87,20 +129,24 @@ Exports durchlaufen jetzt explizite Status-Zustände für bessere Fehlerbehandlu
 Nachverfolgbarkeit von Aktionen durch User-Tracking:
 
 **Neue Felder:**
+
 - `Invoice.createdBy: string?` - FK zu User (wer hat Rechnung hochgeladen?)
 - `Export.createdBy: string?` - FK zu User (wer hat Export erstellt?)
 
 **Neue Relations:**
+
 - `User.createdInvoices` - Alle Invoices, die der User erstellt hat
 - `User.createdExports` - Alle Exports, die der User erstellt hat
 
 **Use Cases:**
+
 - Compliance & DSGVO-Anforderungen
 - Activity Feeds & User-Dashboards
 - Top Contributors Statistiken
 - Impact Analysis vor User-Löschung
 
 **Dateien:**
+
 - `docs/audit-trail.md` - Vollständige Dokumentation
 
 ### 🗄️ Database Migration
@@ -136,10 +182,12 @@ ALTER TABLE "Export" ADD CONSTRAINT "Export_createdBy_fkey"
 ### 📖 Dokumentation
 
 **Neue Dokumentation:**
+
 - `docs/export-processing.md` - Export Status Tracking Guide
 - `docs/audit-trail.md` - Actor Tracking & DSGVO Guide
 
 **Aktualisiert:**
+
 - `docs/SETUP.md` - Links zu neuer Dokumentation
 
 ### 🔧 Breaking Changes
@@ -147,26 +195,29 @@ ALTER TABLE "Export" ADD CONSTRAINT "Export_createdBy_fkey"
 Keine Breaking Changes. Alle neuen Felder sind optional (nullable).
 
 **Bestehende Exports:**
+
 - Haben automatisch `status = 'CREATED'`
 - `createdBy` ist `null` (Legacy-Daten)
 
 ### 📝 Migration Notes
 
 **Legacy Exports ohne Status:**
+
 ```typescript
 // Exports mit storageKey aber ohne Status auf READY setzen
 await prisma.export.updateMany({
   where: {
     storageKey: { not: null },
-    status: 'CREATED'
+    status: 'CREATED',
   },
-  data: { status: 'READY' }
-})
+  data: { status: 'READY' },
+});
 ```
 
 **Actor Tracking für neue Exports:**
+
 ```typescript
-import { createExport } from '@/src/lib/exports/processor'
+import { createExport } from '@/src/lib/exports/processor';
 
 // WICHTIG: userId mitgeben für Audit Trail
 const exp = await createExport(
@@ -176,8 +227,8 @@ const exp = await createExport(
     filename: 'export.csv',
     invoiceIds: ['inv_1', 'inv_2'],
   },
-  session.user.id  // Actor tracking
-)
+  session.user.id // Actor tracking
+);
 ```
 
 ---
@@ -189,6 +240,7 @@ const exp = await createExport(
 Strukturierte Speicherung von einzelnen Rechnungspositionen:
 
 **InvoiceLineItem Tabelle:**
+
 - `positionIndex` - Reihenfolge der Position (1, 2, 3, ...)
 - `description` - Positionsbeschreibung
 - `quantity` - Menge (DECIMAL 18,4)
@@ -197,6 +249,7 @@ Strukturierte Speicherung von einzelnen Rechnungspositionen:
 - `netAmount`, `taxAmount`, `grossAmount` - Berechnete Beträge
 
 **Funktionen:**
+
 - `createLineItems()` - Batch-Erstellung mit Validierung
 - `calculateLineItem()` - Automatische Berechnung der Beträge
 - `validateLineItem()` - Validierung mit Rundungstoleranz (0.01€)
@@ -204,6 +257,7 @@ Strukturierte Speicherung von einzelnen Rechnungspositionen:
 - `getLineItemStats()` - Statistiken und Aggregation
 
 **Dateien:**
+
 - `src/lib/invoices/line-items.ts` - Line Items Utilities
 - `docs/invoice-line-items.md` - Vollständige Dokumentation
 
@@ -220,17 +274,20 @@ Strukturierte Speicherung von einzelnen Rechnungspositionen:
 Versionierung von Invoice-Daten für Re-Processing:
 
 **InvoiceRevision Tabelle:**
+
 - Speichert vollständige Snapshots von `rawJson`
 - Processor-Version Tracking (Semantic Versioning)
 - Zeitstempel für jede Revision
 
 **Funktionen:**
+
 - `createRevision()` - Neue Revision erstellen
 - `reprocessInvoice()` - Invoice mit aktueller Parser-Version neu verarbeiten
 - `getInvoicesNeedingReprocessing()` - Invoices mit alter Version finden
 - `pruneOldRevisions()` - Retention Policy (N neueste behalten)
 
 **Dateien:**
+
 - `src/lib/invoices/revisions.ts` - Revision Management
 - `docs/invoice-revisions.md` - Vollständige Dokumentation
 
@@ -247,6 +304,7 @@ Versionierung von Invoice-Daten für Re-Processing:
 Explizites Status-Tracking für Invoice Processing Pipeline:
 
 **InvoiceStatus Enum:**
+
 - `CREATED` - Invoice erstellt, noch nicht verarbeitet
 - `PARSED` - Rohdaten erfolgreich extrahiert
 - `VALIDATED` - Fachlich validiert (Summen, Pflichtfelder)
@@ -254,17 +312,20 @@ Explizites Status-Tracking für Invoice Processing Pipeline:
 - `FAILED` - Verarbeitung fehlgeschlagen
 
 **Neue Felder:**
+
 - `status: InvoiceStatus` - Aktueller Status
 - `lastProcessedAt: DateTime?` - Zeitpunkt der letzten Verarbeitung
 - `processingVersion: Int` - Version Counter für Re-Processing
 
 **Funktionen:**
+
 - Status-Validierung mit erlaubten Transitionen
 - Helper Functions für Status-Updates
 - UI Helpers für Badge-Anzeige
 - Processing Statistiken
 
 **Dateien:**
+
 - `src/lib/invoices/status.ts` - Status Utilities
 - `src/lib/invoices/processor.ts` - Status Management
 - `docs/invoice-processing.md` - Vollständige Dokumentation
@@ -282,6 +343,7 @@ Explizites Status-Tracking für Invoice Processing Pipeline:
 Vollständige Supabase-Integration mit Multi-Tenant-Architektur:
 
 **Features:**
+
 - Email/Password Authentication mit Email-Bestätigung
 - Multi-Organization Support (N:M via OrganizationMember)
 - RLS Policies auf allen Tabellen
@@ -290,6 +352,7 @@ Vollständige Supabase-Integration mit Multi-Tenant-Architektur:
 - Organization Switcher UI
 
 **Dateien:**
+
 - Complete auth flow in `/app/(auth)/`
 - Protected dashboard in `/app/(dashboard)/`
 - Server actions in `/app/actions/`
@@ -330,25 +393,30 @@ Upload → Invoice [CREATED] → Parse → [PARSED] → Validate → [VALIDATED]
 ### Status-Tracking
 
 **Invoice:**
+
 - CREATED → PARSED → VALIDATED → EXPORTED
 - Re-Processing mit Versionierung
 - Revision History
 
 **Export:**
+
 - CREATED → GENERATING → READY
 - Stuck Detection & Auto-Failover
 - Error Message Storage
 
 **Upload:**
+
 - PENDING → PROCESSED / FAILED
 
 ### Audit Trail
 
 **Actor Tracking:**
+
 - `Invoice.createdBy` - Wer hat Rechnung hochgeladen?
 - `Export.createdBy` - Wer hat Export erstellt?
 
 **Use Cases:**
+
 - Compliance & DSGVO
 - Activity Feeds
 - Top Contributors
@@ -357,6 +425,7 @@ Upload → Invoice [CREATED] → Parse → [PARSED] → Validate → [VALIDATED]
 ### Monitoring & Queries
 
 Alle Features haben:
+
 - ✅ SQL Monitoring Queries
 - ✅ Statistics Functions
 - ✅ UI Helper Functions
@@ -365,17 +434,21 @@ Alle Features haben:
 ### Dokumentation
 
 **Setup & Configuration:**
+
 - `docs/SETUP.md` - Vollständiger Setup Guide
 
 **Invoice System:**
+
 - `docs/invoice-processing.md` - Status & Workflow
 - `docs/invoice-revisions.md` - Versionierung
 - `docs/invoice-line-items.md` - Strukturierte Positionen
 
 **Export System:**
+
 - `docs/export-processing.md` - Status & Fehlerbehandlung
 
 **Security & Compliance:**
+
 - `docs/audit-trail.md` - Actor Tracking & DSGVO
 - `docs/runbooks/supabase-rls.md` - RLS Policies
 

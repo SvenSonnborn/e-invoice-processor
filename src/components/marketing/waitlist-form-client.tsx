@@ -1,7 +1,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { WaitlistForm as WaitlistFormBase, type WaitlistFormProps } from './waitlist-form';
+import {
+  WaitlistForm as WaitlistFormBase,
+  type WaitlistFormProps,
+} from './waitlist-form';
 
 export function WaitlistForm(props: Omit<WaitlistFormProps, 'referralCode'>) {
   const searchParams = useSearchParams();

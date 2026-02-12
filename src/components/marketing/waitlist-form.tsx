@@ -5,7 +5,14 @@ import { z } from 'zod';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { CheckCircle2, Loader2, Mail, ArrowRight, Copy, Check } from 'lucide-react';
+import {
+  CheckCircle2,
+  Loader2,
+  Mail,
+  ArrowRight,
+  Copy,
+  Check,
+} from 'lucide-react';
 
 const waitlistSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -35,7 +42,9 @@ export function WaitlistForm({
     company: '',
     tier: defaultTier,
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof WaitlistFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof WaitlistFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [result, setResult] = useState<{
@@ -124,11 +133,13 @@ export function WaitlistForm({
           You&apos;re on the list!
         </h3>
         <p className="mt-2 text-neutral-600">
-          Thank you for joining our waitlist. We&apos;ll notify you as soon as we launch!
+          Thank you for joining our waitlist. We&apos;ll notify you as soon as
+          we launch!
         </p>
         <div className="mt-6 rounded-xl bg-white p-4 text-left">
           <p className="text-sm font-medium text-neutral-900">
-            Your position: <span className="text-brand-600">#{result.position}</span>
+            Your position:{' '}
+            <span className="text-brand-600">#{result.position}</span>
           </p>
           <p className="mt-1 text-xs text-neutral-500">
             Share your referral link to move up the list!
@@ -162,10 +173,7 @@ export function WaitlistForm({
     );
   }
 
-  const inputClasses =
-    variant === 'hero'
-      ? 'h-14 text-base'
-      : 'h-11';
+  const inputClasses = variant === 'hero' ? 'h-14 text-base' : 'h-11';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -193,9 +201,7 @@ export function WaitlistForm({
           className={inputClasses}
           disabled={isSubmitting}
         />
-        {errors.name && (
-          <p className="text-xs text-error">{errors.name}</p>
-        )}
+        {errors.name && <p className="text-xs text-error">{errors.name}</p>}
       </div>
 
       <div className="space-y-2">
@@ -214,9 +220,7 @@ export function WaitlistForm({
             disabled={isSubmitting}
           />
         </div>
-        {errors.email && (
-          <p className="text-xs text-error">{errors.email}</p>
-        )}
+        {errors.email && <p className="text-xs text-error">{errors.email}</p>}
       </div>
 
       <div className="space-y-2">
@@ -265,9 +269,7 @@ export function WaitlistForm({
             <div className="mt-1 text-xs text-success">50% off</div>
           </button>
         </div>
-        {errors.tier && (
-          <p className="text-xs text-error">{errors.tier}</p>
-        )}
+        {errors.tier && <p className="text-xs text-error">{errors.tier}</p>}
       </div>
 
       <Button

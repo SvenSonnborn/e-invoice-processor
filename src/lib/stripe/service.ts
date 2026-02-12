@@ -1,6 +1,6 @@
 /**
  * Subscription Service
- * 
+ *
  * Helper functions for managing subscription-based features and usage limits.
  */
 
@@ -13,7 +13,9 @@ import type { Plan, PlanId } from './config';
 // Tier & subscription helpers
 // ---------------------------------------------------------------------------
 
-export async function getUserSubscriptionTier(userId: string): Promise<SubscriptionTier> {
+export async function getUserSubscriptionTier(
+  userId: string
+): Promise<SubscriptionTier> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { subscriptionTier: true },
@@ -24,7 +26,7 @@ export async function getUserSubscriptionTier(userId: string): Promise<Subscript
 
 export async function getUserSubscription(userId: string) {
   const subscription = await prisma.subscription.findFirst({
-    where: { 
+    where: {
       userId,
       status: { in: ['TRIALING', 'ACTIVE'] },
     },
@@ -41,7 +43,7 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 
 export async function isInTrialPeriod(userId: string): Promise<boolean> {
   const subscription = await prisma.subscription.findFirst({
-    where: { 
+    where: {
       userId,
       status: 'TRIALING',
     },
@@ -56,7 +58,7 @@ export async function isInTrialPeriod(userId: string): Promise<boolean> {
 
 export async function getUserPlan(userId: string): Promise<Plan | null> {
   const tier = await getUserSubscriptionTier(userId);
-  
+
   if (tier === 'FREE') {
     return null;
   }
@@ -92,10 +94,19 @@ async function getBillingPeriodStart(userId: string): Promise<Date> {
 /**
  * Count invoices for user in current calendar month
  */
-export async function countUserInvoicesThisMonth(userId: string): Promise<number> {
+export async function countUserInvoicesThisMonth(
+  userId: string
+): Promise<number> {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const endOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59
+  );
 
   const count = await prisma.invoice.count({
     where: {
@@ -113,10 +124,19 @@ export async function countUserInvoicesThisMonth(userId: string): Promise<number
 /**
  * Count exports for user in current calendar month
  */
-export async function countUserExportsThisMonth(userId: string): Promise<number> {
+export async function countUserExportsThisMonth(
+  userId: string
+): Promise<number> {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const endOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59
+  );
 
   const count = await prisma.export.count({
     where: {
@@ -161,13 +181,15 @@ export async function getRemainingInvoices(userId: string): Promise<number> {
 // Usage limit checks
 // ---------------------------------------------------------------------------
 
-export async function canCreateInvoice(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+export async function canCreateInvoice(
+  userId: string
+): Promise<{ allowed: boolean; reason?: string }> {
   const tier = await getUserSubscriptionTier(userId);
 
   if (tier === 'FREE') {
-    return { 
-      allowed: false, 
-      reason: 'Upgrade to Basic or Pro to create invoices' 
+    return {
+      allowed: false,
+      reason: 'Upgrade to Basic or Pro to create invoices',
     };
   }
 
@@ -201,13 +223,15 @@ export async function canCreateInvoice(userId: string): Promise<{ allowed: boole
   return { allowed: true };
 }
 
-export async function canCreateExport(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+export async function canCreateExport(
+  userId: string
+): Promise<{ allowed: boolean; reason?: string }> {
   const tier = await getUserSubscriptionTier(userId);
 
   if (tier === 'FREE') {
-    return { 
-      allowed: false, 
-      reason: 'Upgrade to Basic or Pro to create exports' 
+    return {
+      allowed: false,
+      reason: 'Upgrade to Basic or Pro to create exports',
     };
   }
 

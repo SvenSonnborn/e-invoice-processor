@@ -5,7 +5,7 @@
  * State is held in memory — resets on server restart.
  */
 
-import { logger } from "@/src/lib/logging";
+import { logger } from '@/src/lib/logging';
 
 interface RateLimitEntry {
   count: number;
@@ -25,7 +25,7 @@ interface RateLimitConfig {
 
 interface RateLimitResult {
   allowed: boolean;
-  reason?: "ip" | "user" | "global";
+  reason?: 'ip' | 'user' | 'global';
   retryAfterMs?: number;
 }
 
@@ -50,7 +50,10 @@ class RateLimiter {
     // Clean up expired entries every 10 minutes
     this.cleanupInterval = setInterval(() => this.cleanup(), 10 * 60_000);
     // Allow Node to exit without waiting for the interval
-    if (typeof this.cleanupInterval === "object" && "unref" in this.cleanupInterval) {
+    if (
+      typeof this.cleanupInterval === 'object' &&
+      'unref' in this.cleanupInterval
+    ) {
       this.cleanupInterval.unref();
     }
   }
@@ -67,10 +70,10 @@ class RateLimiter {
     // 1. Global daily limit
     this.resetIfExpired(this.global, now);
     if (this.global.count >= this.config.maxGlobalPerDay) {
-      logger.warn({ ip, userId }, "Rate limit reached: global daily limit");
+      logger.warn({ ip, userId }, 'Rate limit reached: global daily limit');
       return {
         allowed: false,
-        reason: "global",
+        reason: 'global',
         retryAfterMs: this.global.resetAt - now,
       };
     }
@@ -82,10 +85,10 @@ class RateLimiter {
     }));
     this.resetIfExpired(ipEntry, now);
     if (ipEntry.count >= this.config.maxPerIp) {
-      logger.warn({ ip }, "Rate limit reached: IP per-minute limit");
+      logger.warn({ ip }, 'Rate limit reached: IP per-minute limit');
       return {
         allowed: false,
-        reason: "ip",
+        reason: 'ip',
         retryAfterMs: ipEntry.resetAt - now,
       };
     }
@@ -97,10 +100,10 @@ class RateLimiter {
       );
       this.resetIfExpired(userEntry, now);
       if (userEntry.count >= this.config.maxPerUserPerDay) {
-        logger.warn({ userId }, "Rate limit reached: user daily limit");
+        logger.warn({ userId }, 'Rate limit reached: user daily limit');
         return {
           allowed: false,
-          reason: "user",
+          reason: 'user',
           retryAfterMs: userEntry.resetAt - now,
         };
       }
@@ -127,7 +130,10 @@ class RateLimiter {
     if (now >= entry.resetAt) {
       entry.count = 0;
       // For daily entries, push to next midnight; for short windows, push by windowMs
-      if (entry.resetAt - (now - this.config.ipWindowMs) < this.config.ipWindowMs * 2) {
+      if (
+        entry.resetAt - (now - this.config.ipWindowMs) <
+        this.config.ipWindowMs * 2
+      ) {
         entry.resetAt = now + this.config.ipWindowMs;
       } else {
         const tomorrow = new Date(now);

@@ -129,4 +129,3 @@ USING (EXISTS (
 > NOTE: As you introduce explicit `workspaces` and `memberships` tables, you
 > should update the policies above to reference those tables instead of the
 > implicit `Organization`/`User` relationship.
-

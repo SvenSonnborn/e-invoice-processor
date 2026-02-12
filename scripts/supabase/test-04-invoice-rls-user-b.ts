@@ -12,7 +12,7 @@
  * Run: bun run supabase:test-04
  */
 
-import { getTestConfig, signInAndGetClient } from "./test-helpers";
+import { getTestConfig, signInAndGetClient } from './test-helpers';
 
 async function main() {
   const config = getTestConfig();
@@ -22,11 +22,11 @@ async function main() {
   );
 
   const { data, error } = await supabase
-    .from("Invoice")
-    .select("id, organizationId, number");
+    .from('Invoice')
+    .select('id, organizationId, number');
 
   if (error) {
-    console.error("❌ QUERY FAILED:", error.message);
+    console.error('❌ QUERY FAILED:', error.message);
     process.exit(1);
   }
 
@@ -40,24 +40,24 @@ async function main() {
   const _orgBIds = rows.filter((r) => r.organizationId === config.orgBId);
 
   if (orgAIds.length > 0) {
-    console.error("❌ User B must not see Org A invoices. Found:", orgAIds);
+    console.error('❌ User B must not see Org A invoices. Found:', orgAIds);
     process.exit(1);
   }
 
   if (rows.length === 0) {
-    console.error("❌ No invoices returned (expected at least Org B invoices)");
+    console.error('❌ No invoices returned (expected at least Org B invoices)');
     process.exit(1);
   }
 
   const allOrgB = rows.every((r) => r.organizationId === config.orgBId);
   if (!allOrgB) {
-    console.error("❌ All returned invoices must be Org B. Got:", rows);
+    console.error('❌ All returned invoices must be Org B. Got:', rows);
     process.exit(1);
   }
 
-  console.log("✅ Query succeeded");
-  console.log("   Invoices returned:", rows.length, "(all Org B)");
-  console.log("   No Org A invoices");
+  console.log('✅ Query succeeded');
+  console.log('   Invoices returned:', rows.length, '(all Org B)');
+  console.log('   No Org A invoices');
 }
 
 main().catch((e) => {

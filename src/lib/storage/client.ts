@@ -1,4 +1,4 @@
-import { supabaseAdminClient } from "@/src/lib/supabase/admin";
+import { supabaseAdminClient } from '@/src/lib/supabase/admin';
 
 /**
  * Storage Client
@@ -18,31 +18,38 @@ export interface UploadOptions {
 }
 
 export interface StorageClient {
-  upload(key: string, data: Buffer | string, options?: UploadOptions): Promise<string>;
+  upload(
+    key: string,
+    data: Buffer | string,
+    options?: UploadOptions
+  ): Promise<string>;
   download(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
   getUrl(key: string): Promise<string>;
 }
 
-type BucketName = "documents" | "exports";
+type BucketName = 'documents' | 'exports';
 
-function resolveBucketAndPath(key: string): { bucket: BucketName; path: string } {
-  const [prefix, ...rest] = key.split("/");
-  const path = rest.join("/");
+function resolveBucketAndPath(key: string): {
+  bucket: BucketName;
+  path: string;
+} {
+  const [prefix, ...rest] = key.split('/');
+  const path = rest.join('/');
 
-  if ((prefix === "documents" || prefix === "exports") && path) {
+  if ((prefix === 'documents' || prefix === 'exports') && path) {
     return { bucket: prefix, path };
   }
 
   // Fallback: treat everything as a document if no explicit bucket prefix given.
-  return { bucket: "documents", path: key };
+  return { bucket: 'documents', path: key };
 }
 
 export function createStorageClient(): StorageClient {
   return {
     async upload(key, data, options?) {
       const { bucket, path } = resolveBucketAndPath(key);
-      const body = typeof data === "string" ? Buffer.from(data) : data;
+      const body = typeof data === 'string' ? Buffer.from(data) : data;
 
       const { data: uploadData, error } = await supabaseAdminClient.storage
         .from(bucket)
@@ -62,10 +69,12 @@ export function createStorageClient(): StorageClient {
 
     async download(key) {
       const { bucket, path } = resolveBucketAndPath(key);
-      const { data, error } = await supabaseAdminClient.storage.from(bucket).download(path);
+      const { data, error } = await supabaseAdminClient.storage
+        .from(bucket)
+        .download(path);
 
       if (error || !data) {
-        throw error ?? new Error("Failed to download object from storage");
+        throw error ?? new Error('Failed to download object from storage');
       }
 
       const arrayBuffer = await data.arrayBuffer();
@@ -74,7 +83,9 @@ export function createStorageClient(): StorageClient {
 
     async delete(key) {
       const { bucket, path } = resolveBucketAndPath(key);
-      const { error } = await supabaseAdminClient.storage.from(bucket).remove([path]);
+      const { error } = await supabaseAdminClient.storage
+        .from(bucket)
+        .remove([path]);
 
       if (error) {
         throw error;
@@ -90,11 +101,10 @@ export function createStorageClient(): StorageClient {
         .createSignedUrl(path, 60 * 60);
 
       if (error || !data?.signedUrl) {
-        throw error ?? new Error("Failed to create signed URL");
+        throw error ?? new Error('Failed to create signed URL');
       }
 
       return data.signedUrl;
     },
   };
 }
-

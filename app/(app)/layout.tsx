@@ -12,9 +12,7 @@ interface AppLayoutProps {
 
 export const dynamic = 'force-dynamic';
 
-export default async function AppLayout({
-  children,
-}: AppLayoutProps) {
+export default async function AppLayout({ children }: AppLayoutProps) {
   const session = await requireAuth();
   const cookieStore = await cookies();
   const orgCookie = cookieStore.get('active-org-id')?.value;
@@ -56,11 +54,13 @@ export default async function AppLayout({
     activeOrgId = user.memberships[0].organizationId;
   }
 
-  const organizations = user.memberships.map((m: (typeof user.memberships)[number]) => ({
-    id: m.organization.id,
-    name: m.organization.name,
-    role: m.role,
-  }));
+  const organizations = user.memberships.map(
+    (m: (typeof user.memberships)[number]) => ({
+      id: m.organization.id,
+      name: m.organization.name,
+      role: m.role,
+    })
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">

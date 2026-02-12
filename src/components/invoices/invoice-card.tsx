@@ -30,9 +30,15 @@ export function InvoiceCard({
   compact = false,
 }: InvoiceCardProps) {
   const gobdStatus = mapPrismaStatusToGoBD(invoice.gobdStatus);
-  
+
   // Parse stored violations if available
-  const violations = (invoice.gobdViolations as Array<{ code: string; message: string; field: string; severity: string }>) || [];
+  const violations =
+    (invoice.gobdViolations as Array<{
+      code: string;
+      message: string;
+      field: string;
+      severity: string;
+    }>) || [];
   const errors = violations.filter((v) => v.severity === 'error');
   const warnings = violations.filter((v) => v.severity === 'warning');
 
@@ -64,17 +70,19 @@ export function InvoiceCard({
             <FileText className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <p className="font-medium text-gray-900">{invoice.number || 'Unbenannt'}</p>
-            <p className="text-sm text-gray-500">{formatDate(invoice.issueDate)}</p>
+            <p className="font-medium text-gray-900">
+              {invoice.number || 'Unbenannt'}
+            </p>
+            <p className="text-sm text-gray-500">
+              {formatDate(invoice.issueDate)}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="font-medium text-gray-900">
             {formatCurrency(invoice.grossAmount)}
           </span>
-          {showBadge && gobdStatus && (
-            <GoBDBadgeCompact status={gobdStatus} />
-          )}
+          {showBadge && gobdStatus && <GoBDBadgeCompact status={gobdStatus} />}
         </div>
       </div>
     );
@@ -124,14 +132,18 @@ export function InvoiceCard({
             <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
             <div>
               <p className="text-xs font-medium text-gray-500">Lieferant</p>
-              <p className="text-sm text-gray-900">{invoice.supplierName || '-'}</p>
+              <p className="text-sm text-gray-900">
+                {invoice.supplierName || '-'}
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
             <div>
               <p className="text-xs font-medium text-gray-500">Kunde</p>
-              <p className="text-sm text-gray-900">{invoice.customerName || '-'}</p>
+              <p className="text-sm text-gray-900">
+                {invoice.customerName || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -142,11 +154,15 @@ export function InvoiceCard({
           <div className="flex flex-wrap gap-4 text-sm">
             <div>
               <span className="text-gray-500">Netto:</span>{' '}
-              <span className="font-medium">{formatCurrency(invoice.netAmount)}</span>
+              <span className="font-medium">
+                {formatCurrency(invoice.netAmount)}
+              </span>
             </div>
             <div>
               <span className="text-gray-500">Steuer:</span>{' '}
-              <span className="font-medium">{formatCurrency(invoice.taxAmount)}</span>
+              <span className="font-medium">
+                {formatCurrency(invoice.taxAmount)}
+              </span>
             </div>
             <div>
               <span className="text-gray-500">Brutto:</span>{' '}
@@ -160,7 +176,8 @@ export function InvoiceCard({
         {/* Line Items Count */}
         {invoice.lineItems && (
           <p className="text-xs text-gray-500">
-            {invoice.lineItems.length} Position{invoice.lineItems.length !== 1 ? 'en' : ''}
+            {invoice.lineItems.length} Position
+            {invoice.lineItems.length !== 1 ? 'en' : ''}
           </p>
         )}
       </div>
@@ -169,7 +186,10 @@ export function InvoiceCard({
       {invoice.gobdValidatedAt && (
         <div className="border-t bg-gray-50 px-4 py-2">
           <p className="text-xs text-gray-500">
-            GoBD-validiert: {format(new Date(invoice.gobdValidatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+            GoBD-validiert:{' '}
+            {format(new Date(invoice.gobdValidatedAt), 'dd.MM.yyyy HH:mm', {
+              locale: de,
+            })}
           </p>
         </div>
       )}

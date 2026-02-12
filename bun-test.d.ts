@@ -3,7 +3,7 @@
  * @see https://bun.sh/docs/api/test
  */
 
-declare module "bun:test" {
+declare module 'bun:test' {
   export interface Matchers<T = unknown> {
     toBe(expected: T): void;
     toEqual(expected: T): void;

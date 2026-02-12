@@ -7,6 +7,7 @@ This directory contains API documentation for the E-Rechnung application.
 ## API Routes
 
 ### Invoices
+
 - `GET /api/invoices` - List invoices
 - `POST /api/invoices` - Create invoice
 - `GET /api/invoices/[invoiceId]` - Get invoice
@@ -14,24 +15,29 @@ This directory contains API documentation for the E-Rechnung application.
 - `DELETE /api/invoices/[invoiceId]` - Delete invoice
 
 ### ZUGFeRD / XRechnung Import
+
 - `GET /api/invoices/import/zugferd` - API metadata and supported formats
 - `POST /api/invoices/import/zugferd` - Parse ZUGFeRD/XRechnung files (single or batch); parse-only, no persistence
 
 ### Exports
+
 - `GET /api/exports` - List exports for the current organization
 - `POST /api/exports` - Create a new export (CSV or DATEV format)
 - `GET /api/exports/[exportId]/download` - Download a completed export file
 
 ### Uploads
+
 - `POST /api/uploads` - Upload file
 - `GET /api/uploads/[uploadId]` - Get upload status
 
 ### Stripe
+
 - `POST /api/stripe/checkout` - Create Stripe Checkout session
 - `POST /api/stripe/portal` - Create Stripe Customer Portal session
 - `POST /api/stripe/webhook` - Stripe webhook handler (signature-verified)
 
 ### Health
+
 - `GET /api/health` - Health check endpoint
 
 ## ZUGFeRD / XRechnung Import
@@ -41,11 +47,17 @@ This directory contains API documentation for the E-Rechnung application.
 Returns API metadata and supported formats.
 
 **Response (200):**
+
 ```json
 {
   "name": "ZUGFeRD/XRechnung Import API",
   "version": "1.0.0",
-  "supportedFormats": ["ZUGFeRD 2.3", "XRechnung CII", "XRechnung UBL", "Factur-X"]
+  "supportedFormats": [
+    "ZUGFeRD 2.3",
+    "XRechnung CII",
+    "XRechnung UBL",
+    "Factur-X"
+  ]
 }
 ```
 
@@ -66,6 +78,7 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 **Batch (JSON):** `{ "invoices": [ { "xml": "<string>", "format": "pdf" | undefined }, ... ] }`. Same rules per item. Max 50 items.
 
 **Success (single, 200):**
+
 ```json
 {
   "success": true,
@@ -79,6 +92,7 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 ```
 
 **Success (batch, 200 or 207):** When all items succeed → 200. When at least one fails → 207 Multi-Status.
+
 ```json
 {
   "success": false,
@@ -100,6 +114,7 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 List exports for the current organization. Supports query parameters: `status` (filter by status), `limit` (default 50), `offset` (default 0).
 
 **Response (200):**
+
 ```json
 {
   "exports": [
@@ -124,6 +139,7 @@ List exports for the current organization. Supports query parameters: `status` (
 Create a new export and generate the file.
 
 **Request body:**
+
 ```json
 {
   "format": "CSV" | "DATEV",
@@ -144,6 +160,7 @@ Create a new export and generate the file.
 `datevOptions` is only used when `format` is `"DATEV"` and is optional.
 
 **Response (201):**
+
 ```json
 {
   "export": {

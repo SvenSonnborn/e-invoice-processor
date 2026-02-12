@@ -8,8 +8,8 @@ on:
 
 env:
   # Dummy values for Prisma generate (doesn't need real DB connection)
-  DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-  DIRECT_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+  DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+  DIRECT_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
 
 jobs:
   lint:
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_ENV: test
-      GOOGLE_CLOUD_VISION_API_KEY: "dummy-api-key"
+      GOOGLE_CLOUD_VISION_API_KEY: 'dummy-api-key'
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
@@ -72,10 +72,10 @@ jobs:
       - name: Build
         run: bun run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: "https://dummy.supabase.co"
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "dummy-key"
-          SUPABASE_SERVICE_ROLE_KEY: "dummy-service-role-key"
-          NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+          NEXT_PUBLIC_SUPABASE_URL: 'https://dummy.supabase.co'
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'dummy-key'
+          SUPABASE_SERVICE_ROLE_KEY: 'dummy-service-role-key'
+          NEXT_PUBLIC_SITE_URL: 'http://localhost:3000'
       - name: Debug build output
         run: |
           echo "Current directory:"

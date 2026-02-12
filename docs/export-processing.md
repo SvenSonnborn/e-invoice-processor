@@ -28,12 +28,14 @@ enum ExportStatus {
 ### Status-Übergänge
 
 **Erlaubte Transitionen:**
+
 - `CREATED` → `GENERATING`, `FAILED`
 - `GENERATING` → `READY`, `FAILED`
 - `READY` → `GENERATING` (Re-Generation erlaubt)
 - `FAILED` → `CREATED` (Retry)
 
 **Verbotene Transitionen:**
+
 - `CREATED` → `READY` (muss durch GENERATING)
 - `READY` → `FAILED` (nur während Generation)
 - Alle anderen direkten Sprünge
@@ -66,6 +68,7 @@ enum ExportStatus {
 ```
 
 **Indizes:**
+
 ```sql
 CREATE INDEX "Export_organizationId_idx" ON "Export"("organizationId");
 CREATE INDEX "Export_format_idx" ON "Export"("format");
@@ -78,7 +81,7 @@ CREATE INDEX "Export_createdBy_idx" ON "Export"("createdBy");
 ### Export erstellen (mit Audit Trail)
 
 ```typescript
-import { createExport } from '@/src/lib/exports/processor'
+import { createExport } from '@/src/lib/exports/processor';
 
 const exp = await createExport(
   {
@@ -87,11 +90,11 @@ const exp = await createExport(
     filename: 'export_2024_01.csv',
     invoiceIds: ['inv_1', 'inv_2', 'inv_3'],
   },
-  userId  // Actor tracking
-)
+  userId // Actor tracking
+);
 
-console.log(exp.status)  // 'CREATED'
-console.log(exp.createdBy)  // userId
+console.log(exp.status); // 'CREATED'
+console.log(exp.createdBy); // userId
 ```
 
 ### Status-Updates während Processing
@@ -100,65 +103,64 @@ console.log(exp.createdBy)  // userId
 import {
   markAsGenerating,
   markAsReady,
-  markAsFailed
-} from '@/src/lib/exports/processor'
+  markAsFailed,
+} from '@/src/lib/exports/processor';
 
 // 1. Export-Job starten
-await markAsGenerating(exportId)
+await markAsGenerating(exportId);
 
 try {
   // 2. Export generieren
-  const storageKey = await generateExportFile(exportId)
+  const storageKey = await generateExportFile(exportId);
 
   // 3. Als bereit markieren
-  await markAsReady(exportId, storageKey)
-
+  await markAsReady(exportId, storageKey);
 } catch (error) {
   // 4. Bei Fehler markieren
-  await markAsFailed(exportId, error.message)
+  await markAsFailed(exportId, error.message);
 }
 ```
 
 ### Fehlgeschlagenen Export wiederholen
 
 ```typescript
-import { retryFailedExport } from '@/src/lib/exports/processor'
+import { retryFailedExport } from '@/src/lib/exports/processor';
 
 // Setzt Status zurück auf CREATED
-const exp = await retryFailedExport(exportId)
+const exp = await retryFailedExport(exportId);
 
-console.log(exp.status)  // 'CREATED'
-console.log(exp.errorMessage)  // null
-console.log(exp.storageKey)  // null
+console.log(exp.status); // 'CREATED'
+console.log(exp.errorMessage); // null
+console.log(exp.storageKey); // null
 ```
 
 ### Pending Exports abrufen
 
 ```typescript
-import { getPendingExports } from '@/src/lib/exports/processor'
+import { getPendingExports } from '@/src/lib/exports/processor';
 
 // Alle CREATED Exports für eine Organisation
-const pending = await getPendingExports('org_123', 50)
+const pending = await getPendingExports('org_123', 50);
 
 for (const exp of pending) {
-  await processExport(exp.id)
+  await processExport(exp.id);
 }
 ```
 
 ### Stuck Exports erkennen und behandeln
 
 ```typescript
-import { getStuckExports, failStuckExports } from '@/src/lib/exports/processor'
+import { getStuckExports, failStuckExports } from '@/src/lib/exports/processor';
 
 // Exports, die länger als 30 Minuten in GENERATING sind
-const stuck = await getStuckExports(30)
+const stuck = await getStuckExports(30);
 
-console.log(`Found ${stuck.length} stuck exports`)
+console.log(`Found ${stuck.length} stuck exports`);
 
 // Automatisch als fehlgeschlagen markieren
-const failedCount = await failStuckExports(30)
+const failedCount = await failStuckExports(30);
 
-console.log(`Marked ${failedCount} exports as failed`)
+console.log(`Marked ${failedCount} exports as failed`);
 ```
 
 ### Status Validierung
@@ -166,16 +168,16 @@ console.log(`Marked ${failedCount} exports as failed`)
 ```typescript
 import {
   isValidExportStatusTransition,
-  canProcessExport
-} from '@/src/lib/exports/status'
+  canProcessExport,
+} from '@/src/lib/exports/status';
 
 // Transition validieren
-const valid = isValidExportStatusTransition('CREATED', 'GENERATING')
-console.log(valid)  // true
+const valid = isValidExportStatusTransition('CREATED', 'GENERATING');
+console.log(valid); // true
 
 // Prüfen ob Export verarbeitet werden kann
-const canProcess = canProcessExport('FAILED')
-console.log(canProcess)  // true (Retry möglich)
+const canProcess = canProcessExport('FAILED');
+console.log(canProcess); // true (Retry möglich)
 ```
 
 ### UI Helpers
@@ -184,30 +186,30 @@ console.log(canProcess)  // true (Retry möglich)
 import {
   getExportStatusLabel,
   getExportStatusColor,
-  getExportStatusBadgeClasses
-} from '@/src/lib/exports/status'
+  getExportStatusBadgeClasses,
+} from '@/src/lib/exports/status';
 
 // Deutsches Label
-const label = getExportStatusLabel('GENERATING')
-console.log(label)  // "Wird generiert"
+const label = getExportStatusLabel('GENERATING');
+console.log(label); // "Wird generiert"
 
 // Farbe für UI
-const color = getExportStatusColor('READY')
-console.log(color)  // "green"
+const color = getExportStatusColor('READY');
+console.log(color); // "green"
 
 // Tailwind Badge Classes
-const classes = getExportStatusBadgeClasses('FAILED')
-console.log(classes)  // "inline-flex items-center ... bg-red-100 text-red-800"
+const classes = getExportStatusBadgeClasses('FAILED');
+console.log(classes); // "inline-flex items-center ... bg-red-100 text-red-800"
 ```
 
 ## Export Statistiken
 
 ```typescript
-import { getExportStats } from '@/src/lib/exports/processor'
+import { getExportStats } from '@/src/lib/exports/processor';
 
-const stats = await getExportStats('org_123')
+const stats = await getExportStats('org_123');
 
-console.log(stats)
+console.log(stats);
 // {
 //   total: 150,
 //   byStatus: {
@@ -228,43 +230,46 @@ Jeder Export und Invoice speichert, welcher User ihn erstellt hat:
 
 ```typescript
 // Export mit User verknüpft
-const exp = await createExport(exportData, userId)
+const exp = await createExport(exportData, userId);
 
 // Invoice mit User verknüpft (bei Upload/Import)
 const invoice = await prisma.invoice.create({
   data: {
     organizationId: 'org_123',
-    createdBy: userId,  // Wer hat die Rechnung hochgeladen?
+    createdBy: userId, // Wer hat die Rechnung hochgeladen?
     // ...
-  }
-})
+  },
+});
 ```
 
 ### Audit-Abfragen
 
 **Wer hat einen Export erstellt?**
+
 ```typescript
 const exp = await prisma.export.findUnique({
   where: { id: exportId },
   include: {
     creator: {
-      select: { id: true, email: true, name: true }
-    }
-  }
-})
+      select: { id: true, email: true, name: true },
+    },
+  },
+});
 
-console.log(`Created by: ${exp.creator.email}`)
+console.log(`Created by: ${exp.creator.email}`);
 ```
 
 **Alle Exports eines Users:**
+
 ```typescript
 const exports = await prisma.export.findMany({
   where: { createdBy: userId },
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: 'desc' },
+});
 ```
 
 **Welche User haben die meisten Exports erstellt?**
+
 ```sql
 SELECT u.email, COUNT(e.id) as export_count
 FROM "Export" e
@@ -296,6 +301,7 @@ ORDER BY export_count DESC;
 ### SQL Queries
 
 **Exports nach Status:**
+
 ```sql
 SELECT status, COUNT(*) as count
 FROM "Export"
@@ -304,6 +310,7 @@ GROUP BY status;
 ```
 
 **Failed Exports mit Fehlergrund:**
+
 ```sql
 SELECT id, filename, "errorMessage", "createdAt"
 FROM "Export"
@@ -313,6 +320,7 @@ LIMIT 20;
 ```
 
 **Stuck Exports (länger als 30 Min in GENERATING):**
+
 ```sql
 SELECT id, filename, "updatedAt",
        EXTRACT(EPOCH FROM (NOW() - "updatedAt"))/60 as minutes_stuck
@@ -323,6 +331,7 @@ ORDER BY "updatedAt" ASC;
 ```
 
 **Success Rate pro Format:**
+
 ```sql
 SELECT format,
        COUNT(*) as total,
@@ -334,6 +343,7 @@ GROUP BY format;
 ```
 
 **Durchschnittliche Generierungsdauer:**
+
 ```sql
 SELECT AVG(EXTRACT(EPOCH FROM ("updatedAt" - "createdAt"))) as avg_seconds
 FROM "Export"
@@ -346,38 +356,41 @@ WHERE status = 'READY';
 
 ```typescript
 // worker.ts
-import { getPendingExports, markAsGenerating } from '@/src/lib/exports/processor'
+import {
+  getPendingExports,
+  markAsGenerating,
+} from '@/src/lib/exports/processor';
 
 async function processExportQueue() {
-  const pending = await getPendingExports(undefined, 10)
+  const pending = await getPendingExports(undefined, 10);
 
   for (const exp of pending) {
     try {
-      await markAsGenerating(exp.id)
-      await generateExport(exp.id)
+      await markAsGenerating(exp.id);
+      await generateExport(exp.id);
     } catch (error) {
-      console.error(`Failed to process export ${exp.id}:`, error)
+      console.error(`Failed to process export ${exp.id}:`, error);
     }
   }
 }
 
 // Run every minute
-setInterval(processExportQueue, 60000)
+setInterval(processExportQueue, 60000);
 ```
 
 ### Stuck Export Cleanup
 
 ```typescript
 // cleanup.ts
-import { failStuckExports } from '@/src/lib/exports/processor'
+import { failStuckExports } from '@/src/lib/exports/processor';
 
 async function cleanupStuckExports() {
-  const count = await failStuckExports(30)
-  console.log(`Marked ${count} stuck exports as failed`)
+  const count = await failStuckExports(30);
+  console.log(`Marked ${count} stuck exports as failed`);
 }
 
 // Run every 10 minutes
-setInterval(cleanupStuckExports, 600000)
+setInterval(cleanupStuckExports, 600000);
 ```
 
 ## Error Handling
@@ -385,33 +398,39 @@ setInterval(cleanupStuckExports, 600000)
 ### Fehler-Kategorien
 
 **1. Validierungsfehler (vor Generation):**
+
 ```typescript
 if (invoiceIds.length === 0) {
-  throw new Error('Keine Rechnungen für Export ausgewählt')
+  throw new Error('Keine Rechnungen für Export ausgewählt');
 }
 // Export wird nie als GENERATING markiert
 ```
 
 **2. Generierungsfehler:**
+
 ```typescript
 try {
-  await markAsGenerating(exportId)
-  const data = await fetchInvoiceData(invoiceIds)
-  const file = await generateCSV(data)
-  const storageKey = await uploadToStorage(file)
-  await markAsReady(exportId, storageKey)
+  await markAsGenerating(exportId);
+  const data = await fetchInvoiceData(invoiceIds);
+  const file = await generateCSV(data);
+  const storageKey = await uploadToStorage(file);
+  await markAsReady(exportId, storageKey);
 } catch (error) {
-  await markAsFailed(exportId, `CSV Generierung fehlgeschlagen: ${error.message}`)
+  await markAsFailed(
+    exportId,
+    `CSV Generierung fehlgeschlagen: ${error.message}`
+  );
 }
 ```
 
 **3. Storage-Fehler:**
+
 ```typescript
 try {
-  const storageKey = await uploadToStorage(file)
-  await markAsReady(exportId, storageKey)
+  const storageKey = await uploadToStorage(file);
+  await markAsReady(exportId, storageKey);
 } catch (error) {
-  await markAsFailed(exportId, `Upload fehlgeschlagen: ${error.message}`)
+  await markAsFailed(exportId, `Upload fehlgeschlagen: ${error.message}`);
   // File cleanup falls nötig
 }
 ```
@@ -419,26 +438,35 @@ try {
 ### Retry-Strategien
 
 **Manueller Retry:**
+
 ```typescript
 // User klickt "Erneut versuchen"
-const exp = await retryFailedExport(exportId)
-await processExport(exp.id)
+const exp = await retryFailedExport(exportId);
+await processExport(exp.id);
 ```
 
 **Automatischer Retry mit Exponential Backoff:**
+
 ```typescript
-async function processWithRetry(exportId: string, attempt = 1, maxAttempts = 3) {
+async function processWithRetry(
+  exportId: string,
+  attempt = 1,
+  maxAttempts = 3
+) {
   try {
-    await markAsGenerating(exportId)
-    await generateExport(exportId)
+    await markAsGenerating(exportId);
+    await generateExport(exportId);
   } catch (error) {
     if (attempt < maxAttempts) {
-      const delay = Math.pow(2, attempt) * 1000  // 2s, 4s, 8s
-      await new Promise(resolve => setTimeout(resolve, delay))
-      await retryFailedExport(exportId)
-      return processWithRetry(exportId, attempt + 1, maxAttempts)
+      const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      await retryFailedExport(exportId);
+      return processWithRetry(exportId, attempt + 1, maxAttempts);
     } else {
-      await markAsFailed(exportId, `Fehlgeschlagen nach ${maxAttempts} Versuchen: ${error.message}`)
+      await markAsFailed(
+        exportId,
+        `Fehlgeschlagen nach ${maxAttempts} Versuchen: ${error.message}`
+      );
     }
   }
 }
@@ -447,7 +475,12 @@ async function processWithRetry(exportId: string, attempt = 1, maxAttempts = 3) 
 ## Beispiel: Vollständiger Export-Flow
 
 ```typescript
-import { createExport, markAsGenerating, markAsReady, markAsFailed } from '@/src/lib/exports/processor'
+import {
+  createExport,
+  markAsGenerating,
+  markAsReady,
+  markAsFailed,
+} from '@/src/lib/exports/processor';
 
 async function handleExportRequest(
   userId: string,
@@ -463,47 +496,46 @@ async function handleExportRequest(
       invoiceIds,
     },
     userId
-  )
+  );
 
-  console.log(`Export ${exp.id} created by user ${userId}`)
+  console.log(`Export ${exp.id} created by user ${userId}`);
 
   // 2. In Background Queue stellen
-  await queueExportJob(exp.id)
+  await queueExportJob(exp.id);
 
-  return exp
+  return exp;
 }
 
 async function processExport(exportId: string) {
   try {
     // 3. Generation starten
-    await markAsGenerating(exportId)
+    await markAsGenerating(exportId);
 
     // 4. Daten laden
     const exp = await prisma.export.findUnique({
       where: { id: exportId },
-      include: { invoices: { include: { invoice: true } } }
-    })
+      include: { invoices: { include: { invoice: true } } },
+    });
 
     // 5. CSV generieren
-    const csvContent = generateCSV(exp.invoices)
+    const csvContent = generateCSV(exp.invoices);
 
     // 6. Upload zu Supabase Storage
-    const filename = exp.filename
+    const filename = exp.filename;
     const { data, error } = await supabase.storage
       .from('exports')
-      .upload(filename, csvContent)
+      .upload(filename, csvContent);
 
-    if (error) throw error
+    if (error) throw error;
 
     // 7. Als bereit markieren
-    await markAsReady(exportId, data.path)
+    await markAsReady(exportId, data.path);
 
-    console.log(`Export ${exportId} ready for download`)
-
+    console.log(`Export ${exportId} ready for download`);
   } catch (error) {
     // 8. Bei Fehler markieren
-    await markAsFailed(exportId, error.message)
-    console.error(`Export ${exportId} failed:`, error)
+    await markAsFailed(exportId, error.message);
+    console.error(`Export ${exportId} failed:`, error);
   }
 }
 ```
@@ -515,15 +547,15 @@ async function processExport(exportId: string) {
 ```typescript
 // Statt einzeln:
 for (const exp of pending) {
-  await processExport(exp.id)
+  await processExport(exp.id);
 }
 
 // Besser: Parallel (mit Limit):
-const BATCH_SIZE = 5
-const batches = chunk(pending, BATCH_SIZE)
+const BATCH_SIZE = 5;
+const batches = chunk(pending, BATCH_SIZE);
 
 for (const batch of batches) {
-  await Promise.all(batch.map(exp => processExport(exp.id)))
+  await Promise.all(batch.map((exp) => processExport(exp.id)));
 }
 ```
 
@@ -532,16 +564,16 @@ for (const batch of batches) {
 ```typescript
 // Effizient durch Index auf status
 const pending = await prisma.export.findMany({
-  where: { status: 'CREATED' }
-})
+  where: { status: 'CREATED' },
+});
 
 // Effizient durch Index auf organizationId + status
 const orgPending = await prisma.export.findMany({
   where: {
     organizationId: 'org_123',
-    status: 'CREATED'
-  }
-})
+    status: 'CREATED',
+  },
+});
 ```
 
 ## Migration von bestehendem Code
@@ -553,8 +585,8 @@ Falls bereits Exports ohne Status existieren:
 await prisma.export.updateMany({
   where: {
     storageKey: { not: null },
-    status: 'CREATED'
+    status: 'CREATED',
   },
-  data: { status: 'READY' }
-})
+  data: { status: 'READY' },
+});
 ```

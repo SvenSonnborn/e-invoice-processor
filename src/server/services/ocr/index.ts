@@ -1,15 +1,15 @@
 /**
  * OCR Service - Google Cloud Vision API Integration
- * 
+ *
  * This module provides OCR (Optical Character Recognition) capabilities
  * using Google Cloud Vision API to extract text from PDFs and images.
  */
 
-import { type Invoice } from "@/src/types";
-import { logger } from "@/src/lib/logging";
-import { VisionClient } from "./vision-client";
-import { TextExtractor } from "./text-extractor";
-import { OcrError, OcrErrorCode } from "./errors";
+import { type Invoice } from '@/src/types';
+import { logger } from '@/src/lib/logging';
+import { VisionClient } from './vision-client';
+import { TextExtractor } from './text-extractor';
+import { OcrError, OcrErrorCode } from './errors';
 
 export interface OcrResult {
   text: string;
@@ -61,18 +61,18 @@ export type OcrInvoiceData = Partial<Invoice> & {
 };
 
 const DEFAULT_OPTIONS: OcrOptions = {
-  languageHints: ["de", "en"],
+  languageHints: ['de', 'en'],
   confidenceThreshold: 0.95,
   timeoutMs: 60000,
 };
 
 const SUPPORTED_MIME_TYPES = [
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/tiff",
-  "image/tif",
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/tiff',
+  'image/tif',
 ];
 
 const MAX_FILE_SIZE_MB = 10;
@@ -96,8 +96,11 @@ export class OcrService {
     options: OcrOptions = {}
   ): Promise<OcrResult> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
-    
-    logger.info({ mimeType, fileSize: fileBuffer.length }, "Starting OCR processing");
+
+    logger.info(
+      { mimeType, fileSize: fileBuffer.length },
+      'Starting OCR processing'
+    );
 
     // Validate file
     this.validateFile(fileBuffer, mimeType);
@@ -105,7 +108,7 @@ export class OcrService {
     try {
       let result: OcrResult;
 
-      if (mimeType === "application/pdf") {
+      if (mimeType === 'application/pdf') {
         result = await this.processPdf(fileBuffer, opts);
       } else {
         result = await this.processImage(fileBuffer, mimeType, opts);
@@ -114,19 +117,22 @@ export class OcrService {
       // Filter by confidence threshold
       if (result.confidence < opts.confidenceThreshold!) {
         logger.warn(
-          { confidence: result.confidence, threshold: opts.confidenceThreshold },
-          "OCR confidence below threshold"
+          {
+            confidence: result.confidence,
+            threshold: opts.confidenceThreshold,
+          },
+          'OCR confidence below threshold'
         );
       }
 
       logger.info(
         { confidence: result.confidence, pageCount: result.pages.length },
-        "OCR processing completed"
+        'OCR processing completed'
       );
 
       return result;
     } catch (error) {
-      logger.error({ error }, "OCR processing failed");
+      logger.error({ error }, 'OCR processing failed');
       throw this.handleError(error);
     }
   }
@@ -138,15 +144,18 @@ export class OcrService {
     fileBuffer: Buffer,
     options: OcrOptions
   ): Promise<OcrResult> {
-    logger.debug("Processing PDF file");
+    logger.debug('Processing PDF file');
 
     const responses = await this.visionClient.batchAnnotateFiles(
       fileBuffer,
-      "application/pdf",
+      'application/pdf',
       options
     );
 
-    return this.textExtractor.extractFromBatchResponse(responses, fileBuffer.length);
+    return this.textExtractor.extractFromBatchResponse(
+      responses,
+      fileBuffer.length
+    );
   }
 
   /**
@@ -157,7 +166,7 @@ export class OcrService {
     mimeType: string,
     options: OcrOptions
   ): Promise<OcrResult> {
-    logger.debug({ mimeType }, "Processing image file");
+    logger.debug({ mimeType }, 'Processing image file');
 
     const response = await this.visionClient.annotateImage(
       fileBuffer,
@@ -165,14 +174,18 @@ export class OcrService {
       options
     );
 
-    return this.textExtractor.extractFromResponse(response, mimeType, fileBuffer.length);
+    return this.textExtractor.extractFromResponse(
+      response,
+      mimeType,
+      fileBuffer.length
+    );
   }
 
   /**
    * Parse invoice data from OCR result
    */
   async parseInvoice(ocrResult: OcrResult): Promise<OcrInvoiceData> {
-    logger.debug("Parsing invoice from OCR result");
+    logger.debug('Parsing invoice from OCR result');
     return this.textExtractor.parseInvoiceFields(ocrResult);
   }
 
@@ -193,12 +206,15 @@ export class OcrService {
     if (!SUPPORTED_MIME_TYPES.includes(mimeType)) {
       throw new OcrError(
         OcrErrorCode.UNSUPPORTED_FILE_TYPE,
-        `Unsupported file type: ${mimeType}. Supported types: ${SUPPORTED_MIME_TYPES.join(", ")}`,
+        `Unsupported file type: ${mimeType}. Supported types: ${SUPPORTED_MIME_TYPES.join(', ')}`,
         { mimeType, supportedTypes: SUPPORTED_MIME_TYPES }
       );
     }
 
-    logger.debug({ mimeType, size: fileBuffer.length }, "File validation passed");
+    logger.debug(
+      { mimeType, size: fileBuffer.length },
+      'File validation passed'
+    );
   }
 
   /**
@@ -211,40 +227,41 @@ export class OcrService {
 
     if (error instanceof Error) {
       // Check for specific Google API errors
-      if (error.message.includes("PERMISSION_DENIED")) {
+      if (error.message.includes('PERMISSION_DENIED')) {
         return new OcrError(
           OcrErrorCode.API_PERMISSION_DENIED,
-          "API permission denied. Check your credentials.",
+          'API permission denied. Check your credentials.',
           { originalError: error.message }
         );
       }
 
-      if (error.message.includes("QUOTA_EXCEEDED")) {
+      if (error.message.includes('QUOTA_EXCEEDED')) {
         return new OcrError(
           OcrErrorCode.API_QUOTA_EXCEEDED,
-          "API quota exceeded. Please try again later.",
+          'API quota exceeded. Please try again later.',
           { originalError: error.message }
         );
       }
 
-      if (error.message.includes("timeout") || error.message.includes("ETIMEDOUT")) {
+      if (
+        error.message.includes('timeout') ||
+        error.message.includes('ETIMEDOUT')
+      ) {
         return new OcrError(
           OcrErrorCode.TIMEOUT,
-          "OCR processing timed out. Please try again.",
+          'OCR processing timed out. Please try again.',
           { originalError: error.message }
         );
       }
 
-      return new OcrError(
-        OcrErrorCode.PROCESSING_FAILED,
-        error.message,
-        { originalError: error.message }
-      );
+      return new OcrError(OcrErrorCode.PROCESSING_FAILED, error.message, {
+        originalError: error.message,
+      });
     }
 
     return new OcrError(
       OcrErrorCode.UNKNOWN_ERROR,
-      "An unknown error occurred during OCR processing",
+      'An unknown error occurred during OCR processing',
       { error }
     );
   }

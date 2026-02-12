@@ -1,26 +1,31 @@
-'use client'
+'use client';
 
-import { requestPasswordReset, type AuthActionResult } from '@/app/actions/auth'
-import { Button } from '@/src/components/ui/button'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
-import { Separator } from '@/src/components/ui/separator'
-import { Mail } from 'lucide-react'
-import Link from 'next/link'
-import { useState } from 'react'
+import {
+  requestPasswordReset,
+  type AuthActionResult,
+} from '@/app/actions/auth';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Separator } from '@/src/components/ui/separator';
+import { Mail } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function ForgotPasswordPage() {
-  const [result, setResult] = useState<AuthActionResult | null>(null)
+  const [result, setResult] = useState<AuthActionResult | null>(null);
 
   async function handleSubmit(formData: FormData) {
-    const response = await requestPasswordReset(formData)
-    setResult(response)
+    const response = await requestPasswordReset(formData);
+    setResult(response);
   }
 
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight">Passwort zurücksetzen</h1>
+        <h1 className="text-xl font-semibold tracking-tight">
+          Passwort zurücksetzen
+        </h1>
         <p className="text-sm text-muted-foreground">
           Wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.
         </p>
@@ -29,10 +34,14 @@ export default function ForgotPasswordPage() {
       {result && (
         <div
           className={`rounded-lg border p-4 ${
-            result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            result.success
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
           }`}
         >
-          <p className={`text-sm ${result.success ? 'text-green-800' : 'text-red-800'}`}>
+          <p
+            className={`text-sm ${result.success ? 'text-green-800' : 'text-red-800'}`}
+          >
             {'message' in result ? result.message : result.error}
           </p>
         </div>
@@ -71,15 +80,21 @@ export default function ForgotPasswordPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         Zurück zum{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:underline"
+        >
           Login
         </Link>{' '}
         oder{' '}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link
+          href="/signup"
+          className="font-medium text-primary hover:underline"
+        >
           neues Konto erstellen
         </Link>
         .
       </p>
     </div>
-  )
+  );
 }

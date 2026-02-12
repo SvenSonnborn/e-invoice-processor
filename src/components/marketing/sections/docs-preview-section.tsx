@@ -64,7 +64,10 @@ console.log(validation.status); // "valid"`;
 
 export const DocsPreviewSection = () => {
   return (
-    <section id="docs" className="relative overflow-hidden bg-neutral-900 py-20 md:py-28">
+    <section
+      id="docs"
+      className="relative overflow-hidden bg-neutral-900 py-20 md:py-28"
+    >
       {/* Background pattern */}
       <div
         className="absolute inset-0 opacity-[0.02]"
@@ -143,7 +146,9 @@ export const DocsPreviewSection = () => {
                 </div>
                 <div className="ml-4 flex items-center gap-2 rounded-md bg-neutral-800 px-3 py-1">
                   <Terminal className="h-3.5 w-3.5 text-neutral-500" />
-                  <span className="text-xs text-neutral-400">api-example.ts</span>
+                  <span className="text-xs text-neutral-400">
+                    api-example.ts
+                  </span>
                 </div>
               </div>
 
@@ -190,14 +195,8 @@ export const DocsPreviewSection = () => {
 
 const highlightCode = (line: string): string => {
   return line
-    .replace(
-      /(\/\/.*)/g,
-      '<span class="text-neutral-500">$1</span>'
-    )
-    .replace(
-      /('.*?'|".*?")/g,
-      '<span class="text-success">$1</span>'
-    )
+    .replace(/(\/\/.*)/g, '<span class="text-neutral-500">$1</span>')
+    .replace(/('.*?'|".*?")/g, '<span class="text-success">$1</span>')
     .replace(
       /\b(const|await|method|body|headers)\b/g,
       '<span class="text-brand-400">$1</span>'

@@ -3,12 +3,14 @@
  * Maps Invoice data to DATEV format fields
  */
 
-import type { DatevEntry, DatevInvoice, DatevInvoiceMapping, DatevLineItem } from "./types";
-import {
-  DATEV_STEUERSCHLUESSEL,
-  DEFAULT_ACCOUNT_MAPPING,
-} from "./constants";
-import { formatDate, formatDateFromISO } from "./validator";
+import type {
+  DatevEntry,
+  DatevInvoice,
+  DatevInvoiceMapping,
+  DatevLineItem,
+} from './types';
+import { DATEV_STEUERSCHLUESSEL, DEFAULT_ACCOUNT_MAPPING } from './constants';
+import { formatDate, formatDateFromISO } from './validator';
 
 /**
  * Default mapping configuration
@@ -60,52 +62,62 @@ export function mapInvoiceToDatevEntries(
   mapping: DatevInvoiceMapping = DEFAULT_INVOICE_MAPPING
 ): DatevEntry[] {
   const entries: DatevEntry[] = [];
-  const date = invoice.issueDate instanceof Date
-    ? formatDate(invoice.issueDate)
-    : formatDateFromISO(invoice.issueDate as unknown as string);
+  const date =
+    invoice.issueDate instanceof Date
+      ? formatDate(invoice.issueDate)
+      : formatDateFromISO(invoice.issueDate as unknown as string);
 
   const belegdatum = invoice.dueDate
-    ? (invoice.dueDate instanceof Date
-        ? formatDate(invoice.dueDate)
-        : formatDateFromISO(invoice.dueDate as unknown as string))
+    ? invoice.dueDate instanceof Date
+      ? formatDate(invoice.dueDate)
+      : formatDateFromISO(invoice.dueDate as unknown as string)
     : date;
 
   const belegnummer = invoice.number || invoice.id.substring(0, 12);
-  const partnerName = invoice.isIncoming ? invoice.supplierName : invoice.customerName;
+  const partnerName = invoice.isIncoming
+    ? invoice.supplierName
+    : invoice.customerName;
 
   if (invoice.isIncoming) {
     // Eingangsrechnung (Incoming invoice)
     // Booking 1: Expense -> Liabilities
     entries.push({
       datum: date,
-      konto: mapping.kontoEingangsrechnung || DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO,
+      konto:
+        mapping.kontoEingangsrechnung || DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO,
       gegenkonto: DEFAULT_ACCOUNT_MAPPING.EINGANG_GEGENKONTO,
-      buchungstext: `ER: ${partnerName || "Unbekannt"} - ${belegnummer}`,
+      buchungstext: `ER: ${partnerName || 'Unbekannt'} - ${belegnummer}`,
       umsatzSoll: invoice.netAmount,
       umsatzHaben: 0,
-      steuerschluessel: mapTaxRateToSteuerschluessel(invoice.taxRate || 19, mapping, true),
+      steuerschluessel: mapTaxRateToSteuerschluessel(
+        invoice.taxRate || 19,
+        mapping,
+        true
+      ),
       steuerbetrag: invoice.taxAmount,
       belegnummer,
       belegdatum,
       kostenstelle: invoice.kostenstelle,
       kostentraeger: invoice.kostentraeger,
-      waehrung: invoice.currency || "EUR",
+      waehrung: invoice.currency || 'EUR',
     });
 
     // Booking 2: Input tax -> Liabilities
     if (invoice.taxAmount > 0) {
       entries.push({
         datum: date,
-        konto: "1576", // Vorsteuer 19%
-        gegenkonto: mapping.kontoEingangsrechnung || DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO,
-        buchungstext: `VSt: ${partnerName || "Unbekannt"} - ${belegnummer}`,
+        konto: '1576', // Vorsteuer 19%
+        gegenkonto:
+          mapping.kontoEingangsrechnung ||
+          DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO,
+        buchungstext: `VSt: ${partnerName || 'Unbekannt'} - ${belegnummer}`,
         umsatzSoll: invoice.taxAmount,
         umsatzHaben: 0,
         belegnummer,
         belegdatum,
         kostenstelle: invoice.kostenstelle,
         kostentraeger: invoice.kostentraeger,
-        waehrung: invoice.currency || "EUR",
+        waehrung: invoice.currency || 'EUR',
       });
     }
   } else {
@@ -113,34 +125,41 @@ export function mapInvoiceToDatevEntries(
     // Booking 1: Receivables -> Revenue
     entries.push({
       datum: date,
-      konto: mapping.kontoAusgangsrechnung || DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO,
+      konto:
+        mapping.kontoAusgangsrechnung || DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO,
       gegenkonto: DEFAULT_ACCOUNT_MAPPING.AUSGANG_GEGENKONTO,
-      buchungstext: `AR: ${partnerName || "Unbekannt"} - ${belegnummer}`,
+      buchungstext: `AR: ${partnerName || 'Unbekannt'} - ${belegnummer}`,
       umsatzSoll: invoice.netAmount,
       umsatzHaben: 0,
-      steuerschluessel: mapTaxRateToSteuerschluessel(invoice.taxRate || 19, mapping, false),
+      steuerschluessel: mapTaxRateToSteuerschluessel(
+        invoice.taxRate || 19,
+        mapping,
+        false
+      ),
       steuerbetrag: invoice.taxAmount,
       belegnummer,
       belegdatum,
       kostenstelle: invoice.kostenstelle,
       kostentraeger: invoice.kostentraeger,
-      waehrung: invoice.currency || "EUR",
+      waehrung: invoice.currency || 'EUR',
     });
 
     // Booking 2: Receivables -> VAT
     if (invoice.taxAmount > 0) {
       entries.push({
         datum: date,
-        konto: mapping.kontoAusgangsrechnung || DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO,
-        gegenkonto: "1776", // Umsatzsteuer 19%
-        buchungstext: `USt: ${partnerName || "Unbekannt"} - ${belegnummer}`,
+        konto:
+          mapping.kontoAusgangsrechnung ||
+          DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO,
+        gegenkonto: '1776', // Umsatzsteuer 19%
+        buchungstext: `USt: ${partnerName || 'Unbekannt'} - ${belegnummer}`,
         umsatzSoll: 0,
         umsatzHaben: invoice.taxAmount,
         belegnummer,
         belegdatum,
         kostenstelle: invoice.kostenstelle,
         kostentraeger: invoice.kostentraeger,
-        waehrung: invoice.currency || "EUR",
+        waehrung: invoice.currency || 'EUR',
       });
     }
   }
@@ -161,18 +180,21 @@ export function mapInvoiceWithLineItemsToDatevEntries(
   }
 
   const entries: DatevEntry[] = [];
-  const date = invoice.issueDate instanceof Date
-    ? formatDate(invoice.issueDate)
-    : formatDateFromISO(invoice.issueDate as unknown as string);
+  const date =
+    invoice.issueDate instanceof Date
+      ? formatDate(invoice.issueDate)
+      : formatDateFromISO(invoice.issueDate as unknown as string);
 
   const belegdatum = invoice.dueDate
-    ? (invoice.dueDate instanceof Date
-        ? formatDate(invoice.dueDate)
-        : formatDateFromISO(invoice.dueDate as unknown as string))
+    ? invoice.dueDate instanceof Date
+      ? formatDate(invoice.dueDate)
+      : formatDateFromISO(invoice.dueDate as unknown as string)
     : date;
 
   const belegnummer = invoice.number || invoice.id.substring(0, 12);
-  const partnerName = invoice.isIncoming ? invoice.supplierName : invoice.customerName;
+  const partnerName = invoice.isIncoming
+    ? invoice.supplierName
+    : invoice.customerName;
 
   // Create entry for each line item
   for (const item of invoice.lineItems) {
@@ -210,14 +232,14 @@ function mapLineItemToDatevEntries(
   // Truncate description to fit DATEV limits
   const description = item.description
     ? `${item.description.substring(0, 40)}...`
-    : "Position";
+    : 'Position';
 
   // Use item-specific account if provided, otherwise use default
-  const itemKonto = item.konto || (
-    isIncoming
-      ? (mapping.kontoEingangsrechnung || DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO)
-      : (mapping.kontoAusgangsrechnung || DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO)
-  );
+  const itemKonto =
+    item.konto ||
+    (isIncoming
+      ? mapping.kontoEingangsrechnung || DEFAULT_ACCOUNT_MAPPING.EINGANG_KONTO
+      : mapping.kontoAusgangsrechnung || DEFAULT_ACCOUNT_MAPPING.AUSGANG_KONTO);
 
   // Use item-specific cost center/cost object if provided
   const kostenstelle = item.kostenstelle;
@@ -229,22 +251,26 @@ function mapLineItemToDatevEntries(
       datum: date,
       konto: itemKonto,
       gegenkonto: DEFAULT_ACCOUNT_MAPPING.EINGANG_GEGENKONTO,
-      buchungstext: `${description} - ${partnerName || "Unbekannt"}`,
+      buchungstext: `${description} - ${partnerName || 'Unbekannt'}`,
       umsatzSoll: item.netAmount,
       umsatzHaben: 0,
-      steuerschluessel: mapTaxRateToSteuerschluessel(item.taxRate, mapping, true),
+      steuerschluessel: mapTaxRateToSteuerschluessel(
+        item.taxRate,
+        mapping,
+        true
+      ),
       belegnummer,
       belegdatum,
       kostenstelle,
       kostentraeger,
-      waehrung: currency || "EUR",
+      waehrung: currency || 'EUR',
     });
 
     // Add tax entry if applicable
     if (item.taxAmount > 0) {
       entries.push({
         datum: date,
-        konto: "1576", // Vorsteuer 19%
+        konto: '1576', // Vorsteuer 19%
         gegenkonto: itemKonto,
         buchungstext: `VSt: ${description}`,
         umsatzSoll: item.taxAmount,
@@ -253,7 +279,7 @@ function mapLineItemToDatevEntries(
         belegdatum,
         kostenstelle,
         kostentraeger,
-        waehrung: currency || "EUR",
+        waehrung: currency || 'EUR',
       });
     }
   } else {
@@ -262,15 +288,19 @@ function mapLineItemToDatevEntries(
       datum: date,
       konto: itemKonto,
       gegenkonto: DEFAULT_ACCOUNT_MAPPING.AUSGANG_GEGENKONTO,
-      buchungstext: `${description} - ${partnerName || "Unbekannt"}`,
+      buchungstext: `${description} - ${partnerName || 'Unbekannt'}`,
       umsatzSoll: item.netAmount,
       umsatzHaben: 0,
-      steuerschluessel: mapTaxRateToSteuerschluessel(item.taxRate, mapping, false),
+      steuerschluessel: mapTaxRateToSteuerschluessel(
+        item.taxRate,
+        mapping,
+        false
+      ),
       belegnummer,
       belegdatum,
       kostenstelle,
       kostentraeger,
-      waehrung: currency || "EUR",
+      waehrung: currency || 'EUR',
     });
   }
 

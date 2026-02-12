@@ -1,12 +1,12 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from 'bun:test';
 import {
   parseInvoiceFromXML,
   parseCII,
   parseUBL,
   detectInvoiceFlavor,
-} from "@/src/lib/zugferd";
+} from '@/src/lib/zugferd';
 
-describe("XRechnung Parser", () => {
+describe('XRechnung Parser', () => {
   const validCiiXml = `<?xml version="1.0" encoding="UTF-8"?>
     <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
       <ExchangedDocument>
@@ -64,37 +64,38 @@ describe("XRechnung Parser", () => {
   const invalidXml = `<?xml version="1.0"?><invalid>`;
   const unknownXml = `<?xml version="1.0"?><root><item>test</item></root>`;
 
-  describe("parseInvoiceFromXML", () => {
-    it("should auto-detect and parse CII format", async () => {
+  describe('parseInvoiceFromXML', () => {
+    it('should auto-detect and parse CII format', async () => {
       const result = await parseInvoiceFromXML(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.number).toBe("XR-2024-001");
-      expect(result.invoice?.supplier?.name).toBe("XRechnung Seller GmbH");
-      expect(["ZUGFeRD", "XRechnung"]).toContain(result.detection.flavor);
+      expect(result.invoice?.number).toBe('XR-2024-001');
+      expect(result.invoice?.supplier?.name).toBe('XRechnung Seller GmbH');
+      expect(['ZUGFeRD', 'XRechnung']).toContain(result.detection.flavor);
     });
 
-    it("should auto-detect and parse UBL format", async () => {
+    it('should auto-detect and parse UBL format', async () => {
       const ublResult = parseUBL(validUblXml);
       expect(ublResult.success).toBe(true);
-      expect(ublResult.invoice?.documentId).toBe("XR-2024-002");
+      expect(ublResult.invoice?.documentId).toBe('XR-2024-002');
       const result = await parseInvoiceFromXML(validUblXml);
-      expect(result.detection.flavor).not.toBe("Unknown");
-      if (result.success && result.invoice) expect(result.invoice.number).toBe("XR-2024-002");
+      expect(result.detection.flavor).not.toBe('Unknown');
+      if (result.success && result.invoice)
+        expect(result.invoice.number).toBe('XR-2024-002');
     });
 
-    it("should return success false for unknown format", async () => {
+    it('should return success false for unknown format', async () => {
       const result = await parseInvoiceFromXML(unknownXml);
       expect(result.success).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
-    it("should return success false for invalid XML", async () => {
+    it('should return success false for invalid XML', async () => {
       const result = await parseInvoiceFromXML(invalidXml);
       expect(result.success).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
-    it("should include warnings when validation finds issues", async () => {
+    it('should include warnings when validation finds issues', async () => {
       const partialCii = `<?xml version="1.0"?>
         <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
           <ExchangedDocument>
@@ -118,60 +119,64 @@ describe("XRechnung Parser", () => {
           </SupplyChainTradeTransaction>
         </CrossIndustryInvoice>`;
       const result = await parseInvoiceFromXML(partialCii);
-      expect(result.invoice?.number).toBe("PARTIAL");
+      expect(result.invoice?.number).toBe('PARTIAL');
     });
   });
 
-  describe("parseCII", () => {
-    it("should parse CII format", () => {
+  describe('parseCII', () => {
+    it('should parse CII format', () => {
       const result = parseCII(validCiiXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.documentId).toBe("XR-2024-001");
+      expect(result.invoice?.documentId).toBe('XR-2024-001');
     });
 
-    it("should return success false on invalid XML", () => {
+    it('should return success false on invalid XML', () => {
       const result = parseCII(invalidXml);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("parseUBL", () => {
-    it("should parse UBL format", () => {
+  describe('parseUBL', () => {
+    it('should parse UBL format', () => {
       const result = parseUBL(validUblXml);
       expect(result.success).toBe(true);
-      expect(result.invoice?.documentId).toBe("XR-2024-002");
+      expect(result.invoice?.documentId).toBe('XR-2024-002');
     });
 
-    it("should return success false on invalid XML", () => {
+    it('should return success false on invalid XML', () => {
       const result = parseUBL(invalidXml);
       expect(result.success).toBe(false);
     });
   });
 
-  describe("detectInvoiceFlavor", () => {
-    it("should detect CII format", () => {
+  describe('detectInvoiceFlavor', () => {
+    it('should detect CII format', () => {
       const detection = detectInvoiceFlavor(validCiiXml);
-      expect(detection.flavor).toBe("ZUGFeRD");
-      expect(detection.version === undefined || detection.version === "2.3").toBe(true);
+      expect(detection.flavor).toBe('ZUGFeRD');
+      expect(
+        detection.version === undefined || detection.version === '2.3'
+      ).toBe(true);
     });
 
-    it("should detect UBL format", () => {
+    it('should detect UBL format', () => {
       const detection = detectInvoiceFlavor(validUblXml);
-      expect(["ZUGFeRD", "XRechnung"]).toContain(detection.flavor);
+      expect(['ZUGFeRD', 'XRechnung']).toContain(detection.flavor);
     });
 
-    it("should return Unknown for unrecognized format", () => {
-      expect(detectInvoiceFlavor(unknownXml).flavor).toBe("Unknown");
+    it('should return Unknown for unrecognized format', () => {
+      expect(detectInvoiceFlavor(unknownXml).flavor).toBe('Unknown');
     });
 
-    it("should detect CII by root element", () => {
+    it('should detect CII by root element', () => {
       const ciiRoot = `<CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"><SupplyChainTradeTransaction/></CrossIndustryInvoice>`;
-      expect(detectInvoiceFlavor(ciiRoot).flavor).toBe("ZUGFeRD");
+      expect(detectInvoiceFlavor(ciiRoot).flavor).toBe('ZUGFeRD');
     });
 
-    it("should detect UBL by Invoice element", () => {
+    it('should detect UBL by Invoice element', () => {
       const ublByCbc = `<Invoice xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"></Invoice>`;
-      expect(["ZUGFeRD", "XRechnung"]).toContain(detectInvoiceFlavor(ublByCbc).flavor);
+      expect(['ZUGFeRD', 'XRechnung']).toContain(
+        detectInvoiceFlavor(ublByCbc).flavor
+      );
     });
   });
 });

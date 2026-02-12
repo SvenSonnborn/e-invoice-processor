@@ -1,4 +1,4 @@
-export type InvoiceFormat = "ZUGFERD" | "XRECHNUNG" | "UNKNOWN";
+export type InvoiceFormat = 'ZUGFERD' | 'XRECHNUNG' | 'UNKNOWN';
 
 export interface InvoiceTotals {
   currency: string;
@@ -21,4 +21,3 @@ export interface Invoice {
   dueDate?: string;
   totals?: InvoiceTotals;
 }
-

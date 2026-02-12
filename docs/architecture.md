@@ -35,8 +35,36 @@ The application follows a layered architecture with clear separation of concerns
 
 ### Authentication
 
-- Auth helpers in `src/lib/auth/`
-- Session management utilities
+- **Supabase Auth** with JWT access tokens + refresh tokens stored in HTTP cookies
+- **`@supabase/ssr`** manages cookie-based sessions for server-side rendering
+- Three Supabase client types:
+  - **Server client** (`src/lib/supabase/server.ts`) — Server Components, Server Actions, Route Handlers
+  - **Browser client** (`src/lib/supabase/client.ts`) — Client Components
+  - **Admin client** (`src/lib/supabase/admin.ts`) — Service role for backend tasks (storage, RLS bypass)
+
+#### Middleware (`middleware.ts`)
+
+- Runs on **all** requests (pages + API routes), except static assets
+- Refreshes expired JWTs automatically via `supabase.auth.getUser()`
+- Redirects unauthenticated users to `/login` for protected page routes (`/dashboard`, `/invoices`, `/exports`, `/settings`)
+- Passes `redirectTo` query param so login can redirect back after auth
+
+#### Session helpers (`src/lib/auth/session.ts`)
+
+- `getSession()` — validates JWT server-side via `getUser()`, returns user or null
+- `requireAuth()` — for Server Components/Actions, redirects to `/login` if unauthenticated
+- `getCurrentUser()` — returns the Prisma `User` record linked by `supabaseUserId`
+- `requireApiAuth()` — for API Route Handlers, returns user or `401 Unauthorized` JSON response
+- `requireApiAuthWithOrg()` — same as above but also resolves the user's organization membership, returns `403` if no org
+
+#### Protected API routes
+
+All API routes require authentication except:
+
+- `/api/health` — public health check
+- `/api/waitlist/join` — public waitlist signup
+- `/api/stripe/webhook` — uses Stripe signature verification
+- `/auth/callback` — OAuth/email confirmation handler
 
 ### Storage
 

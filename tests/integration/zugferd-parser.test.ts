@@ -1,18 +1,20 @@
-import { describe, it, expect } from "bun:test";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
-import { parseInvoiceFromPDF, isPDF } from "@/src/lib/zugferd";
+import { describe, it, expect } from 'bun:test';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { parseInvoiceFromPDF, isPDF } from '@/src/lib/zugferd';
 
-describe("ZUGFeRD Parser", () => {
-  describe("parseInvoiceFromPDF", () => {
-    it("should return success false and errors for non-PDF buffer", async () => {
-      const notPdf = Buffer.from("This is not a PDF");
+describe('ZUGFeRD Parser', () => {
+  describe('parseInvoiceFromPDF', () => {
+    it('should return success false and errors for non-PDF buffer', async () => {
+      const notPdf = Buffer.from('This is not a PDF');
       const result = await parseInvoiceFromPDF(notPdf);
       expect(result.success).toBe(false);
-      expect(result.errors.some((e) => e.includes("Invalid PDF file"))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Invalid PDF file'))).toBe(
+        true
+      );
     });
 
-    it("should return success false for PDF without embedded XML", async () => {
+    it('should return success false for PDF without embedded XML', async () => {
       const minimalPdf = Buffer.from(
         `%PDF-1.4
 1 0 obj
@@ -48,13 +50,13 @@ startxref
     });
   });
 
-  describe("isPDF", () => {
-    it("should return false for non-PDF buffer", () => {
-      const notPdf = Buffer.from("This is not a PDF");
+  describe('isPDF', () => {
+    it('should return false for non-PDF buffer', () => {
+      const notPdf = Buffer.from('This is not a PDF');
       expect(isPDF(notPdf)).toBe(false);
     });
 
-    it("should return true for minimal PDF buffer", () => {
+    it('should return true for minimal PDF buffer', () => {
       const minimalPdf = Buffer.from(
         `%PDF-1.4
 1 0 obj
@@ -89,13 +91,18 @@ startxref
   });
 });
 
-describe("ZUGFeRD Parser Integration", () => {
-  const fixturePath = join(process.cwd(), "tests", "fixtures", "zugferd-invoice.pdf");
+describe('ZUGFeRD Parser Integration', () => {
+  const fixturePath = join(
+    process.cwd(),
+    'tests',
+    'fixtures',
+    'zugferd-invoice.pdf'
+  );
 
-  it("should parse ZUGFeRD 2.3 PDF with embedded CII XML when fixture is present", async () => {
+  it('should parse ZUGFeRD 2.3 PDF with embedded CII XML when fixture is present', async () => {
     if (!existsSync(fixturePath)) {
       console.warn(
-        "Skipping: place a ZUGFeRD sample PDF at tests/fixtures/zugferd-invoice.pdf (e.g. from https://github.com/ZUGFeRD/corpus) to run this test."
+        'Skipping: place a ZUGFeRD sample PDF at tests/fixtures/zugferd-invoice.pdf (e.g. from https://github.com/ZUGFeRD/corpus) to run this test.'
       );
       return;
     }
@@ -104,6 +111,6 @@ describe("ZUGFeRD Parser Integration", () => {
     expect(result.success).toBe(true);
     expect(result.invoice).toBeDefined();
     expect(result.invoice?.number ?? result.invoice?.id).toBeDefined();
-    expect(result.detection.flavor).not.toBe("Unknown");
+    expect(result.detection.flavor).not.toBe('Unknown');
   });
 });

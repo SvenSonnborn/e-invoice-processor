@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { env } from "@/src/lib/config/env";
+import { createClient } from '@supabase/supabase-js';
+import { env } from '@/src/lib/config/env';
 
 /**
  * Supabase admin client (service role)
@@ -16,4 +16,3 @@ export const supabaseAdminClient = createClient(
     },
   }
 );
-

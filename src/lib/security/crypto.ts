@@ -5,7 +5,7 @@
 
 export async function hashPassword(_password: string): Promise<string> {
   // TODO: Implement password hashing (bcrypt, argon2, etc.)
-  throw new Error("Not implemented");
+  throw new Error('Not implemented');
 }
 
 export async function verifyPassword(
@@ -13,7 +13,7 @@ export async function verifyPassword(
   _hash: string
 ): Promise<boolean> {
   // TODO: Implement password verification
-  throw new Error("Not implemented");
+  throw new Error('Not implemented');
 }
 
 export function generateToken(): string {

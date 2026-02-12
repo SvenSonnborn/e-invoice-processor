@@ -11,7 +11,9 @@ import { Pool } from 'pg';
 const DATABASE_URL = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL or DIRECT_URL environment variable is required');
+  console.error(
+    '❌ DATABASE_URL or DIRECT_URL environment variable is required'
+  );
   process.exit(1);
 }
 
@@ -62,7 +64,9 @@ async function createBuckets() {
     result.rows.forEach((bucket) => {
       console.log(`  - ${bucket.name}:`);
       console.log(`    - Public: ${bucket.public}`);
-      console.log(`    - Size Limit: ${(bucket.file_size_limit / 1024 / 1024).toFixed(0)}MB`);
+      console.log(
+        `    - Size Limit: ${(bucket.file_size_limit / 1024 / 1024).toFixed(0)}MB`
+      );
       console.log(`    - MIME Types: ${bucket.allowed_mime_types?.join(', ')}`);
     });
 

@@ -4,9 +4,11 @@ import { Users, Clock, Sparkles } from 'lucide-react';
 import { WaitlistForm } from '../waitlist-form-client';
 
 export const WaitlistSection = () => {
-
   return (
-    <section id="waitlist" className="relative overflow-hidden bg-white py-20 md:py-28">
+    <section
+      id="waitlist"
+      className="relative overflow-hidden bg-white py-20 md:py-28"
+    >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -left-40 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-brand-100/30 blur-[100px]" />
@@ -21,17 +23,18 @@ export const WaitlistSection = () => {
               <Sparkles className="h-4 w-4" />
               Limited Time Offer
             </div>
-            
+
             <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 md:text-4xl">
               Join the waitlist and save{' '}
               <span className="bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
                 50% forever
               </span>
             </h2>
-            
+
             <p className="mt-6 text-lg text-neutral-600">
-              Be among the first to experience the future of e-invoice processing. 
-              As a waitlist member, you&apos;ll get exclusive benefits:
+              Be among the first to experience the future of e-invoice
+              processing. As a waitlist member, you&apos;ll get exclusive
+              benefits:
             </p>
 
             <ul className="mt-8 space-y-4">
@@ -79,7 +82,9 @@ export const WaitlistSection = () => {
                   <Clock className="h-6 w-6 text-brand-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-neutral-900">Q2 2025</div>
+                  <div className="text-2xl font-bold text-neutral-900">
+                    Q2 2025
+                  </div>
                   <div className="text-sm text-neutral-500">Beta Launch</div>
                 </div>
               </div>

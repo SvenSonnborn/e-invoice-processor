@@ -1,14 +1,14 @@
 /**
  * OCR Parser for Invoice Processing
- * 
+ *
  * Integrates with Google Cloud Vision API to extract invoice data
  * from PDFs and images (PNG, JPG, TIFF).
  */
 
-import type { Invoice } from "@/src/types";
-import { getOcrService } from "@/src/server/services/ocr";
-import { logger } from "@/src/lib/logging";
-import { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
+import type { Invoice } from '@/src/types';
+import { getOcrService } from '@/src/server/services/ocr';
+import { logger } from '@/src/lib/logging';
+import { OcrError, OcrErrorCode } from '@/src/server/services/ocr/errors';
 
 export interface OcrParseOptions {
   languageHints?: string[];
@@ -17,14 +17,14 @@ export interface OcrParseOptions {
 }
 
 const DEFAULT_OPTIONS: OcrParseOptions = {
-  languageHints: ["de", "en"],
+  languageHints: ['de', 'en'],
   confidenceThreshold: 0.95,
   timeoutMs: 60000,
 };
 
 /**
  * Parse invoice data from a file buffer using OCR
- * 
+ *
  * @param fileBuffer - The file content as Buffer
  * @param mimeType - MIME type of the file (application/pdf, image/png, etc.)
  * @param options - Optional OCR configuration
@@ -39,7 +39,7 @@ export async function parseWithOcr(
 
   logger.info(
     { mimeType, size: fileBuffer.length },
-    "Starting OCR invoice parsing"
+    'Starting OCR invoice parsing'
   );
 
   try {
@@ -54,17 +54,17 @@ export async function parseWithOcr(
     // Log confidence score
     logger.info(
       { confidence: ocrResult.confidence, pages: ocrResult.pages.length },
-      "OCR processing completed"
+      'OCR processing completed'
     );
 
     // Check if confidence meets threshold
     if (ocrResult.confidence < opts.confidenceThreshold!) {
       logger.warn(
-        { 
-          confidence: ocrResult.confidence, 
-          threshold: opts.confidenceThreshold 
+        {
+          confidence: ocrResult.confidence,
+          threshold: opts.confidenceThreshold,
         },
-        "OCR confidence below threshold - results may be inaccurate"
+        'OCR confidence below threshold - results may be inaccurate'
       );
     }
 
@@ -73,28 +73,28 @@ export async function parseWithOcr(
 
     // Map to Invoice type
     const invoice: Partial<Invoice> = {
-      format: "UNKNOWN",
+      format: 'UNKNOWN',
       ...parsedFields,
     };
 
     if (!invoice.totals) {
-      invoice.totals = { currency: "EUR" };
+      invoice.totals = { currency: 'EUR' };
     } else if (!invoice.totals.currency) {
-      invoice.totals.currency = "EUR";
+      invoice.totals.currency = 'EUR';
     }
 
     logger.info(
-      { 
+      {
         invoiceNumber: invoice.number,
-        confidence: ocrResult.confidence 
+        confidence: ocrResult.confidence,
       },
-      "Invoice parsing completed"
+      'Invoice parsing completed'
     );
 
     return invoice;
   } catch (error) {
-    logger.error({ error }, "OCR invoice parsing failed");
-    
+    logger.error({ error }, 'OCR invoice parsing failed');
+
     if (error instanceof OcrError) {
       throw error;
     }
@@ -112,14 +112,14 @@ export async function parseWithOcr(
  */
 export function isSupportedMimeType(mimeType: string): boolean {
   const supportedTypes = [
-    "application/pdf",
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/tiff",
-    "image/tif",
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/tiff',
+    'image/tif',
   ];
-  
+
   return supportedTypes.includes(mimeType);
 }
 
@@ -128,23 +128,26 @@ export function isSupportedMimeType(mimeType: string): boolean {
  */
 export function getSupportedMimeTypes(): string[] {
   return [
-    "application/pdf",
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/tiff",
-    "image/tif",
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/tiff',
+    'image/tif',
   ];
 }
 
 /**
  * Validate file size for OCR processing
  */
-export function validateFileSize(fileSizeBytes: number, maxSizeMB: number = 10): boolean {
+export function validateFileSize(
+  fileSizeBytes: number,
+  maxSizeMB: number = 10
+): boolean {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   return fileSizeBytes <= maxSizeBytes;
 }
 
 // Re-export OCR service types
-export { OcrError, OcrErrorCode } from "@/src/server/services/ocr/errors";
-export type { OcrResult, OcrPage, OcrOptions } from "@/src/server/services/ocr";
+export { OcrError, OcrErrorCode } from '@/src/server/services/ocr/errors';
+export type { OcrResult, OcrPage, OcrOptions } from '@/src/server/services/ocr';

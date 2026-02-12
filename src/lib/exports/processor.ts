@@ -1,6 +1,6 @@
-import { prisma } from '@/src/lib/db/client'
-import type { Export, ExportStatus } from '@/src/generated/prisma/client'
-import { isValidExportStatusTransition } from './status'
+import { prisma } from '@/src/lib/db/client';
+import type { Export, ExportStatus } from '@/src/generated/prisma/client';
+import { isValidExportStatusTransition } from './status';
 
 /**
  * Export Processor
@@ -24,17 +24,17 @@ export async function updateExportStatus(
   const currentExport = await prisma.export.findUnique({
     where: { id: exportId },
     select: { status: true },
-  })
+  });
 
   if (!currentExport) {
-    throw new Error(`Export ${exportId} not found`)
+    throw new Error(`Export ${exportId} not found`);
   }
 
   // Validate status transition
   if (!isValidExportStatusTransition(currentExport.status, newStatus)) {
     throw new Error(
       `Invalid status transition from ${currentExport.status} to ${newStatus}`
-    )
+    );
   }
 
   return await prisma.export.update({
@@ -44,7 +44,7 @@ export async function updateExportStatus(
       errorMessage: newStatus === 'FAILED' ? errorMessage : null,
       updatedAt: new Date(),
     },
-  })
+  });
 }
 
 /**
@@ -54,7 +54,7 @@ export async function updateExportStatus(
  * @returns Updated export
  */
 export async function markAsGenerating(exportId: string): Promise<Export> {
-  return await updateExportStatus(exportId, 'GENERATING')
+  return await updateExportStatus(exportId, 'GENERATING');
 }
 
 /**
@@ -71,17 +71,17 @@ export async function markAsReady(
   const currentExport = await prisma.export.findUnique({
     where: { id: exportId },
     select: { status: true },
-  })
+  });
 
   if (!currentExport) {
-    throw new Error(`Export ${exportId} not found`)
+    throw new Error(`Export ${exportId} not found`);
   }
 
   // Validate status transition
   if (!isValidExportStatusTransition(currentExport.status, 'READY')) {
     throw new Error(
       `Invalid status transition from ${currentExport.status} to READY`
-    )
+    );
   }
 
   // Atomically update both status and storageKey
@@ -93,7 +93,7 @@ export async function markAsReady(
       errorMessage: null,
       updatedAt: new Date(),
     },
-  })
+  });
 }
 
 /**
@@ -107,7 +107,7 @@ export async function markAsFailed(
   exportId: string,
   errorMessage: string
 ): Promise<Export> {
-  return await updateExportStatus(exportId, 'FAILED', errorMessage)
+  return await updateExportStatus(exportId, 'FAILED', errorMessage);
 }
 
 /**
@@ -120,14 +120,14 @@ export async function retryFailedExport(exportId: string): Promise<Export> {
   const currentExport = await prisma.export.findUnique({
     where: { id: exportId },
     select: { status: true },
-  })
+  });
 
   if (!currentExport) {
-    throw new Error(`Export ${exportId} not found`)
+    throw new Error(`Export ${exportId} not found`);
   }
 
   if (currentExport.status !== 'FAILED') {
-    throw new Error(`Export must be in FAILED status to retry`)
+    throw new Error(`Export must be in FAILED status to retry`);
   }
 
   return await prisma.export.update({
@@ -138,7 +138,7 @@ export async function retryFailedExport(exportId: string): Promise<Export> {
       storageKey: null,
       updatedAt: new Date(),
     },
-  })
+  });
 }
 
 /**
@@ -158,7 +158,7 @@ export async function getExportsByStatus(
       status,
     },
     orderBy: { createdAt: 'desc' },
-  })
+  });
 }
 
 /**
@@ -174,7 +174,7 @@ export async function getExportStats(organizationId: string) {
     prisma.export.count({ where: { organizationId, status: 'GENERATING' } }),
     prisma.export.count({ where: { organizationId, status: 'READY' } }),
     prisma.export.count({ where: { organizationId, status: 'FAILED' } }),
-  ])
+  ]);
 
   return {
     total,
@@ -185,7 +185,7 @@ export async function getExportStats(organizationId: string) {
       FAILED: failed,
     },
     successRate: total > 0 ? ((ready / total) * 100).toFixed(2) : '0.00',
-  }
+  };
 }
 
 /**
@@ -206,7 +206,7 @@ export async function getPendingExports(
     },
     orderBy: { createdAt: 'asc' },
     take: limit,
-  })
+  });
 }
 
 /**
@@ -215,8 +215,10 @@ export async function getPendingExports(
  * @param minutesThreshold - Minutes threshold for stuck detection
  * @returns Stuck exports
  */
-export async function getStuckExports(minutesThreshold: number = 30): Promise<Export[]> {
-  const thresholdTime = new Date(Date.now() - minutesThreshold * 60 * 1000)
+export async function getStuckExports(
+  minutesThreshold: number = 30
+): Promise<Export[]> {
+  const thresholdTime = new Date(Date.now() - minutesThreshold * 60 * 1000);
 
   return await prisma.export.findMany({
     where: {
@@ -226,7 +228,7 @@ export async function getStuckExports(minutesThreshold: number = 30): Promise<Ex
       },
     },
     orderBy: { updatedAt: 'asc' },
-  })
+  });
 }
 
 /**
@@ -235,17 +237,19 @@ export async function getStuckExports(minutesThreshold: number = 30): Promise<Ex
  * @param minutesThreshold - Minutes threshold for stuck detection
  * @returns Number of exports marked as failed
  */
-export async function failStuckExports(minutesThreshold: number = 30): Promise<number> {
-  const stuckExports = await getStuckExports(minutesThreshold)
+export async function failStuckExports(
+  minutesThreshold: number = 30
+): Promise<number> {
+  const stuckExports = await getStuckExports(minutesThreshold);
 
   for (const exp of stuckExports) {
     await markAsFailed(
       exp.id,
       `Export wurde nach ${minutesThreshold} Minuten automatisch als fehlgeschlagen markiert`
-    )
+    );
   }
 
-  return stuckExports.length
+  return stuckExports.length;
 }
 
 /**
@@ -257,10 +261,10 @@ export async function failStuckExports(minutesThreshold: number = 30): Promise<n
  */
 export async function createExport(
   data: {
-    organizationId: string
-    format: 'CSV' | 'DATEV'
-    filename: string
-    invoiceIds: string[]
+    organizationId: string;
+    format: 'CSV' | 'DATEV';
+    filename: string;
+    invoiceIds: string[];
   },
   userId: string
 ): Promise<Export> {
@@ -274,7 +278,7 @@ export async function createExport(
         filename: data.filename,
         status: 'CREATED',
       },
-    })
+    });
 
     // Link invoices
     await tx.exportInvoice.createMany({
@@ -282,8 +286,8 @@ export async function createExport(
         exportId: exp.id,
         invoiceId,
       })),
-    })
+    });
 
-    return exp
-  })
+    return exp;
+  });
 }

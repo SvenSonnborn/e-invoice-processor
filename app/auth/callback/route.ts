@@ -1,5 +1,5 @@
-import { createSupabaseServerClient } from '@/src/lib/supabase/server'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createSupabaseServerClient } from '@/src/lib/supabase/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Auth Callback Route
@@ -10,32 +10,34 @@ import { NextResponse, type NextRequest } from 'next/server'
  * - OAuth: ?code=...
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  const token = searchParams.get('token')
-  const type = searchParams.get('type')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get('code');
+  const token = searchParams.get('token');
+  const type = searchParams.get('type');
+  const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
     // OAuth callback
-    const supabase = await createSupabaseServerClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error('OAuth error:', error)
-      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+      console.error('OAuth error:', error);
+      return NextResponse.redirect(
+        `${origin}/login?error=${encodeURIComponent(error.message)}`
+      );
     }
 
     // Redirect to the specified next URL or dashboard
-    return NextResponse.redirect(`${origin}${next}`)
+    return NextResponse.redirect(`${origin}${next}`);
   }
 
   if (token) {
-    const supabase = await createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient();
 
     if (type === 'recovery') {
       // Password recovery - redirect to reset password page
-      return NextResponse.redirect(`${origin}/reset-password?token=${token}`)
+      return NextResponse.redirect(`${origin}/reset-password?token=${token}`);
     }
 
     if (type === 'signup' || type === 'email_confirmation') {
@@ -43,20 +45,20 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.verifyOtp({
         token_hash: token,
         type: 'email',
-      })
+      });
 
       if (error) {
-        console.error('Email confirmation error:', error)
+        console.error('Email confirmation error:', error);
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('E-Mail-Bestätigung fehlgeschlagen')}`
-        )
+        );
       }
 
       // Success - redirect to onboarding or dashboard
-      return NextResponse.redirect(`${origin}/onboarding`)
+      return NextResponse.redirect(`${origin}/onboarding`);
     }
   }
 
   // No valid code or token - redirect to login
-  return NextResponse.redirect(`${origin}/login`)
+  return NextResponse.redirect(`${origin}/login`);
 }
