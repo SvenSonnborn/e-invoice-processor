@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 
 const capturedWhere: unknown[] = [];
+const capturedFindManyArgs: unknown[] = [];
 
 // Mock session dependencies instead of the session module itself,
 // so that mock.module does not leak into tests/auth/session.test.ts.
@@ -56,7 +57,8 @@ mock.module('@/src/lib/db/client', () => ({
       findFirst: () => Promise.resolve({ organizationId: 'org-123' }),
     },
     invoice: {
-      findMany: async (args: { where: unknown; take: number }) => {
+      findMany: async (args: { where: unknown; take: number; skip?: number }) => {
+        capturedFindManyArgs.push(args);
         capturedWhere.push(args.where);
         if (args.take === 3) {
           return [
@@ -115,6 +117,7 @@ import { GET } from '@/app/api/invoices/route';
 describe('GET /api/invoices', () => {
   beforeEach(() => {
     capturedWhere.length = 0;
+    capturedFindManyArgs.length = 0;
   });
 
   it('returns filtered invoice list with stats and cursor', async () => {
@@ -129,6 +132,12 @@ describe('GET /api/invoices', () => {
     expect(payload.success).toBe(true);
     expect(payload.items).toHaveLength(2);
     expect(payload.nextCursor).toBe(payload.items[payload.items.length - 1].id);
+    expect(payload.pagination).toEqual({
+      limit: 2,
+      offset: 0,
+      page: 1,
+      hasMore: true,
+    });
     expect(payload.stats.totalCount).toBe(2);
     expect(payload.stats.currentMonthCount).toBe(2);
     expect(payload.stats.totalGrossAmount).toBe(133.45);
@@ -145,13 +154,63 @@ describe('GET /api/invoices', () => {
       OR: [
         { number: { contains: 'acme', mode: 'insensitive' } },
         { supplierName: { contains: 'acme', mode: 'insensitive' } },
+        { customerName: { contains: 'acme', mode: 'insensitive' } },
       ],
+    });
+  });
+
+  it('supports status/date/amount filters with page pagination', async () => {
+    const request = new Request(
+      'http://localhost/api/invoices?status=PARSED,VALIDATED&search=acme&issueDateFrom=2026-02-01T00:00:00.000Z&issueDateTo=2026-02-28T23:59:59.000Z&grossAmountMin=10&grossAmountMax=1000&page=2&limit=10'
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await GET(request as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(payload.pagination).toEqual({
+      limit: 10,
+      offset: 10,
+      page: 2,
+      hasMore: false,
+    });
+    expect(capturedFindManyArgs[0]).toMatchObject({
+      take: 11,
+      skip: 10,
+      where: {
+        organizationId: 'org-123',
+        status: {
+          in: ['PARSED', 'VALIDATED'],
+        },
+        issueDate: {
+          gte: new Date('2026-02-01T00:00:00.000Z'),
+          lte: new Date('2026-02-28T23:59:59.000Z'),
+        },
+        grossAmount: {
+          gte: 10,
+          lte: 1000,
+        },
+      },
     });
   });
 
   it('returns 400 for invalid statusGroup', async () => {
     const request = new Request(
       'http://localhost/api/invoices?statusGroup=failed'
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await GET(request as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 when page pagination is combined with cursor', async () => {
+    const request = new Request(
+      'http://localhost/api/invoices?page=2&cursor=inv-2'
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await GET(request as any);
