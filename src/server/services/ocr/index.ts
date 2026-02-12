@@ -6,6 +6,7 @@
  */
 
 export type {
+  IOcrService,
   OcrResult,
   OcrPage,
   TextBlock,
@@ -16,3 +17,4 @@ export type {
 } from './types';
 
 export { OcrService, getOcrService } from './service';
+export { MockOcrService } from './mock-service';

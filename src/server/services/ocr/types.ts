@@ -54,3 +54,12 @@ export interface OcrInvoiceLineItem {
 export type OcrInvoiceData = Partial<Invoice> & {
   lineItems?: OcrInvoiceLineItem[];
 };
+
+export interface IOcrService {
+  processFile(
+    fileBuffer: Buffer,
+    mimeType: string,
+    options?: OcrOptions
+  ): Promise<OcrResult>;
+  parseInvoice(ocrResult: OcrResult): Promise<OcrInvoiceData>;
+}

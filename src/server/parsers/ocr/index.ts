@@ -44,7 +44,7 @@ export async function parseWithOcr(
 
   try {
     // Process file with OCR
-    const ocrService = getOcrService();
+    const ocrService = await getOcrService();
     const ocrResult = await ocrService.processFile(fileBuffer, mimeType, {
       languageHints: opts.languageHints,
       confidenceThreshold: opts.confidenceThreshold,

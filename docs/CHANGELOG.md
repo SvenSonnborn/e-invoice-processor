@@ -2,6 +2,33 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-12: Mock OCR Service
+
+### Changes
+
+#### New: `MockOcrService` (`src/server/services/ocr/mock-service.ts`)
+
+- Drop-in replacement for `OcrService` that loads pre-defined JSON fixtures instead of calling Google Cloud Vision API
+- Enable via `OCR_MOCK_ENABLED=true` environment variable
+- Loads fixtures from `mocks/ocr-responses/` directory (3 German invoice samples included)
+- Cycles through fixtures on successive calls for varied test data
+
+#### New: `IOcrService` interface (`src/server/services/ocr/types.ts`)
+
+- Shared interface implemented by both `OcrService` and `MockOcrService`
+- Defines `processFile()` and `parseInvoice()` contract
+- `getOcrService()` now returns `IOcrService` — transparent switching between real and mock
+
+#### New: Mock response fixtures (`mocks/ocr-responses/`)
+
+- `invoice-standard.json` — Standard single-page German invoice (Musterfirma GmbH, 3 line items)
+- `invoice-multi-page.json` — Multi-page IT services invoice (TechSolutions AG, 6 line items)
+- `invoice-minimal.json` — Minimal Kleinunternehmer invoice (1 line item, no tax)
+
+#### Updated: `.env.example`
+
+- Added `OCR_MOCK_ENABLED` variable documentation
+
 ## 2026-02-12: Standardized API Auth & Error Handling
 
 ### Changes

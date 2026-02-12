@@ -1,0 +1,58 @@
+{
+  "ocrResult": {
+    "text": "Kleinunternehmer Max Mustermann\nHauptstraße 10\n50667 Köln\n\nRechnung RE-2024-100\n\nDatum: 20.06.2024\n\nAn: Firma Schmidt & Co. KG\n\n1x Beratungsleistung                          € 500,00\n\nGesamtbetrag: EUR 500,00\n\nGemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+    "confidence": 0.92,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Kleinunternehmer Max Mustermann\nHauptstraße 10\n50667 Köln\n\nRechnung RE-2024-100\n\nDatum: 20.06.2024\n\nAn: Firma Schmidt & Co. KG\n\n1x Beratungsleistung                          € 500,00\n\nGesamtbetrag: EUR 500,00\n\nGemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+        "confidence": 0.92,
+        "blocks": [
+          {
+            "text": "Kleinunternehmer Max Mustermann Hauptstraße 10 50667 Köln",
+            "confidence": 0.94,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 50 }
+          },
+          {
+            "text": "Rechnung RE-2024-100",
+            "confidence": 0.93,
+            "boundingBox": { "x": 50, "y": 120, "width": 250, "height": 25 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 500,00",
+            "confidence": 0.90,
+            "boundingBox": { "x": 250, "y": 320, "width": 200, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "image/png",
+      "fileSize": 85000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "RE-2024-100",
+    "supplier": {
+      "name": "Kleinunternehmer Max Mustermann"
+    },
+    "customer": {
+      "name": "Firma Schmidt & Co. KG"
+    },
+    "issueDate": "2024-06-20",
+    "totals": {
+      "currency": "EUR",
+      "grossAmount": "500.00"
+    },
+    "lineItems": [
+      {
+        "description": "Beratungsleistung",
+        "quantity": 1,
+        "unitPrice": 500.0,
+        "total": 500.0
+      }
+    ]
+  }
+}

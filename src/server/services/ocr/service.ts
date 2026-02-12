@@ -9,7 +9,7 @@ import { logger } from '@/src/lib/logging';
 import { VisionClient } from './vision-client';
 import { TextExtractor } from './text-extractor';
 import { OcrError, OcrErrorCode } from './errors';
-import type { OcrResult, OcrOptions, OcrInvoiceData } from './types';
+import type { IOcrService, OcrResult, OcrOptions, OcrInvoiceData } from './types';
 
 const DEFAULT_OPTIONS: OcrOptions = {
   languageHints: ['de', 'en'],
@@ -29,7 +29,7 @@ const SUPPORTED_MIME_TYPES = [
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-export class OcrService {
+export class OcrService implements IOcrService {
   private visionClient: VisionClient;
   private textExtractor: TextExtractor;
 
@@ -219,14 +219,30 @@ export class OcrService {
 }
 
 // Lazy singleton - only instantiated on first access, not at build time
-let _ocrService: OcrService | null = null;
+let _ocrService: IOcrService | null = null;
+let _ocrServicePromise: Promise<IOcrService> | null = null;
 
-export function getOcrService(): OcrService {
-  if (!_ocrService) {
+export async function getOcrService(): Promise<IOcrService> {
+  if (_ocrService) return _ocrService;
+
+  if (!_ocrServicePromise) {
+    _ocrServicePromise = initOcrService();
+  }
+
+  return _ocrServicePromise;
+}
+
+async function initOcrService(): Promise<IOcrService> {
+  if (process.env.OCR_MOCK_ENABLED === 'true') {
+    const { MockOcrService } = await import('./mock-service');
+    _ocrService = new MockOcrService();
+    logger.info('OCR Service: Using MockOcrService (OCR_MOCK_ENABLED=true)');
+  } else {
     _ocrService = new OcrService(
       process.env.GOOGLE_CLOUD_VISION_API_KEY,
       process.env.GOOGLE_CLOUD_PROJECT_ID
     );
   }
+
   return _ocrService;
 }

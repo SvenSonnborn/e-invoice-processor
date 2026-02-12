@@ -93,6 +93,13 @@ All API routes require authentication except:
 - ZUGFeRD/XRechnung parser (CII & UBL) in `src/lib/zugferd/`
 - OCR adapter in `src/server/parsers/ocr/`
 
+### OCR Service
+
+- Production: `OcrService` — Google Cloud Vision API (`src/server/services/ocr/service.ts`)
+- Development: `MockOcrService` — JSON-based mock responses (`src/server/services/ocr/mock-service.ts`)
+- Both implement `IOcrService` interface, switched via `OCR_MOCK_ENABLED=true` env var
+- Mock fixtures in `mocks/ocr-responses/` (3 German invoice samples)
+
 ### Exporters
 
 - CSV exporter in `src/server/exporters/csv/`

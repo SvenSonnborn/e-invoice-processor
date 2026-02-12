@@ -1,0 +1,98 @@
+{
+  "ocrResult": {
+    "text": "TechSolutions AG\nIndustriepark 7\n60329 Frankfurt am Main\n\nRechnung Nr. INV-2024-0042\nDatum: 03.03.2024\n\nKunde:\nDigital Dynamics GmbH\nSchillerstraße 15\n10117 Berlin\n\nPos.  Beschreibung                          Menge  Einzelpreis  Gesamt\n1     Cloud Infrastructure Setup             1      € 2.500,00   € 2.500,00\n2     Kubernetes Cluster Konfiguration       1      € 1.800,00   € 1.800,00\n3     CI/CD Pipeline Einrichtung             1      € 1.200,00   € 1.200,00\n4     Monitoring & Alerting Setup            1      € 800,00     € 800,00\n5     Dokumentation & Schulung               8      € 150,00     € 1.200,00\n6     Support-Paket (3 Monate)               1      € 450,00     € 450,00\n\nNettobetrag:                                                     € 7.950,00\nMwSt. (19%):                                                     € 1.510,50\nGesamtbetrag:                                                    EUR 9.460,50\n\nZahlungsziel: 30 Tage netto\nZahlbar bis: 02.04.2024\n\nBankverbindung:\nTechSolutions AG\nIBAN: DE12 5001 0517 0123 4567 89\nBIC: INGDDEFFXXX",
+    "confidence": 0.95,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "TechSolutions AG\nIndustriepark 7\n60329 Frankfurt am Main\n\nRechnung Nr. INV-2024-0042\nDatum: 03.03.2024\n\nKunde:\nDigital Dynamics GmbH\nSchillerstraße 15\n10117 Berlin\n\nPos.  Beschreibung                          Menge  Einzelpreis  Gesamt\n1     Cloud Infrastructure Setup             1      € 2.500,00   € 2.500,00\n2     Kubernetes Cluster Konfiguration       1      € 1.800,00   € 1.800,00\n3     CI/CD Pipeline Einrichtung             1      € 1.200,00   € 1.200,00",
+        "confidence": 0.96,
+        "blocks": [
+          {
+            "text": "TechSolutions AG Industriepark 7 60329 Frankfurt am Main",
+            "confidence": 0.99,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Rechnung Nr. INV-2024-0042",
+            "confidence": 0.98,
+            "boundingBox": { "x": 50, "y": 130, "width": 300, "height": 25 }
+          }
+        ]
+      },
+      {
+        "pageNumber": 2,
+        "text": "4     Monitoring & Alerting Setup            1      € 800,00     € 800,00\n5     Dokumentation & Schulung               8      € 150,00     € 1.200,00\n6     Support-Paket (3 Monate)               1      € 450,00     € 450,00\n\nNettobetrag:                                                     € 7.950,00\nMwSt. (19%):                                                     € 1.510,50\nGesamtbetrag:                                                    EUR 9.460,50\n\nZahlungsziel: 30 Tage netto\nZahlbar bis: 02.04.2024",
+        "confidence": 0.94,
+        "blocks": [
+          {
+            "text": "Gesamtbetrag: EUR 9.460,50",
+            "confidence": 0.95,
+            "boundingBox": { "x": 300, "y": 300, "width": 250, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 245000,
+      "pageCount": 2
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "INV-2024-0042",
+    "supplier": {
+      "name": "TechSolutions AG"
+    },
+    "customer": {
+      "name": "Digital Dynamics GmbH"
+    },
+    "issueDate": "2024-03-03",
+    "dueDate": "2024-04-02",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "7950.00",
+      "taxAmount": "1510.50",
+      "grossAmount": "9460.50"
+    },
+    "lineItems": [
+      {
+        "description": "Cloud Infrastructure Setup",
+        "quantity": 1,
+        "unitPrice": 2500.0,
+        "total": 2500.0
+      },
+      {
+        "description": "Kubernetes Cluster Konfiguration",
+        "quantity": 1,
+        "unitPrice": 1800.0,
+        "total": 1800.0
+      },
+      {
+        "description": "CI/CD Pipeline Einrichtung",
+        "quantity": 1,
+        "unitPrice": 1200.0,
+        "total": 1200.0
+      },
+      {
+        "description": "Monitoring & Alerting Setup",
+        "quantity": 1,
+        "unitPrice": 800.0,
+        "total": 800.0
+      },
+      {
+        "description": "Dokumentation & Schulung",
+        "quantity": 8,
+        "unitPrice": 150.0,
+        "total": 1200.0
+      },
+      {
+        "description": "Support-Paket (3 Monate)",
+        "quantity": 1,
+        "unitPrice": 450.0,
+        "total": 450.0
+      }
+    ]
+  }
+}
