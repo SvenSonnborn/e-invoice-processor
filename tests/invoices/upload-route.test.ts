@@ -6,12 +6,34 @@ let mockInvoiceId = 'invoice-1';
 const deletedStorageKeys: string[] = [];
 const uploadedStorageKeys: string[] = [];
 
-mock.module('@/src/lib/auth/session', () => ({
-  getMyOrganizationIdOrThrow: () =>
+// Mock session dependencies instead of the session module itself,
+// so that mock.module does not leak into tests/auth/session.test.ts.
+
+mock.module('@/src/lib/supabase/server', () => ({
+  createSupabaseServerClient: () =>
     Promise.resolve({
-      user: { id: 'user-123', email: 'user@example.com' },
-      organizationId: 'org-123',
+      auth: {
+        getUser: () =>
+          Promise.resolve({
+            data: { user: { id: 'sup-123', email: 'user@example.com' } },
+            error: null,
+          }),
+      },
     }),
+}));
+
+mock.module('next/headers', () => ({
+  cookies: () =>
+    Promise.resolve({
+      get: (name: string) =>
+        name === 'active-org-id' ? { value: 'org-123' } : undefined,
+    }),
+}));
+
+mock.module('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  },
 }));
 
 mock.module('@/src/lib/logging', () => ({
@@ -37,6 +59,18 @@ mock.module('@/src/lib/storage', () => ({
 
 mock.module('@/src/lib/db/client', () => ({
   prisma: {
+    user: {
+      findUnique: () =>
+        Promise.resolve({
+          id: 'user-123',
+          email: 'user@example.com',
+          supabaseUserId: 'sup-123',
+        }),
+    },
+    organizationMember: {
+      findUnique: () => Promise.resolve({ organizationId: 'org-123' }),
+      findFirst: () => Promise.resolve({ organizationId: 'org-123' }),
+    },
     $transaction: async (
       callback: (tx: {
         file: {

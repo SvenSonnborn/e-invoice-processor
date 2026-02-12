@@ -73,12 +73,51 @@ mock.module('@/src/lib/rate-limit', () => ({
   },
 }));
 
-mock.module('@/src/lib/auth/session', () => ({
-  getMyOrganizationIdOrThrow: () =>
+// Mock session dependencies instead of the session module itself,
+// so that mock.module does not leak into tests/auth/session.test.ts.
+
+mock.module('@/src/lib/supabase/server', () => ({
+  createSupabaseServerClient: () =>
     Promise.resolve({
-      user: { id: 'test-user-id', email: 'test@example.com' },
-      organizationId: 'test-org-id',
+      auth: {
+        getUser: () =>
+          Promise.resolve({
+            data: { user: { id: 'sup-test', email: 'test@example.com' } },
+            error: null,
+          }),
+      },
     }),
+}));
+
+mock.module('next/headers', () => ({
+  cookies: () =>
+    Promise.resolve({
+      get: (name: string) =>
+        name === 'active-org-id' ? { value: 'test-org-id' } : undefined,
+    }),
+}));
+
+mock.module('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  },
+}));
+
+mock.module('@/src/lib/db/client', () => ({
+  prisma: {
+    user: {
+      findUnique: () =>
+        Promise.resolve({
+          id: 'test-user-id',
+          email: 'test@example.com',
+          supabaseUserId: 'sup-test',
+        }),
+    },
+    organizationMember: {
+      findUnique: () => Promise.resolve({ organizationId: 'test-org-id' }),
+      findFirst: () => Promise.resolve({ organizationId: 'test-org-id' }),
+    },
+  },
 }));
 
 import { POST, GET } from '@/app/api/ocr/route';
