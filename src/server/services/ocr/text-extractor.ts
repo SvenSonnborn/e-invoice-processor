@@ -11,7 +11,7 @@ import type {
   TextBlock,
   BoundingBox,
   OcrInvoiceData,
-} from './index';
+} from './types';
 import type {
   AnnotateImageResponse,
   AnnotateFileResponse,
@@ -299,13 +299,11 @@ export class TextExtractor {
       foundDates.sort((a, b) => a.getTime() - b.getTime());
 
       // Invoice date is usually the earliest
-      result.issueDate = foundDates[0].toISOString().split('T')[0];
+      result.issueDate = this.formatDateOnly(foundDates[0]);
 
       // Due date might be mentioned explicitly or be the later date
       if (foundDates.length > 1) {
-        result.dueDate = foundDates[foundDates.length - 1]
-          .toISOString()
-          .split('T')[0];
+        result.dueDate = this.formatDateOnly(foundDates[foundDates.length - 1]);
       }
     }
 
@@ -316,7 +314,7 @@ export class TextExtractor {
     if (dueDateMatch) {
       const dueDate = this.parseDate(dueDateMatch[1]);
       if (dueDate) {
-        result.dueDate = dueDate.toISOString().split('T')[0];
+        result.dueDate = this.formatDateOnly(dueDate);
       }
     }
 
@@ -495,5 +493,12 @@ export class TextExtractor {
 
     const value = parseFloat(clean);
     return isNaN(value) ? null : value;
+  }
+
+  private formatDateOnly(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

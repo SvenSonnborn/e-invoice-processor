@@ -9,36 +9,36 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/src/lib/stripe/client';
-import { createSupabaseServerClient } from '@/src/lib/supabase/server';
 import { prisma } from '@/src/lib/db/client';
 import { logger } from '@/src/lib/logging/logger';
+import { getMyUserOrThrow } from '@/src/lib/auth/session';
+import { ApiError } from '@/src/lib/errors/api-error';
 
 const log = logger.child({ module: 'stripe-portal' });
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getMyUserOrThrow();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      throw ApiError.validationError('Invalid JSON body');
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw ApiError.validationError('Request body must be a JSON object');
     }
 
-    const body = await request.json();
-    const { returnUrl } = body;
+    const { returnUrl } = body as Record<string, string | undefined>;
 
     const dbUser = await prisma.user.findUnique({
-      where: { supabaseUserId: user.id },
+      where: { id: user.id },
       include: { subscriptions: true },
     });
 
     if (!dbUser || !dbUser.subscriptions[0]?.stripeCustomerId) {
-      return NextResponse.json(
-        { error: 'No active subscription found' },
-        { status: 404 }
-      );
+      throw ApiError.notFound('No active subscription found');
     }
 
     const customerId = dbUser.subscriptions[0].stripeCustomerId;
@@ -50,12 +50,10 @@ export async function POST(request: NextRequest) {
 
     log.info({ userId: dbUser.id }, 'Portal session created');
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ success: true, url: session.url });
   } catch (error) {
+    if (error instanceof ApiError) return error.toResponse();
     log.error({ error }, 'Stripe portal error');
-    return NextResponse.json(
-      { error: 'Failed to create portal session' },
-      { status: 500 }
-    );
+    return ApiError.internal('Failed to create portal session').toResponse();
   }
 }

@@ -13,11 +13,10 @@ import {
   type DatevInvoiceMapping,
 } from '@/src/lib/export/datev';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireApiAuthWithOrg } from '@/src/lib/auth/session';
+import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
+import { ApiError } from '@/src/lib/errors/api-error';
+import { logger } from '@/src/lib/logging';
 
-/**
- * Export request body
- */
 interface ExportRequestBody {
   invoiceIds: string[];
   config?: Partial<DatevExportConfig>;
@@ -29,17 +28,12 @@ interface ExportRequestBody {
   };
 }
 
-/**
- * Convert database invoice to DATEV invoice format
- */
 function convertToDatevInvoice(
   invoice: Awaited<ReturnType<typeof prisma.invoice.findUnique>>,
   lineItems: Awaited<ReturnType<typeof prisma.invoiceLineItem.findMany>>
 ): DatevInvoice | null {
   if (!invoice) return null;
 
-  // Determine if incoming or outgoing based on available data
-  // This is a heuristic - you may need to adjust based on your business logic
   const isIncoming =
     invoice.supplierName !== null && invoice.supplierName !== '';
 
@@ -54,7 +48,7 @@ function convertToDatevInvoice(
     netAmount: Number(invoice.netAmount) || 0,
     taxAmount: Number(invoice.taxAmount) || 0,
     grossAmount: Number(invoice.grossAmount) || 0,
-    taxRate: 19, // Default, could be calculated from line items
+    taxRate: 19,
     isIncoming,
     lineItems: lineItems.map((item) => ({
       description: item.description || '',
@@ -70,47 +64,42 @@ function convertToDatevInvoice(
  * POST handler - Generate DATEV export
  */
 export async function POST(request: NextRequest) {
-  const authResult = await requireApiAuthWithOrg();
-  if (authResult instanceof NextResponse) return authResult;
-  const { organizationId } = authResult;
-
   try {
-    // Parse request body
-    const body: ExportRequestBody = await request.json();
+    const { organizationId } = await getMyOrganizationIdOrThrow();
 
-    // Validate request
+    let body: ExportRequestBody;
+    try {
+      body = await request.json();
+    } catch {
+      throw ApiError.validationError('Invalid JSON body');
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw ApiError.validationError('Request body must be a JSON object');
+    }
+
     if (
       !body.invoiceIds ||
       !Array.isArray(body.invoiceIds) ||
       body.invoiceIds.length === 0
     ) {
-      return NextResponse.json(
-        { error: 'Mindestens eine Rechnungs-ID ist erforderlich' },
-        { status: 400 }
+      throw ApiError.validationError(
+        'Mindestens eine Rechnungs-ID ist erforderlich'
       );
     }
 
-    // Fetch invoices scoped to the user's organization
     const invoices = await prisma.invoice.findMany({
       where: { id: { in: body.invoiceIds }, organizationId },
-      include: {
-        lineItems: true,
-      },
+      include: { lineItems: true },
     });
 
-    // Convert to DATEV invoices
     const validInvoices = invoices
       .map((inv) => convertToDatevInvoice(inv, inv.lineItems))
       .filter((inv): inv is DatevInvoice => inv !== null);
 
     if (validInvoices.length === 0) {
-      return NextResponse.json(
-        { error: 'Keine gültigen Rechnungen gefunden' },
-        { status: 404 }
-      );
+      throw ApiError.notFound('Keine gültigen Rechnungen gefunden');
     }
 
-    // Build export configuration
     const exportConfig: DatevExportConfig = {
       encoding: 'UTF-8',
       beraterNummer: body.config?.beraterNummer,
@@ -122,7 +111,6 @@ export async function POST(request: NextRequest) {
       datumBis: body.config?.datumBis,
     };
 
-    // Build mapping configuration
     const mapping: DatevInvoiceMapping = {
       kontoEingangsrechnung: body.mapping?.kontoEingangsrechnung || '4400',
       kontoAusgangsrechnung: body.mapping?.kontoAusgangsrechnung || '1200',
@@ -135,7 +123,6 @@ export async function POST(request: NextRequest) {
       defaultKostenträger: body.mapping?.defaultKostenträger,
     };
 
-    // Generate DATEV export
     const result = formatInvoicesForDatev(validInvoices, {
       format: body.options?.format || 'standard',
       detailed: body.options?.detailed || false,
@@ -145,33 +132,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Export fehlgeschlagen',
-          details: result.errors,
-        },
-        { status: 422 }
-      );
+      throw ApiError.validationError('Export fehlgeschlagen', {
+        errors: result.errors,
+      });
     }
 
-    // Return success response with download info
     return NextResponse.json({
       success: true,
       filename: result.filename,
       entryCount: result.entryCount,
       totalAmount: result.totalAmount,
       invoiceCount: validInvoices.length,
-      csv: result.csv, // Include CSV content for immediate download
+      csv: result.csv,
     });
   } catch (error) {
-    console.error('DATEV Export Error:', error);
-    return NextResponse.json(
-      {
-        error: 'Interner Serverfehler',
-        message: error instanceof Error ? error.message : 'Unbekannter Fehler',
-      },
-      { status: 500 }
-    );
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'DATEV export failed');
+    return ApiError.internal('Interner Serverfehler').toResponse();
   }
 }
 
@@ -179,27 +156,21 @@ export async function POST(request: NextRequest) {
  * GET handler - Get export preview/info
  */
 export async function GET(request: NextRequest) {
-  const authResult = await requireApiAuthWithOrg();
-  if (authResult instanceof NextResponse) return authResult;
-  const { organizationId } = authResult;
-
-  const { searchParams } = new URL(request.url);
-  const invoiceIds = searchParams.getAll('invoiceId');
-
-  if (invoiceIds.length === 0) {
-    return NextResponse.json(
-      { error: 'Mindestens eine Rechnungs-ID ist erforderlich' },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Fetch invoices scoped to the user's organization
+    const { organizationId } = await getMyOrganizationIdOrThrow();
+
+    const { searchParams } = new URL(request.url);
+    const invoiceIds = searchParams.getAll('invoiceId');
+
+    if (invoiceIds.length === 0) {
+      throw ApiError.validationError(
+        'Mindestens eine Rechnungs-ID ist erforderlich'
+      );
+    }
+
     const invoices = await prisma.invoice.findMany({
       where: { id: { in: invoiceIds }, organizationId },
-      include: {
-        lineItems: true,
-      },
+      include: { lineItems: true },
     });
 
     const validInvoices = invoices
@@ -208,28 +179,19 @@ export async function GET(request: NextRequest) {
       .filter((inv): inv is DatevInvoice => inv !== null);
 
     if (validInvoices.length === 0) {
-      return NextResponse.json(
-        { error: 'Keine gültigen Rechnungen gefunden' },
-        { status: 404 }
-      );
+      throw ApiError.notFound('Keine gültigen Rechnungen gefunden');
     }
 
-    // Calculate preview data
     const { previewExport, getExportSummary } =
       await import('@/src/lib/export/datev');
 
     const preview = previewExport(validInvoices);
     const summary = getExportSummary(validInvoices);
 
-    return NextResponse.json({
-      preview,
-      summary,
-    });
+    return NextResponse.json({ success: true, preview, summary });
   } catch (error) {
-    console.error('DATEV Preview Error:', error);
-    return NextResponse.json(
-      { error: 'Interner Serverfehler' },
-      { status: 500 }
-    );
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'DATEV preview failed');
+    return ApiError.internal('Interner Serverfehler').toResponse();
   }
 }

@@ -187,8 +187,46 @@ Download a completed export file. The export must have status `READY`.
 
 ## Authentication
 
-API endpoints require authentication (implementation pending).
+All API endpoints require authentication via Supabase JWT (cookie-based session), except:
+
+- `GET /api/health` — public health check
+- `POST /api/waitlist/join` — public waitlist signup
+- `POST /api/stripe/webhook` — Stripe signature verification
+- `/auth/callback` — OAuth/email confirmation handler
+
+### Auth helpers
+
+- **`getMyUserOrThrow()`** — Validates session and returns the Prisma `User`. Throws `ApiError(UNAUTHENTICATED, 401)` if no session.
+- **`getMyOrganizationIdOrThrow()`** — Same as above, plus resolves the user's active organization (via `active-org-id` cookie with fallback to first membership). Throws `ApiError(NO_ORGANIZATION, 403)` if user has no org.
+
+## Error Format
+
+All API routes return a consistent structured error format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable description",
+    "details": {}
+  }
+}
+```
+
+### Error codes
+
+| Code                         | HTTP Status | Description                         |
+| ---------------------------- | ----------- | ----------------------------------- |
+| `UNAUTHENTICATED`            | 401         | No valid session                    |
+| `NO_ORGANIZATION`            | 403         | User has no organization membership |
+| `ORGANIZATION_LOOKUP_FAILED` | 400         | Organization lookup failed          |
+| `VALIDATION_ERROR`           | 400         | Invalid request data                |
+| `NOT_FOUND`                  | 404         | Resource not found                  |
+| `FORBIDDEN`                  | 403         | Access denied                       |
+| `RATE_LIMIT_EXCEEDED`        | 429         | Rate limit exceeded                 |
+| `INTERNAL_ERROR`             | 500         | Internal server error               |
 
 ## Rate Limiting
 
-Rate limiting is implemented via middleware (configuration pending).
+Rate limiting is implemented for the OCR endpoint via `src/lib/rate-limit/`.

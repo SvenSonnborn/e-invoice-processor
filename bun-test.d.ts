@@ -27,6 +27,9 @@ declare module 'bun:test' {
     toBeNumber(): void;
     toBeString(): void;
     toBeObject(): void;
+    toMatchObject(expected: Record<string, unknown>): void;
+    rejects: Matchers<Awaited<T>>;
+    resolves: Matchers<Awaited<T>>;
   }
 
   export interface Expect {

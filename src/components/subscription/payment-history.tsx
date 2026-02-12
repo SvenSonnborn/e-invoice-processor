@@ -10,13 +10,14 @@ import {
 } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Separator } from '@/src/components/ui/separator';
+import type { PaymentStatus } from '@/src/generated/prisma/client';
 import { ExternalLink, Receipt, AlertCircle } from 'lucide-react';
 
 export interface PaymentItem {
   id: string;
   amount: string;
   currency: string;
-  status: string;
+  status: PaymentStatus;
   description: string | null;
   receiptUrl: string | null;
   paidAt: string | null;
@@ -28,7 +29,7 @@ interface PaymentHistoryProps {
 }
 
 const statusConfig: Record<
-  string,
+  PaymentStatus,
   {
     label: string;
     variant: 'default' | 'secondary' | 'destructive' | 'outline';
@@ -84,7 +85,7 @@ export const PaymentHistory = ({ payments }: PaymentHistoryProps) => {
       <CardContent>
         <div className="space-y-4">
           {payments.map((payment, index) => {
-            const config = statusConfig[payment.status] ?? statusConfig.pending;
+            const config = statusConfig[payment.status];
 
             return (
               <div key={payment.id}>

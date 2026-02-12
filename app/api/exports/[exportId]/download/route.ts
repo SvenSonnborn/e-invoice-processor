@@ -6,7 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/db/client';
 import { storage } from '@/src/lib/storage';
-import { getCurrentUser } from '@/src/lib/auth/session';
+import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
+import { ApiError } from '@/src/lib/errors/api-error';
+import { logger } from '@/src/lib/logging';
 
 export async function GET(
   request: NextRequest,
@@ -14,62 +16,35 @@ export async function GET(
 ) {
   try {
     const { exportId } = await params;
-    const user = await getCurrentUser();
+    const { organizationId } = await getMyOrganizationIdOrThrow();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user's organization
-    const membership = await prisma.organizationMember.findFirst({
-      where: { userId: user.id },
-      select: { organizationId: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: 'No organization found' },
-        { status: 404 }
-      );
-    }
-
-    // Get export record
     const exportRecord = await prisma.export.findFirst({
       where: {
         id: exportId,
-        organizationId: membership.organizationId,
+        organizationId,
       },
     });
 
     if (!exportRecord) {
-      return NextResponse.json({ error: 'Export not found' }, { status: 404 });
+      throw ApiError.notFound('Export not found');
     }
 
     if (exportRecord.status !== 'READY') {
-      return NextResponse.json(
-        { error: 'Export not ready', status: exportRecord.status },
-        { status: 400 }
-      );
+      throw ApiError.validationError('Export not ready', {
+        status: exportRecord.status,
+      });
     }
 
     if (!exportRecord.storageKey) {
-      return NextResponse.json(
-        { error: 'Export file not found' },
-        { status: 404 }
-      );
+      throw ApiError.notFound('Export file not found');
     }
 
-    // Download from storage
     const fileBuffer = await storage.download(exportRecord.storageKey);
 
     if (!fileBuffer) {
-      return NextResponse.json(
-        { error: 'Export file not found in storage' },
-        { status: 404 }
-      );
+      throw ApiError.notFound('Export file not found in storage');
     }
 
-    // Determine content type based on format
     const contentTypeMap: Record<string, string> = {
       DATEV: 'text/csv; charset=utf-8',
       CSV: 'text/csv; charset=utf-8',
@@ -77,7 +52,6 @@ export async function GET(
     const contentType =
       contentTypeMap[exportRecord.format] ?? 'application/octet-stream';
 
-    // Return file with appropriate headers
     return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
@@ -87,10 +61,8 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error downloading export:', error);
-    return NextResponse.json(
-      { error: 'Failed to download export' },
-      { status: 500 }
-    );
+    if (error instanceof ApiError) return error.toResponse();
+    logger.error({ error }, 'Failed to download export');
+    return ApiError.internal('Failed to download export').toResponse();
   }
 }

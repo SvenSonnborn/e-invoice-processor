@@ -3,40 +3,32 @@ import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
 import { logger } from '@/src/lib/logging';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ uploadId: string }> }
-) {
+export async function GET() {
   try {
     await getMyOrganizationIdOrThrow();
-    const { uploadId } = await params;
 
     return NextResponse.json({
       success: true,
-      message: `Upload ${uploadId} - coming soon`,
+      message: 'Uploads API - coming soon',
     });
   } catch (error) {
     if (error instanceof ApiError) return error.toResponse();
-    logger.error({ error }, 'Failed to get upload');
+    logger.error({ error }, 'Failed to list uploads');
     return ApiError.internal().toResponse();
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ uploadId: string }> }
-) {
+export async function POST() {
   try {
     await getMyOrganizationIdOrThrow();
-    const { uploadId } = await params;
 
-    return NextResponse.json({
-      success: true,
-      message: `Delete upload ${uploadId} - coming soon`,
-    });
+    return NextResponse.json(
+      { success: true, message: 'Create upload - coming soon' },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof ApiError) return error.toResponse();
-    logger.error({ error }, 'Failed to delete upload');
+    logger.error({ error }, 'Failed to create upload');
     return ApiError.internal().toResponse();
   }
 }

@@ -68,6 +68,17 @@ enum SubscriptionTier {
   BUSINESS
 }
 
+enum PaymentStatus {
+  succeeded
+  failed
+  pending
+}
+
+enum WaitlistTier {
+  pro
+  business
+}
+
 model Organization {
   id        String   @id @default(cuid())
   name      String
@@ -97,7 +108,6 @@ model User {
   subscriptions   Subscription[]       // User's subscriptions
   payments        Payment[]            // User's payment history
 
-  @@index([supabaseUserId])
   @@index([subscriptionTier])
 }
 
@@ -119,7 +129,7 @@ model OrganizationMember {
 
 model Upload {
   id             String       @id @default(cuid())
-  organizationId String?
+  organizationId String
   filename       String
   contentType    String?
   sizeBytes      Int?
@@ -129,7 +139,7 @@ model Upload {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   invoice      Invoice?
 
   @@index([organizationId])
@@ -138,7 +148,7 @@ model Upload {
 
 model Invoice {
   id             String        @id @default(cuid())
-  organizationId String?
+  organizationId String
   uploadId       String?       @unique
   createdBy      String?       // FK to User (who created this invoice)
 
@@ -169,7 +179,7 @@ model Invoice {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   upload       Upload?            @relation(fields: [uploadId], references: [id], onDelete: SetNull)
   creator      User?              @relation(fields: [createdBy], references: [id], onDelete: SetNull)
   exports      ExportInvoice[]
@@ -220,7 +230,7 @@ model InvoiceLineItem {
 
 model Export {
   id             String       @id @default(cuid())
-  organizationId String?
+  organizationId String
   createdBy      String?      // FK to User (who created this export)
   format         ExportFormat
   filename       String
@@ -233,7 +243,7 @@ model Export {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   creator      User?          @relation(fields: [createdBy], references: [id], onDelete: SetNull)
   invoices     ExportInvoice[]
 
@@ -274,8 +284,6 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([stripeCustomerId])
-  @@index([stripeSubscriptionId])
   @@index([status])
   @@index([tier])
 }
@@ -287,7 +295,7 @@ model Payment {
   stripeInvoiceId   String?   @unique
   amount            Decimal   @db.Decimal(18, 2)
   currency          String    @default("EUR")
-  status            String    // succeeded, failed, pending
+  status            PaymentStatus
   description       String?
   receiptUrl        String?
   paidAt            DateTime?
@@ -296,7 +304,6 @@ model Payment {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([stripePaymentId])
   @@index([status])
   @@index([createdAt])
 }
@@ -306,7 +313,7 @@ model WaitlistEntry {
   email        String   @unique
   name         String
   company      String?
-  tier         String   @default("pro")
+  tier         WaitlistTier @default(pro)
   earlyBird    Boolean  @default(true)
   referralCode String   @unique @default(cuid())
   referredBy   String?
@@ -315,7 +322,5 @@ model WaitlistEntry {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@index([email])
-  @@index([referralCode])
   @@index([createdAt])
 }
