@@ -278,17 +278,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST() {
+export async function POST(_request: NextRequest) {
   try {
     await getMyOrganizationIdOrThrow();
-
-    return NextResponse.json(
-      { success: true, message: 'Create invoice - coming soon' },
-      { status: 201 }
-    );
+    return ApiError.validationError(
+      'Manuelles Erstellen von Rechnungen wird nicht unterstützt. Bitte PDF hochladen und OCR-Daten validieren.'
+    ).toResponse();
   } catch (error) {
     if (error instanceof ApiError) return error.toResponse();
-    logger.error({ error }, 'Failed to create invoice');
+    logger.error({ error }, 'Failed to handle invoice POST');
     return ApiError.internal().toResponse();
   }
 }

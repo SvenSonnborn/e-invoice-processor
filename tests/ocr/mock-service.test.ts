@@ -169,6 +169,29 @@ describe('MockOcrService', () => {
     });
   });
 
+  describe('processFile – filename fixture matching', () => {
+    it('should use matching fixture when sourceFileName is provided', async () => {
+      const result = await service.processFile(VALID_PDF_BUFFER, VALID_MIME_TYPE, {
+        sourceFileName: 'sample-invoice-05.pdf',
+      });
+      const invoiceData = await service.parseInvoice(result);
+
+      expect(invoiceData.number).toBe('ROS-GU-2026-0006');
+      expect(invoiceData.totals?.grossAmount).toBe('-112.92');
+    });
+
+    it('should match fixture from prefixed storage-key style sourceFileName', async () => {
+      const result = await service.processFile(VALID_PDF_BUFFER, VALID_MIME_TYPE, {
+        sourceFileName:
+          'invoices/org/user/1730000000000-123e4567-e89b-12d3-a456-426614174000-sample-invoice-05.pdf',
+      });
+      const invoiceData = await service.parseInvoice(result);
+
+      expect(invoiceData.number).toBe('ROS-GU-2026-0006');
+      expect(invoiceData.totals?.grossAmount).toBe('-112.92');
+    });
+  });
+
   describe('parseInvoice – für jede Beispielrechnung', () => {
     for (const [idx, file] of fixtureFiles.entries()) {
       describe(`Fixture: ${file}`, () => {

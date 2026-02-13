@@ -107,6 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       invoiceId: invoice.id,
       storageKey: file.storageKey,
       contentType: file.contentType || 'application/pdf',
+      sourceFileName: file.filename,
     }).catch((ocrError: InvoiceProcessingError) => {
       logger.error(
         {

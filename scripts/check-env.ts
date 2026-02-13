@@ -24,6 +24,8 @@ const requiredEnvVars = [
 const optionalEnvVars = [
   'LOG_LEVEL', // Has default: "info"
   'NODE_ENV', // Usually set by Next.js/Bun automatically
+  'VIES_VALIDATION_ENABLED', // Has runtime default: "true"
+  'VIES_TIMEOUT_MS', // Has runtime default: 3500ms
 ] as const;
 
 // TODO: Future environment variables (not yet implemented, warnings only)

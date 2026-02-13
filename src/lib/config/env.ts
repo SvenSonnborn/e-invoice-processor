@@ -9,6 +9,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  VIES_VALIDATION_ENABLED: z.enum(['true', 'false']).optional(),
+  VIES_TIMEOUT_MS: z
+    .string()
+    .regex(/^\d+$/, 'VIES_TIMEOUT_MS must be a positive integer in milliseconds')
+    .optional(),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
@@ -35,6 +40,8 @@ function buildRawEnv() {
       (isTest ? 'test' : undefined),
     SUPABASE_SERVICE_ROLE_KEY:
       process.env.SUPABASE_SERVICE_ROLE_KEY || (isTest ? 'test' : undefined),
+    VIES_VALIDATION_ENABLED: process.env.VIES_VALIDATION_ENABLED,
+    VIES_TIMEOUT_MS: process.env.VIES_TIMEOUT_MS,
     LOG_LEVEL: process.env.LOG_LEVEL,
   };
 }

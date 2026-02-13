@@ -42,6 +42,11 @@ export interface OcrOptions {
   languageHints?: string[];
   confidenceThreshold?: number;
   timeoutMs?: number;
+  /**
+   * Optional original filename (e.g. "sample-invoice-05.pdf").
+   * Used by mock implementations to select deterministic fixtures.
+   */
+  sourceFileName?: string;
 }
 
 export interface OcrInvoiceLineItem {

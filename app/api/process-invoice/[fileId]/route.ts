@@ -64,6 +64,7 @@ export async function POST(
       invoiceId: invoice.id,
       storageKey: file.storageKey,
       contentType: file.contentType || 'application/pdf',
+      sourceFileName: file.filename,
     });
 
     // Fetch the final invoice state for the response

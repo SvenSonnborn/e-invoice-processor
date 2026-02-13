@@ -14,3 +14,10 @@ export type {
   ProcessInvoiceParams,
   ProcessInvoiceResult,
 } from './invoice-processing';
+
+export {
+  validateSellerVatId,
+  type VatValidationResult,
+  type VatValidationStatus,
+  type VatValidationReason,
+} from './vat';

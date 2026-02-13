@@ -1,8 +1,2 @@
-/**
- * Invoice Form Component
- * Form for creating/editing invoices
- */
-
-export function InvoiceForm() {
-  return <form>{/* Invoice form implementation */}</form>;
-}
+export { InvoiceReviewForm as InvoiceForm } from './invoice-review-form';
+export type { InvoiceReviewFormProps as InvoiceFormProps } from './invoice-review-form';

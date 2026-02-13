@@ -1,6 +1,20 @@
-import { InvoiceUpload } from '@/src/components/InvoiceUpload';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import {
+  InvoiceUpload,
+  type InvoiceUploadSuccessResponse,
+} from '@/src/components/InvoiceUpload';
 
 export default function NewInvoicePage() {
+  const router = useRouter();
+
+  const handleUploadSuccess = async (
+    response: InvoiceUploadSuccessResponse
+  ) => {
+    router.push(`/invoices/${response.invoice.id}`);
+  };
+
   return (
     <section className="mx-auto w-full max-w-3xl space-y-6">
       <header className="space-y-2">
@@ -13,7 +27,7 @@ export default function NewInvoicePage() {
         </p>
       </header>
 
-      <InvoiceUpload />
+      <InvoiceUpload onUploadSuccess={handleUploadSuccess} />
     </section>
   );
 }
