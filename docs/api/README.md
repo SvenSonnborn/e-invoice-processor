@@ -25,6 +25,11 @@ This directory contains API documentation for the E-Rechnung application.
 - `POST /api/exports` - Create a new export (CSV or DATEV format)
 - `GET /api/exports/[exportId]/download` - Download a completed export file
 
+### Invoice Upload & Processing
+
+- `POST /api/invoices/upload` - Upload invoice file (auto-triggers OCR)
+- `POST /api/process-invoice/[fileId]` - Manually trigger OCR processing for a file
+
 ### Uploads
 
 - `POST /api/uploads` - Upload file
@@ -106,6 +111,54 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 
 **Error (400):** Missing/invalid body, file too large, too many files, or parse failure (single request).
 **Error (500):** Internal server error.
+
+## Invoice Processing
+
+**POST /api/invoices/upload**
+
+Uploads an invoice file, creates File + Invoice records, and automatically triggers OCR processing in the background.
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "file": { "id": "...", "filename": "invoice.pdf", "contentType": "application/pdf", "sizeBytes": 125000, "storageKey": "invoices/...", "status": "PENDING", "createdAt": "..." },
+  "invoice": { "id": "...", "fileId": "...", "status": "UPLOADED" }
+}
+```
+
+OCR runs asynchronously after the response is returned. The invoice status will transition to `VALIDATED` (success) or `FAILED` (error).
+
+---
+
+**POST /api/process-invoice/[fileId]**
+
+Manually triggers OCR processing for an uploaded invoice. Requires the invoice to be in `UPLOADED` or `CREATED` status.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "invoice": {
+    "id": "...",
+    "status": "VALIDATED",
+    "number": "RE-2024-001",
+    "supplierName": "Firma GmbH",
+    "customerName": "Kunde AG",
+    "issueDate": "2024-01-15T00:00:00.000Z",
+    "dueDate": "2024-02-15T00:00:00.000Z",
+    "grossAmount": "1190.00",
+    "format": "UNKNOWN"
+  },
+  "ocr": { "confidence": 0.95, "pageCount": 1 }
+}
+```
+
+**Error (409):** Invoice already processed (not in `UPLOADED`/`CREATED` status).
+**Error (404):** File or linked invoice not found.
+**Error (403):** File belongs to different organization.
 
 ## Exports
 

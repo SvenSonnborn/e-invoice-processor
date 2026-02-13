@@ -8,6 +8,7 @@ Das Invoice-Modell verwendet ein `InvoiceStatus` Enum zur Verfolgung des Verarbe
 
 ```typescript
 enum InvoiceStatus {
+  UPLOADED   // Datei hochgeladen, noch nicht verarbeitet
   CREATED    // Invoice-Datensatz existiert, noch nicht verarbeitet
   PARSED     // Rohdaten erfolgreich extrahiert
   VALIDATED  // Fachlich validiert (Summen, Pflichtfelder)
@@ -19,9 +20,9 @@ enum InvoiceStatus {
 ## Verarbeitungs-Pipeline
 
 ```
-┌─────────┐     ┌────────┐     ┌───────────┐     ┌──────────┐
-│ CREATED │────▶│ PARSED │────▶│ VALIDATED │────▶│ EXPORTED │
-└─────────┘     └────────┘     └───────────┘     └──────────┘
+┌──────────┐     ┌────────┐     ┌───────────┐     ┌──────────┐
+│ UPLOADED │────▶│ PARSED │────▶│ VALIDATED │────▶│ EXPORTED │
+└──────────┘     └────────┘     └───────────┘     └──────────┘
      │               │                │                 │
      │               │                │                 │
      └───────────────┴────────────────┴─────────────────┘
@@ -32,8 +33,36 @@ enum InvoiceStatus {
                      └────────┘
                           │
                           ▼
-                     (Retry → CREATED)
+                  (Retry → UPLOADED/CREATED)
 ```
+
+## Automatische OCR-Verarbeitung nach Upload
+
+Nach dem Upload wird OCR automatisch im Hintergrund (fire-and-forget) getriggert:
+
+```
+Upload → File + Invoice (UPLOADED) → processInvoiceOcr() → PARSED → VALIDATED
+                                                         └→ FAILED (bei Fehler)
+```
+
+Die Funktion `processInvoiceOcr()` aus `src/server/services/invoice-processing.ts` orchestriert:
+
+1. Download der Datei aus Supabase Storage
+2. OCR-Text-Extraktion (Mock oder Google Cloud Vision)
+3. Invoice-Daten parsen
+4. Status-Updates: UPLOADED → PARSED → VALIDATED
+5. Line Items erstellen
+6. Bei Fehler: FAILED setzen mit Fehlermeldung
+
+### Manueller Trigger
+
+OCR kann auch manuell über die API getriggert werden:
+
+```
+POST /api/process-invoice/[fileId]
+```
+
+Erfordert Authentifizierung und Organisation-Zugehörigkeit. Invoice muss im Status `UPLOADED` oder `CREATED` sein.
 
 ## Status-Details
 

@@ -6,6 +6,10 @@ import { ApiError } from '@/src/lib/errors/api-error';
 import { logger } from '@/src/lib/logging';
 import { storage } from '@/src/lib/storage';
 import { isSupportedMimeType } from '@/src/server/parsers/ocr';
+import {
+  processInvoiceOcr,
+  InvoiceProcessingError,
+} from '@/src/server/services/invoice-processing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -95,6 +99,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
 
       return { file: fileRecord, invoice: invoiceRecord };
+    });
+
+    // Fire-and-forget: trigger OCR processing in the background
+    processInvoiceOcr({
+      fileId: file.id,
+      invoiceId: invoice.id,
+      storageKey: file.storageKey,
+      contentType: file.contentType || 'application/pdf',
+    }).catch((ocrError: InvoiceProcessingError) => {
+      logger.error(
+        { code: ocrError.code, message: ocrError.message, fileId: file.id, invoiceId: invoice.id },
+        'Background OCR processing failed'
+      );
     });
 
     return NextResponse.json(
