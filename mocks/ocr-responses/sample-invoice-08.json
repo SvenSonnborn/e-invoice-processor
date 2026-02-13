@@ -1,135 +1,80 @@
 {
-  "document_id": "sample-invoice-08",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.96,
-  "invoice_data": {
-    "invoice_number": "GC-2026-774402",
-    "invoice_date": "2026-02-12",
-    "due_date": "2026-02-26",
-    "total_amount": 65.09,
-    "net_amount": 54.7,
-    "tax_amount": 10.39,
-    "tax_rate": 19,
-    "currency": "EUR",
-    "vendor": {
-      "name": "GreenCart eCommerce GmbH",
-      "address": "Marktstraße 14, 04109 Leipzig, Deutschland",
-      "tax_id": "DE102938475",
-      "contact": "rechnung@greencart.example"
+  "ocrResult": {
+    "text": "GreenCart eCommerce GmbH\nMarktstraße 14\n04109 Leipzig\n\nRechnung\n\nRechnungsnummer: GC-2026-774402\nRechnungsdatum: 12.02.2026\nFällig: 26.02.2026\n\nAn:\nFreizeit & Familie Schmidt\nAm Park 22\n50931 Köln\n\nPos.  Beschreibung                        Menge  Einzelpreis  Gesamt\n1     Wiederverwendbare Trinkflasche 0,75L 2 Stk  € 14,95      € 29,90\n2     Lunchbox Edelstahl                   1 Stk  € 24,90      € 24,90\n3     Rabattcode: GREEN10                  1 Stk  € -5,00      € -5,00\n4     Versandkosten                        1 Stk  € 4,90       € 4,90\n\nNettobetrag:                                                    € 54,70\nMwSt. (19%):                                                    € 10,39\nGesamtbetrag:                                                   EUR 65,09\n\nZahlungsreferenz: GC-2026-774402\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE102938475\nKontakt: rechnung@greencart.example",
+    "confidence": 0.96,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "GreenCart eCommerce GmbH\nMarktstraße 14\n04109 Leipzig\n\nRechnung\n\nRechnungsnummer: GC-2026-774402\nRechnungsdatum: 12.02.2026\nFällig: 26.02.2026\n\nAn:\nFreizeit & Familie Schmidt\nAm Park 22\n50931 Köln\n\nPos.  Beschreibung                        Menge  Einzelpreis  Gesamt\n1     Wiederverwendbare Trinkflasche 0,75L 2 Stk  € 14,95      € 29,90\n2     Lunchbox Edelstahl                   1 Stk  € 24,90      € 24,90\n3     Rabattcode: GREEN10                  1 Stk  € -5,00      € -5,00\n4     Versandkosten                        1 Stk  € 4,90       € 4,90\n\nNettobetrag:                                                    € 54,70\nMwSt. (19%):                                                    € 10,39\nGesamtbetrag:                                                   EUR 65,09\n\nZahlungsreferenz: GC-2026-774402\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE102938475\nKontakt: rechnung@greencart.example",
+        "confidence": 0.96,
+        "blocks": [
+          {
+            "text": "GreenCart eCommerce GmbH Marktstraße 14 04109 Leipzig",
+            "confidence": 0.97,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Rechnungsnummer: GC-2026-774402 Rechnungsdatum: 12.02.2026 Fällig: 26.02.2026",
+            "confidence": 0.96,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Freizeit & Familie Schmidt Am Park 22 50931 Köln",
+            "confidence": 0.95,
+            "boundingBox": { "x": 50, "y": 260, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 65,09",
+            "confidence": 0.95,
+            "boundingBox": { "x": 300, "y": 480, "width": 220, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 92000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "GC-2026-774402",
+    "supplier": { "name": "GreenCart eCommerce GmbH" },
+    "customer": { "name": "Freizeit & Familie Schmidt" },
+    "issueDate": "2026-02-12",
+    "dueDate": "2026-02-26",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "54.70",
+      "taxAmount": "10.39",
+      "grossAmount": "65.09"
     },
-    "buyer": {
-      "name": "Freizeit & Familie Schmidt",
-      "address": "Am Park 22, 50931 Köln, Deutschland"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Wiederverwendbare Trinkflasche 0,75L",
         "quantity": 2,
-        "unit": "Stk",
-        "unit_price": 14.95,
+        "unitPrice": 14.95,
         "total": 29.9
       },
       {
         "description": "Lunchbox Edelstahl",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": 24.9,
+        "unitPrice": 24.9,
         "total": 24.9
       },
       {
         "description": "Rabattcode: GREEN10",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": -5.0,
+        "unitPrice": -5.0,
         "total": -5.0
       },
       {
         "description": "Versandkosten",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": 4.9,
+        "unitPrice": 4.9,
         "total": 4.9
       }
-    ],
-    "payment_reference": "GC-2026-774402",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 1,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "GC-2026-774402",
-        "confidence": 0.98,
-        "normalized_value": {
-          "text": "GC-2026-774402"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "12.02.2026",
-        "confidence": 0.96,
-        "normalized_value": {
-          "text": "2026-02-12"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "26.02.2026",
-        "confidence": 0.94,
-        "normalized_value": {
-          "text": "2026-02-26"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "GreenCart eCommerce GmbH",
-        "confidence": 0.97
-      },
-      {
-        "type": "supplier_vat_id",
-        "mention_text": "DE102938475",
-        "confidence": 0.93
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Freizeit & Familie Schmidt",
-        "confidence": 0.95
-      },
-      {
-        "type": "net_amount",
-        "mention_text": "54,70 €",
-        "confidence": 0.94,
-        "normalized_value": {
-          "amount": 54.7,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_amount",
-        "mention_text": "10,39 €",
-        "confidence": 0.91,
-        "normalized_value": {
-          "amount": 10.39,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "65,09 €",
-        "confidence": 0.95,
-        "normalized_value": {
-          "amount": 65.09,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "discount",
-        "mention_text": "Rabattcode: GREEN10",
-        "confidence": 0.9
-      }
-    ],
-    "warnings": []
+    ]
   }
 }

@@ -1,325 +1,97 @@
 {
-  "document_id": "sample-invoice-06",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.88,
-  "invoice_data": {
-    "invoice_number": "WSM-2026-0149",
-    "invoice_date": "2026-01-31",
-    "due_date": "2026-02-14",
-    "total_amount": 1660.05,
-    "net_amount": 1395.0,
-    "tax_amount": 265.05,
-    "tax_rate": 19,
-    "currency": "EUR",
-    "vendor": {
-      "name": "Werkstatt & Service Müller GmbH",
-      "address": "Handwerkerweg 9, 90403 Nürnberg, Deutschland",
-      "tax_id": "DE135792468",
-      "contact": "service@mueller-werkstatt.example"
+  "ocrResult": {
+    "text": "Werkstatt & Service Müller GmbH\nHandwerkerweg 9\n90403 Nürnberg\n\nRechnung\n\nRechnungsnummer: WSM-2026-0149\nRechnungsdatum: 31.01.2026\nFällig: 14.02.2026\n\nAn:\nStadtwerke Beispielstadt AöR\nRathausplatz 1\n01067 Dresden\nUSt-IdNr.: DE223344556\n\nPos.  Beschreibung                              Menge    Einzelpreis  Gesamt\n1     Wartung Hydraulikpumpe – Vor-Ort Einsatz   1 Eins.  € 480,00     € 480,00\n2     Arbeitszeit Techniker                      7,5 Std  € 88,00      € 660,00\n3     Ersatzteile pauschal                       1 Pausch € 210,00     € 210,00\n4     Anfahrt                                    1 Stk    € 45,00      € 45,00\n\nNettobetrag:                                                          € 1.395,00\nMwSt. (19%):                                                          € 265,05\nGesamtbetrag:                                                         EUR 1.660,05\n\nZahlungsreferenz: WSM-2026-0149\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE135792468\nKontakt: service@mueller-werkstatt.example",
+    "confidence": 0.88,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Werkstatt & Service Müller GmbH\nHandwerkerweg 9\n90403 Nürnberg\n\nRechnung\n\nRechnungsnummer: WSM-2026-0149\nRechnungsdatum: 31.01.2026\nFällig: 14.02.2026\n\nAn:\nStadtwerke Beispielstadt AöR\nRathausplatz 1\n01067 Dresden\nUSt-IdNr.: DE223344556\n\nPos.  Beschreibung                              Menge    Einzelpreis  Gesamt\n1     Wartung Hydraulikpumpe – Vor-Ort Einsatz   1 Eins.  € 480,00     € 480,00\n2     Arbeitszeit Techniker                      7,5 Std  € 88,00      € 660,00\n3     Ersatzteile pauschal                       1 Pausch € 210,00     € 210,00\n4     Anfahrt                                    1 Stk    € 45,00      € 45,00\n\nNettobetrag:                                                          € 1.395,00\nMwSt. (19%):                                                          € 265,05\nGesamtbetrag:                                                         EUR 1.660,05",
+        "confidence": 0.89,
+        "blocks": [
+          {
+            "text": "Werkstatt & Service Müller GmbH Handwerkerweg 9 90403 Nürnberg",
+            "confidence": 0.92,
+            "boundingBox": { "x": 50, "y": 50, "width": 380, "height": 60 }
+          },
+          {
+            "text": "Rechnungsnummer: WSM-2026-0149 Rechnungsdatum: 31.01.2026 Fällig: 14.02.2026",
+            "confidence": 0.91,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Stadtwerke Beispielstadt AöR Rathausplatz 1 01067 Dresden",
+            "confidence": 0.90,
+            "boundingBox": { "x": 50, "y": 260, "width": 380, "height": 60 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 1.660,05",
+            "confidence": 0.88,
+            "boundingBox": { "x": 300, "y": 520, "width": 250, "height": 25 }
+          }
+        ]
+      },
+      {
+        "pageNumber": 2,
+        "text": "Anhang / Appendix\n\nZusatzpositionen (nicht in Rechnungssumme Seite 1 enthalten):\n\nPos.  Beschreibung                                        Menge  Einzelpreis  Gesamt\n01    Zusatzposition 01 – Verbrauchsmaterial               1 Stk  € 10,30      € 10,30\n02    Zusatzposition 02 – Verbrauchsmaterial               1 Stk  € 10,70      € 10,70\n03    Zusatzposition 03 – Verbrauchsmaterial               1 Stk  € 11,10      € 11,10\n...\n25    Zusatzposition 25 – Verbrauchsmaterial               1 Stk  € 19,90      € 19,90\n\nHinweis: Anhang-Positionen sind nicht in den Gesamtbeträgen auf Seite 1 enthalten.",
+        "confidence": 0.86,
+        "blocks": [
+          {
+            "text": "Anhang / Appendix",
+            "confidence": 0.84,
+            "boundingBox": { "x": 50, "y": 50, "width": 250, "height": 30 }
+          },
+          {
+            "text": "Zusatzpositionen (nicht in Rechnungssumme Seite 1 enthalten)",
+            "confidence": 0.85,
+            "boundingBox": { "x": 50, "y": 90, "width": 450, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 195000,
+      "pageCount": 2
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "WSM-2026-0149",
+    "supplier": { "name": "Werkstatt & Service Müller GmbH" },
+    "customer": { "name": "Stadtwerke Beispielstadt AöR" },
+    "issueDate": "2026-01-31",
+    "dueDate": "2026-02-14",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "1395.00",
+      "taxAmount": "265.05",
+      "grossAmount": "1660.05"
     },
-    "buyer": {
-      "name": "Stadtwerke Beispielstadt AöR",
-      "address": "Rathausplatz 1, 01067 Dresden, Deutschland",
-      "tax_id": "DE223344556"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Wartung Hydraulikpumpe – Vor-Ort Einsatz",
         "quantity": 1,
-        "unit": "Einsatz",
-        "unit_price": 480.0,
+        "unitPrice": 480.0,
         "total": 480.0
       },
       {
         "description": "Arbeitszeit Techniker",
         "quantity": 7.5,
-        "unit": "Std",
-        "unit_price": 88.0,
+        "unitPrice": 88.0,
         "total": 660.0
       },
       {
         "description": "Ersatzteile pauschal",
         "quantity": 1,
-        "unit": "Pauschal",
-        "unit_price": 210.0,
+        "unitPrice": 210.0,
         "total": 210.0
       },
       {
         "description": "Anfahrt",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": 45.0,
+        "unitPrice": 45.0,
         "total": 45.0
       }
-    ],
-    "additional_sections": {
-      "appendix_detected": true,
-      "appendix_title": "Anhang / Appendix",
-      "appendix_line_items_extracted": [
-        {
-          "description": "Zusatzposition 01 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 10.3,
-          "total": 10.3
-        },
-        {
-          "description": "Zusatzposition 02 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 10.7,
-          "total": 10.7
-        },
-        {
-          "description": "Zusatzposition 03 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 11.1,
-          "total": 11.1
-        },
-        {
-          "description": "Zusatzposition 04 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 11.5,
-          "total": 11.5
-        },
-        {
-          "description": "Zusatzposition 05 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 11.9,
-          "total": 11.9
-        },
-        {
-          "description": "Zusatzposition 06 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 12.3,
-          "total": 12.3
-        },
-        {
-          "description": "Zusatzposition 07 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 12.7,
-          "total": 12.7
-        },
-        {
-          "description": "Zusatzposition 08 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 13.1,
-          "total": 13.1
-        },
-        {
-          "description": "Zusatzposition 09 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 13.5,
-          "total": 13.5
-        },
-        {
-          "description": "Zusatzposition 10 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 13.9,
-          "total": 13.9
-        },
-        {
-          "description": "Zusatzposition 11 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 14.3,
-          "total": 14.3
-        },
-        {
-          "description": "Zusatzposition 12 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 14.7,
-          "total": 14.7
-        },
-        {
-          "description": "Zusatzposition 13 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 15.1,
-          "total": 15.1
-        },
-        {
-          "description": "Zusatzposition 14 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 15.5,
-          "total": 15.5
-        },
-        {
-          "description": "Zusatzposition 15 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 15.9,
-          "total": 15.9
-        },
-        {
-          "description": "Zusatzposition 16 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 16.3,
-          "total": 16.3
-        },
-        {
-          "description": "Zusatzposition 17 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 16.7,
-          "total": 16.7
-        },
-        {
-          "description": "Zusatzposition 18 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 17.1,
-          "total": 17.1
-        },
-        {
-          "description": "Zusatzposition 19 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 17.5,
-          "total": 17.5
-        },
-        {
-          "description": "Zusatzposition 20 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 17.9,
-          "total": 17.9
-        },
-        {
-          "description": "Zusatzposition 21 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 18.3,
-          "total": 18.3
-        },
-        {
-          "description": "Zusatzposition 22 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 18.7,
-          "total": 18.7
-        },
-        {
-          "description": "Zusatzposition 23 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 19.1,
-          "total": 19.1
-        },
-        {
-          "description": "Zusatzposition 24 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 19.5,
-          "total": 19.5
-        },
-        {
-          "description": "Zusatzposition 25 – Verbrauchsmaterial / add-on item",
-          "quantity": 1,
-          "unit": "Stk",
-          "unit_price": 19.9,
-          "total": 19.9
-        }
-      ],
-      "appendix_note": "Appendix items are extracted but NOT included in invoice totals on page 1."
-    },
-    "payment_reference": "WSM-2026-0149",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 2,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "WSM-2026-0149",
-        "confidence": 0.94,
-        "normalized_value": {
-          "text": "WSM-2026-0149"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "31.01.2026",
-        "confidence": 0.91,
-        "normalized_value": {
-          "text": "2026-01-31"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "14.02.2026",
-        "confidence": 0.88,
-        "normalized_value": {
-          "text": "2026-02-14"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "Werkstatt & Service Müller GmbH",
-        "confidence": 0.92
-      },
-      {
-        "type": "supplier_vat_id",
-        "mention_text": "DE135792468",
-        "confidence": 0.87
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Stadtwerke Beispielstadt AöR",
-        "confidence": 0.9
-      },
-      {
-        "type": "customer_vat_id",
-        "mention_text": "DE223344556",
-        "confidence": 0.86
-      },
-      {
-        "type": "net_amount",
-        "mention_text": "1.395,00 €",
-        "confidence": 0.89,
-        "normalized_value": {
-          "amount": 1395.0,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_amount",
-        "mention_text": "265,05 €",
-        "confidence": 0.85,
-        "normalized_value": {
-          "amount": 265.05,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "1.660,05 €",
-        "confidence": 0.88,
-        "normalized_value": {
-          "amount": 1660.05,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "appendix_title",
-        "mention_text": "Anhang / Appendix",
-        "confidence": 0.84
-      }
-    ],
-    "warnings": [
-      "Multi-page document detected. Appendix line items may belong to separate section and not totals."
     ]
   }
 }

@@ -1,113 +1,73 @@
 {
-  "document_id": "sample-invoice-07",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.93,
-  "invoice_data": {
-    "invoice_number": "BA-INV-2026-0210",
-    "invoice_date": "2026-02-07",
-    "due_date": "2026-02-21",
-    "total_amount": 1149.0,
-    "net_amount": 1149.0,
-    "tax_amount": 0.0,
-    "tax_rate": 0,
-    "currency": "EUR",
-    "vendor": {
-      "name": "Baltic Analytics OÜ",
-      "address": "Maakri 19, 10145 Tallinn, Estonia",
-      "tax_id": "EE123456789",
-      "contact": "billing@baltic-analytics.example"
+  "ocrResult": {
+    "text": "Baltic Analytics OÜ\nMaakri 19\n10145 Tallinn, Estonia\n\nInvoice\n\nInvoice Number: BA-INV-2026-0210\nDate: 07.02.2026\nDue: 21.02.2026\n\nTo:\nSonnenhof Ventures GmbH\nKurfürstendamm 210\n10719 Berlin, Germany\nVAT ID: DE445566778\n\nPos.  Description                          Qty    Unit Price   Total\n1     Data dashboard license (Mar 2026)    1 Mon  € 399,00     € 399,00\n2     Custom report – Quarterly insights   1 Proj € 750,00     € 750,00\n\nNet Amount:                                                     € 1.149,00\nVAT (0%):                                                       € 0,00\nTotal Amount:                                                   EUR 1.149,00\n\nReverse Charge. VAT not charged.\n\nPayment Reference: BA-INV-2026-0210\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nVAT ID: EE123456789\nContact: billing@baltic-analytics.example",
+    "confidence": 0.93,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Baltic Analytics OÜ\nMaakri 19\n10145 Tallinn, Estonia\n\nInvoice\n\nInvoice Number: BA-INV-2026-0210\nDate: 07.02.2026\nDue: 21.02.2026\n\nTo:\nSonnenhof Ventures GmbH\nKurfürstendamm 210\n10719 Berlin, Germany\nVAT ID: DE445566778\n\nPos.  Description                          Qty    Unit Price   Total\n1     Data dashboard license (Mar 2026)    1 Mon  € 399,00     € 399,00\n2     Custom report – Quarterly insights   1 Proj € 750,00     € 750,00\n\nNet Amount:                                                     € 1.149,00\nVAT (0%):                                                       € 0,00\nTotal Amount:                                                   EUR 1.149,00\n\nReverse Charge. VAT not charged.\n\nPayment Reference: BA-INV-2026-0210\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nVAT ID: EE123456789\nContact: billing@baltic-analytics.example",
+        "confidence": 0.93,
+        "blocks": [
+          {
+            "text": "Baltic Analytics OÜ Maakri 19 10145 Tallinn, Estonia",
+            "confidence": 0.96,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Invoice Number: BA-INV-2026-0210 Date: 07.02.2026 Due: 21.02.2026",
+            "confidence": 0.95,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Sonnenhof Ventures GmbH Kurfürstendamm 210 10719 Berlin",
+            "confidence": 0.95,
+            "boundingBox": { "x": 50, "y": 260, "width": 400, "height": 60 }
+          },
+          {
+            "text": "Total Amount: EUR 1.149,00",
+            "confidence": 0.94,
+            "boundingBox": { "x": 300, "y": 480, "width": 250, "height": 25 }
+          },
+          {
+            "text": "Reverse Charge. VAT not charged.",
+            "confidence": 0.92,
+            "boundingBox": { "x": 50, "y": 520, "width": 350, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 118000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "BA-INV-2026-0210",
+    "supplier": { "name": "Baltic Analytics OÜ" },
+    "customer": { "name": "Sonnenhof Ventures GmbH" },
+    "issueDate": "2026-02-07",
+    "dueDate": "2026-02-21",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "1149.00",
+      "taxAmount": "0.00",
+      "grossAmount": "1149.00"
     },
-    "buyer": {
-      "name": "Sonnenhof Ventures GmbH",
-      "address": "Kurfürstendamm 210, 10719 Berlin, Germany",
-      "tax_id": "DE445566778"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Data dashboard license (Mar 2026)",
         "quantity": 1,
-        "unit": "Month",
-        "unit_price": 399.0,
+        "unitPrice": 399.0,
         "total": 399.0
       },
       {
         "description": "Custom report – Quarterly insights",
         "quantity": 1,
-        "unit": "Project",
-        "unit_price": 750.0,
+        "unitPrice": 750.0,
         "total": 750.0
       }
-    ],
-    "tax_notes": "Reverse Charge. VAT not charged.",
-    "payment_reference": "BA-INV-2026-0210",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 1,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "BA-INV-2026-0210",
-        "confidence": 0.97,
-        "normalized_value": {
-          "text": "BA-INV-2026-0210"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "07.02.2026",
-        "confidence": 0.95,
-        "normalized_value": {
-          "text": "2026-02-07"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "21.02.2026",
-        "confidence": 0.93,
-        "normalized_value": {
-          "text": "2026-02-21"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "Baltic Analytics OÜ",
-        "confidence": 0.96
-      },
-      {
-        "type": "supplier_vat_id",
-        "mention_text": "EE123456789",
-        "confidence": 0.92
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Sonnenhof Ventures GmbH",
-        "confidence": 0.95
-      },
-      {
-        "type": "customer_vat_id",
-        "mention_text": "DE445566778",
-        "confidence": 0.91
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "1.149,00 €",
-        "confidence": 0.94,
-        "normalized_value": {
-          "amount": 1149.0,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_rate",
-        "mention_text": "0%",
-        "confidence": 0.88,
-        "normalized_value": {
-          "number_value": 0
-        }
-      }
-    ],
-    "warnings": []
+    ]
   }
 }

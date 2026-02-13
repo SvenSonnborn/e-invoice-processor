@@ -1,134 +1,73 @@
 {
-  "document_id": "sample-invoice-05",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.91,
-  "invoice_data": {
-    "invoice_number": "ROS-GU-2026-0006",
-    "invoice_date": "2026-02-10",
-    "due_date": "2026-02-24",
-    "total_amount": -112.92,
-    "net_amount": -94.89,
-    "tax_amount": -18.03,
-    "tax_rate": 19,
-    "currency": "EUR",
-    "document_type": "CREDIT_NOTE",
-    "vendor": {
-      "name": "Rheinland Office Supplies GmbH",
-      "address": "Aachener Straße 88, 50674 Köln, Deutschland",
-      "tax_id": "DE556677889",
-      "contact": "accounts@rhein-office.example"
+  "ocrResult": {
+    "text": "Rheinland Office Supplies GmbH\nAachener Straße 88\n50674 Köln\n\nGutschrift\n\nGutschriftsnummer: ROS-GU-2026-0006\nDatum: 10.02.2026\nFällig: 24.02.2026\n\nAn:\nBüro Fischer KG\nFischmarkt 3\n28195 Bremen\nUSt-IdNr.: DE998877665\n\nPos.  Beschreibung                                    Menge  Einzelpreis   Gesamt\n1     Gutschrift für Retoure: Toner Kartusche (RMA 58421)  1 Stk  € -89,90  € -89,90\n2     Gutschrift Versandkosten                             1 Stk  € -4,99   € -4,99\n\nNettobetrag:                                                                € -94,89\nMwSt. (19%):                                                                € -18,03\nGesamtbetrag:                                                               EUR -112,92\n\nHinweis: Negative Beträge stellen eine Gutschrift/Rückerstattung dar.\n\nZahlungsreferenz: ROS-GU-2026-0006\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE556677889\nKontakt: accounts@rhein-office.example",
+    "confidence": 0.91,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Rheinland Office Supplies GmbH\nAachener Straße 88\n50674 Köln\n\nGutschrift\n\nGutschriftsnummer: ROS-GU-2026-0006\nDatum: 10.02.2026\nFällig: 24.02.2026\n\nAn:\nBüro Fischer KG\nFischmarkt 3\n28195 Bremen\nUSt-IdNr.: DE998877665\n\nPos.  Beschreibung                                    Menge  Einzelpreis   Gesamt\n1     Gutschrift für Retoure: Toner Kartusche (RMA 58421)  1 Stk  € -89,90  € -89,90\n2     Gutschrift Versandkosten                             1 Stk  € -4,99   € -4,99\n\nNettobetrag:                                                                € -94,89\nMwSt. (19%):                                                                € -18,03\nGesamtbetrag:                                                               EUR -112,92\n\nHinweis: Negative Beträge stellen eine Gutschrift/Rückerstattung dar.\n\nZahlungsreferenz: ROS-GU-2026-0006\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE556677889\nKontakt: accounts@rhein-office.example",
+        "confidence": 0.91,
+        "blocks": [
+          {
+            "text": "Rheinland Office Supplies GmbH Aachener Straße 88 50674 Köln",
+            "confidence": 0.94,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Gutschrift",
+            "confidence": 0.96,
+            "boundingBox": { "x": 200, "y": 130, "width": 150, "height": 30 }
+          },
+          {
+            "text": "Gutschriftsnummer: ROS-GU-2026-0006 Datum: 10.02.2026 Fällig: 24.02.2026",
+            "confidence": 0.95,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Büro Fischer KG Fischmarkt 3 28195 Bremen",
+            "confidence": 0.92,
+            "boundingBox": { "x": 50, "y": 260, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR -112,92",
+            "confidence": 0.90,
+            "boundingBox": { "x": 300, "y": 480, "width": 250, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 110000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "ROS-GU-2026-0006",
+    "supplier": { "name": "Rheinland Office Supplies GmbH" },
+    "customer": { "name": "Büro Fischer KG" },
+    "issueDate": "2026-02-10",
+    "dueDate": "2026-02-24",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "-94.89",
+      "taxAmount": "-18.03",
+      "grossAmount": "-112.92"
     },
-    "buyer": {
-      "name": "Büro Fischer KG",
-      "address": "Fischmarkt 3, 28195 Bremen, Deutschland",
-      "tax_id": "DE998877665"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Gutschrift für Retoure: Toner Kartusche (RMA 58421)",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": -89.9,
+        "unitPrice": -89.9,
         "total": -89.9
       },
       {
         "description": "Gutschrift Versandkosten",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": -4.99,
+        "unitPrice": -4.99,
         "total": -4.99
       }
-    ],
-    "payment_reference": "ROS-GU-2026-0006",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX",
-    "notes": "Negative amounts indicate a refund/credit to the buyer."
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 1,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "ROS-GU-2026-0006",
-        "confidence": 0.95,
-        "normalized_value": {
-          "text": "ROS-GU-2026-0006"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "10.02.2026",
-        "confidence": 0.93,
-        "normalized_value": {
-          "text": "2026-02-10"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "24.02.2026",
-        "confidence": 0.9,
-        "normalized_value": {
-          "text": "2026-02-24"
-        }
-      },
-      {
-        "type": "document_type",
-        "mention_text": "Gutschrift / Credit Note",
-        "confidence": 0.92,
-        "normalized_value": {
-          "text": "CREDIT_NOTE"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "Rheinland Office Supplies GmbH",
-        "confidence": 0.94
-      },
-      {
-        "type": "supplier_vat_id",
-        "mention_text": "DE556677889",
-        "confidence": 0.9
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Büro Fischer KG",
-        "confidence": 0.92
-      },
-      {
-        "type": "customer_vat_id",
-        "mention_text": "DE998877665",
-        "confidence": 0.88
-      },
-      {
-        "type": "net_amount",
-        "mention_text": "-94,89 €",
-        "confidence": 0.89,
-        "normalized_value": {
-          "amount": -94.89,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_amount",
-        "mention_text": "-18,03 €",
-        "confidence": 0.86,
-        "normalized_value": {
-          "amount": -18.03,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "-112,92 €",
-        "confidence": 0.9,
-        "normalized_value": {
-          "amount": -112.92,
-          "currency_code": "EUR"
-        }
-      }
-    ],
-    "warnings": [
-      "Negative totals detected (credit note). Ensure business logic supports refunds/credits."
     ]
   }
 }

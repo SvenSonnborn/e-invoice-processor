@@ -1,123 +1,74 @@
 {
-  "document_id": "sample-invoice-02",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.92,
-  "invoice_data": {
-    "invoice_number": "PP-RE-2026-0198",
-    "invoice_date": "2026-02-11",
-    "due_date": "2026-02-25",
-    "total_amount": 113.4,
-    "net_amount": 95.29,
-    "tax_amount": 18.11,
-    "tax_rate": 19,
-    "currency": "EUR",
-    "vendor": {
-      "name": "Studio Pixel & Papier",
-      "address": "Schönhauser Allee 44, 10435 Berlin, Deutschland",
-      "tax_id": "DE246802468",
-      "contact": "rechnung@pixelpapier.example"
+  "ocrResult": {
+    "text": "Studio Pixel & Papier\nSchönhauser Allee 44\n10435 Berlin\n\nRechnung\n\nRechnungsnummer: PP-RE-2026-0198\nRechnungsdatum: 11.02.2026\nFällig: 25.02.2026\n\nAn:\nMax Mustermann\nMusterweg 7\n10115 Berlin\n\nPos.  Beschreibung                        Menge  Einzelpreis  Gesamt\n1     Print-Set: Visitenkarten (500 Stk)   1 Set  € 49,90      € 49,90\n2     Poster A2 – Premium Matt             2 Stk  € 19,95      € 39,90\n3     Versand (DHL Paket)                  1 Stk  € 5,49       € 5,49\n\nNettobetrag:                                                    € 95,29\nMwSt. (19%):                                                    € 18,11\nGesamtbetrag:                                                   EUR 113,40\n\nZahlungsreferenz: PP-RE-2026-0198\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE246802468\nKontakt: rechnung@pixelpapier.example",
+    "confidence": 0.92,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Studio Pixel & Papier\nSchönhauser Allee 44\n10435 Berlin\n\nRechnung\n\nRechnungsnummer: PP-RE-2026-0198\nRechnungsdatum: 11.02.2026\nFällig: 25.02.2026\n\nAn:\nMax Mustermann\nMusterweg 7\n10115 Berlin\n\nPos.  Beschreibung                        Menge  Einzelpreis  Gesamt\n1     Print-Set: Visitenkarten (500 Stk)   1 Set  € 49,90      € 49,90\n2     Poster A2 – Premium Matt             2 Stk  € 19,95      € 39,90\n3     Versand (DHL Paket)                  1 Stk  € 5,49       € 5,49\n\nNettobetrag:                                                    € 95,29\nMwSt. (19%):                                                    € 18,11\nGesamtbetrag:                                                   EUR 113,40\n\nZahlungsreferenz: PP-RE-2026-0198\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr.: DE246802468\nKontakt: rechnung@pixelpapier.example",
+        "confidence": 0.92,
+        "blocks": [
+          {
+            "text": "Studio Pixel & Papier Schönhauser Allee 44 10435 Berlin",
+            "confidence": 0.95,
+            "boundingBox": { "x": 50, "y": 50, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Rechnungsnummer: PP-RE-2026-0198 Rechnungsdatum: 11.02.2026 Fällig: 25.02.2026",
+            "confidence": 0.94,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Max Mustermann Musterweg 7 10115 Berlin",
+            "confidence": 0.93,
+            "boundingBox": { "x": 50, "y": 260, "width": 300, "height": 60 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 113,40",
+            "confidence": 0.92,
+            "boundingBox": { "x": 300, "y": 480, "width": 220, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 98000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "PP-RE-2026-0198",
+    "supplier": { "name": "Studio Pixel & Papier" },
+    "customer": { "name": "Max Mustermann" },
+    "issueDate": "2026-02-11",
+    "dueDate": "2026-02-25",
+    "totals": {
+      "currency": "EUR",
+      "netAmount": "95.29",
+      "taxAmount": "18.11",
+      "grossAmount": "113.40"
     },
-    "buyer": {
-      "name": "Max Mustermann",
-      "address": "Musterweg 7, 10115 Berlin, Deutschland"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Print-Set: Visitenkarten (500 Stk)",
         "quantity": 1,
-        "unit": "Set",
-        "unit_price": 49.9,
+        "unitPrice": 49.9,
         "total": 49.9
       },
       {
         "description": "Poster A2 – Premium Matt",
         "quantity": 2,
-        "unit": "Stk",
-        "unit_price": 19.95,
+        "unitPrice": 19.95,
         "total": 39.9
       },
       {
         "description": "Versand (DHL Paket)",
         "quantity": 1,
-        "unit": "Stk",
-        "unit_price": 5.49,
+        "unitPrice": 5.49,
         "total": 5.49
       }
-    ],
-    "payment_reference": "PP-RE-2026-0198",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 1,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "PP-RE-2026-0198",
-        "confidence": 0.96,
-        "normalized_value": {
-          "text": "PP-RE-2026-0198"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "11.02.2026",
-        "confidence": 0.94,
-        "normalized_value": {
-          "text": "2026-02-11"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "25.02.2026",
-        "confidence": 0.92,
-        "normalized_value": {
-          "text": "2026-02-25"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "Studio Pixel & Papier",
-        "confidence": 0.95
-      },
-      {
-        "type": "supplier_vat_id",
-        "mention_text": "DE246802468",
-        "confidence": 0.9
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Max Mustermann",
-        "confidence": 0.93
-      },
-      {
-        "type": "net_amount",
-        "mention_text": "95,29 €",
-        "confidence": 0.91,
-        "normalized_value": {
-          "amount": 95.29,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_amount",
-        "mention_text": "18,11 €",
-        "confidence": 0.88,
-        "normalized_value": {
-          "amount": 18.11,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "113,40 €",
-        "confidence": 0.92,
-        "normalized_value": {
-          "amount": 113.4,
-          "currency_code": "EUR"
-        }
-      }
-    ],
-    "warnings": []
+    ]
   }
 }

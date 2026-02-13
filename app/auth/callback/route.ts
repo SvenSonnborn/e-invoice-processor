@@ -28,6 +28,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (type === 'recovery') {
+      // Keep recovery session in auth cookies and avoid passing tokens in URL.
+      return NextResponse.redirect(`${origin}/reset-password`);
+    }
+
     // Redirect to the specified next URL or dashboard
     return NextResponse.redirect(`${origin}${next}`);
   }
@@ -36,8 +41,20 @@ export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServerClient();
 
     if (type === 'recovery') {
-      // Password recovery - redirect to reset password page
-      return NextResponse.redirect(`${origin}/reset-password?token=${token}`);
+      // Verify token server-side and keep the session in auth cookies.
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery',
+      });
+
+      if (error) {
+        console.error('Password recovery verification error:', error);
+        return NextResponse.redirect(
+          `${origin}/login?error=${encodeURIComponent('Passwort-Reset-Link ungültig oder abgelaufen')}`
+        );
+      }
+
+      return NextResponse.redirect(`${origin}/reset-password`);
     }
 
     if (type === 'signup' || type === 'email_confirmation') {

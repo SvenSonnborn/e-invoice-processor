@@ -25,6 +25,18 @@ const signInSchema = z.object({
   password: z.string().min(1, 'Passwort ist erforderlich'),
 });
 
+const updatePasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
+    confirmPassword: z.string().min(1, 'Bitte bestätigen Sie Ihr Passwort'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwörter stimmen nicht überein',
+    path: ['confirmPassword'],
+  });
+
 export type AuthActionResult =
   | { success: true; message: string }
   | { success: false; error: string };
@@ -235,6 +247,53 @@ export async function requestPasswordReset(
     };
   } catch (error) {
     console.error('Password reset error:', error);
+    return {
+      success: false,
+      error: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+    };
+  }
+}
+
+/**
+ * Update password for an authenticated recovery session.
+ */
+export async function updatePassword(
+  formData: FormData
+): Promise<AuthActionResult> {
+  try {
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    const validation = updatePasswordSchema.safeParse({
+      password,
+      confirmPassword,
+    });
+
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.error.issues[0].message,
+      };
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.updateUser({
+      password: validation.data.password,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: 'Passwort konnte nicht aktualisiert werden. Bitte fordern Sie einen neuen Link an.',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.',
+    };
+  } catch (error) {
+    console.error('Password update error:', error);
     return {
       success: false,
       error: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',

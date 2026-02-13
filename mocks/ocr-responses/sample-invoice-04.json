@@ -1,107 +1,71 @@
 {
-  "document_id": "sample-invoice-04",
-  "processed_at": "2026-02-13T10:00:00Z",
-  "confidence": 0.89,
-  "invoice_data": {
-    "invoice_number": "KKD-2026-00012",
-    "invoice_date": "2026-02-06",
-    "due_date": "2026-02-20",
-    "total_amount": 1100.0,
-    "net_amount": 1100.0,
-    "tax_amount": 0.0,
-    "tax_rate": 0,
-    "currency": "EUR",
-    "vendor": {
-      "name": "Klein & Klar Design",
-      "address": "Bergstraße 2, 70174 Stuttgart, Deutschland",
-      "tax_id": null,
-      "contact": "hello@kleinundklar.example"
+  "ocrResult": {
+    "text": "Klein & Klar Design\nBergstraße 2\n70174 Stuttgart\n\nRechnung\n\nRechnungsnummer: KKD-2026-00012\nRechnungsdatum: 06.02.2026\nFällig: 20.02.2026\n\nAn:\nCafé Morgenrot GmbH\nSonnenplatz 1\n80331 München\nUSt-IdNr.: DE112233445\n\nPos.  Beschreibung                          Menge      Einzelpreis  Gesamt\n1     Logo-Refresh (2 Korrekturrunden)       1 Pauschal € 680,00     € 680,00\n2     Speisekarten-Layout (A4, 8 Seiten)     1 Projekt  € 420,00     € 420,00\n\nNettobetrag:                                                        € 1.100,00\nGesamtbetrag:                                                       EUR 1.100,00\n\nGemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).\n\nZahlungsreferenz: KKD-2026-00012\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nKontakt: hello@kleinundklar.example",
+    "confidence": 0.89,
+    "pages": [
+      {
+        "pageNumber": 1,
+        "text": "Klein & Klar Design\nBergstraße 2\n70174 Stuttgart\n\nRechnung\n\nRechnungsnummer: KKD-2026-00012\nRechnungsdatum: 06.02.2026\nFällig: 20.02.2026\n\nAn:\nCafé Morgenrot GmbH\nSonnenplatz 1\n80331 München\nUSt-IdNr.: DE112233445\n\nPos.  Beschreibung                          Menge      Einzelpreis  Gesamt\n1     Logo-Refresh (2 Korrekturrunden)       1 Pauschal € 680,00     € 680,00\n2     Speisekarten-Layout (A4, 8 Seiten)     1 Projekt  € 420,00     € 420,00\n\nNettobetrag:                                                        € 1.100,00\nGesamtbetrag:                                                       EUR 1.100,00\n\nGemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).\n\nZahlungsreferenz: KKD-2026-00012\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nKontakt: hello@kleinundklar.example",
+        "confidence": 0.89,
+        "blocks": [
+          {
+            "text": "Klein & Klar Design Bergstraße 2 70174 Stuttgart",
+            "confidence": 0.93,
+            "boundingBox": { "x": 50, "y": 50, "width": 300, "height": 60 }
+          },
+          {
+            "text": "Rechnungsnummer: KKD-2026-00012 Rechnungsdatum: 06.02.2026 Fällig: 20.02.2026",
+            "confidence": 0.92,
+            "boundingBox": { "x": 50, "y": 180, "width": 450, "height": 50 }
+          },
+          {
+            "text": "Café Morgenrot GmbH Sonnenplatz 1 80331 München",
+            "confidence": 0.91,
+            "boundingBox": { "x": 50, "y": 260, "width": 350, "height": 60 }
+          },
+          {
+            "text": "Gesamtbetrag: EUR 1.100,00",
+            "confidence": 0.90,
+            "boundingBox": { "x": 300, "y": 460, "width": 250, "height": 25 }
+          },
+          {
+            "text": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet",
+            "confidence": 0.87,
+            "boundingBox": { "x": 50, "y": 500, "width": 450, "height": 25 }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "fileType": "application/pdf",
+      "fileSize": 105000,
+      "pageCount": 1
+    }
+  },
+  "invoiceData": {
+    "format": "UNKNOWN",
+    "number": "KKD-2026-00012",
+    "supplier": { "name": "Klein & Klar Design" },
+    "customer": { "name": "Café Morgenrot GmbH" },
+    "issueDate": "2026-02-06",
+    "dueDate": "2026-02-20",
+    "totals": {
+      "currency": "EUR",
+      "grossAmount": "1100.00"
     },
-    "buyer": {
-      "name": "Café Morgenrot GmbH",
-      "address": "Sonnenplatz 1, 80331 München, Deutschland",
-      "tax_id": "DE112233445"
-    },
-    "line_items": [
+    "lineItems": [
       {
         "description": "Logo-Refresh (2 Korrekturrunden)",
         "quantity": 1,
-        "unit": "Pauschal",
-        "unit_price": 680.0,
+        "unitPrice": 680.0,
         "total": 680.0
       },
       {
         "description": "Speisekarten-Layout (A4, 8 Seiten)",
         "quantity": 1,
-        "unit": "Projekt",
-        "unit_price": 420.0,
+        "unitPrice": 420.0,
         "total": 420.0
       }
-    ],
-    "tax_notes": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).",
-    "payment_reference": "KKD-2026-00012",
-    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
-  },
-  "document_ai_like": {
-    "mime_type": "application/pdf",
-    "pages": 1,
-    "entities": [
-      {
-        "type": "invoice_number",
-        "mention_text": "KKD-2026-00012",
-        "confidence": 0.94,
-        "normalized_value": {
-          "text": "KKD-2026-00012"
-        }
-      },
-      {
-        "type": "invoice_date",
-        "mention_text": "06.02.2026",
-        "confidence": 0.92,
-        "normalized_value": {
-          "text": "2026-02-06"
-        }
-      },
-      {
-        "type": "due_date",
-        "mention_text": "20.02.2026",
-        "confidence": 0.89,
-        "normalized_value": {
-          "text": "2026-02-20"
-        }
-      },
-      {
-        "type": "supplier_name",
-        "mention_text": "Klein & Klar Design",
-        "confidence": 0.93
-      },
-      {
-        "type": "customer_name",
-        "mention_text": "Café Morgenrot GmbH",
-        "confidence": 0.91
-      },
-      {
-        "type": "customer_vat_id",
-        "mention_text": "DE112233445",
-        "confidence": 0.88
-      },
-      {
-        "type": "total_amount",
-        "mention_text": "1.100,00 €",
-        "confidence": 0.9,
-        "normalized_value": {
-          "amount": 1100.0,
-          "currency_code": "EUR"
-        }
-      },
-      {
-        "type": "tax_note",
-        "mention_text": "§ 19 UStG",
-        "confidence": 0.87
-      }
-    ],
-    "warnings": [
-      "No vendor VAT ID present (small business). Some systems expect VAT ID; handle gracefully."
     ]
   }
 }
