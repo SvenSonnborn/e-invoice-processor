@@ -1,0 +1,107 @@
+{
+  "document_id": "sample-invoice-04",
+  "processed_at": "2026-02-13T10:00:00Z",
+  "confidence": 0.89,
+  "invoice_data": {
+    "invoice_number": "KKD-2026-00012",
+    "invoice_date": "2026-02-06",
+    "due_date": "2026-02-20",
+    "total_amount": 1100.0,
+    "net_amount": 1100.0,
+    "tax_amount": 0.0,
+    "tax_rate": 0,
+    "currency": "EUR",
+    "vendor": {
+      "name": "Klein & Klar Design",
+      "address": "Bergstraße 2, 70174 Stuttgart, Deutschland",
+      "tax_id": null,
+      "contact": "hello@kleinundklar.example"
+    },
+    "buyer": {
+      "name": "Café Morgenrot GmbH",
+      "address": "Sonnenplatz 1, 80331 München, Deutschland",
+      "tax_id": "DE112233445"
+    },
+    "line_items": [
+      {
+        "description": "Logo-Refresh (2 Korrekturrunden)",
+        "quantity": 1,
+        "unit": "Pauschal",
+        "unit_price": 680.0,
+        "total": 680.0
+      },
+      {
+        "description": "Speisekarten-Layout (A4, 8 Seiten)",
+        "quantity": 1,
+        "unit": "Projekt",
+        "unit_price": 420.0,
+        "total": 420.0
+      }
+    ],
+    "tax_notes": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).",
+    "payment_reference": "KKD-2026-00012",
+    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
+  },
+  "document_ai_like": {
+    "mime_type": "application/pdf",
+    "pages": 1,
+    "entities": [
+      {
+        "type": "invoice_number",
+        "mention_text": "KKD-2026-00012",
+        "confidence": 0.94,
+        "normalized_value": {
+          "text": "KKD-2026-00012"
+        }
+      },
+      {
+        "type": "invoice_date",
+        "mention_text": "06.02.2026",
+        "confidence": 0.92,
+        "normalized_value": {
+          "text": "2026-02-06"
+        }
+      },
+      {
+        "type": "due_date",
+        "mention_text": "20.02.2026",
+        "confidence": 0.89,
+        "normalized_value": {
+          "text": "2026-02-20"
+        }
+      },
+      {
+        "type": "supplier_name",
+        "mention_text": "Klein & Klar Design",
+        "confidence": 0.93
+      },
+      {
+        "type": "customer_name",
+        "mention_text": "Café Morgenrot GmbH",
+        "confidence": 0.91
+      },
+      {
+        "type": "customer_vat_id",
+        "mention_text": "DE112233445",
+        "confidence": 0.88
+      },
+      {
+        "type": "total_amount",
+        "mention_text": "1.100,00 €",
+        "confidence": 0.9,
+        "normalized_value": {
+          "amount": 1100.0,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "tax_note",
+        "mention_text": "§ 19 UStG",
+        "confidence": 0.87
+      }
+    ],
+    "warnings": [
+      "No vendor VAT ID present (small business). Some systems expect VAT ID; handle gracefully."
+    ]
+  }
+}

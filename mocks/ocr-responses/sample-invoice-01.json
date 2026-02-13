@@ -1,0 +1,129 @@
+{
+  "document_id": "sample-invoice-01",
+  "processed_at": "2026-02-13T10:00:00Z",
+  "confidence": 0.94,
+  "invoice_data": {
+    "invoice_number": "NL-2026-00041",
+    "invoice_date": "2026-02-09",
+    "due_date": "2026-02-23",
+    "total_amount": 2487.1,
+    "net_amount": 2090.0,
+    "tax_amount": 397.1,
+    "tax_rate": 19,
+    "currency": "EUR",
+    "vendor": {
+      "name": "Nordlicht IT Services GmbH",
+      "address": "Hafenstraße 12, 20457 Hamburg, Deutschland",
+      "tax_id": "DE123456789",
+      "contact": "billing@nordlicht-it.example"
+    },
+    "buyer": {
+      "name": "Kronberg Maschinenbau AG",
+      "address": "Industriepark 5, 60486 Frankfurt am Main, Deutschland",
+      "tax_id": "DE987654321"
+    },
+    "line_items": [
+      {
+        "description": "Beratung – Prozessanalyse (Remote)",
+        "quantity": 6,
+        "unit": "Std",
+        "unit_price": 120.0,
+        "total": 720.0
+      },
+      {
+        "description": "Implementierung – OCR Pipeline Setup",
+        "quantity": 8,
+        "unit": "Std",
+        "unit_price": 135.0,
+        "total": 1080.0
+      },
+      {
+        "description": "Support & Monitoring (Monatspauschale)",
+        "quantity": 1,
+        "unit": "Monat",
+        "unit_price": 290.0,
+        "total": 290.0
+      }
+    ],
+    "payment_reference": "NL-2026-00041",
+    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
+  },
+  "document_ai_like": {
+    "mime_type": "application/pdf",
+    "pages": 1,
+    "entities": [
+      {
+        "type": "invoice_number",
+        "mention_text": "NL-2026-00041",
+        "confidence": 0.97,
+        "normalized_value": {
+          "text": "NL-2026-00041"
+        }
+      },
+      {
+        "type": "invoice_date",
+        "mention_text": "09.02.2026",
+        "confidence": 0.95,
+        "normalized_value": {
+          "text": "2026-02-09"
+        }
+      },
+      {
+        "type": "due_date",
+        "mention_text": "23.02.2026",
+        "confidence": 0.93,
+        "normalized_value": {
+          "text": "2026-02-23"
+        }
+      },
+      {
+        "type": "supplier_name",
+        "mention_text": "Nordlicht IT Services GmbH",
+        "confidence": 0.96
+      },
+      {
+        "type": "supplier_vat_id",
+        "mention_text": "DE123456789",
+        "confidence": 0.92
+      },
+      {
+        "type": "customer_name",
+        "mention_text": "Kronberg Maschinenbau AG",
+        "confidence": 0.95
+      },
+      {
+        "type": "customer_vat_id",
+        "mention_text": "DE987654321",
+        "confidence": 0.91
+      },
+      {
+        "type": "net_amount",
+        "mention_text": "2.090,00 €",
+        "confidence": 0.92,
+        "normalized_value": {
+          "amount": 2090.0,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "tax_amount",
+        "mention_text": "397,10 €",
+        "confidence": 0.9,
+        "normalized_value": {
+          "amount": 397.1,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "total_amount",
+        "mention_text": "2.487,10 €",
+        "confidence": 0.94,
+        "normalized_value": {
+          "amount": 2487.1,
+          "currency_code": "EUR"
+        }
+      }
+    ],
+    "warnings": []
+  }
+}

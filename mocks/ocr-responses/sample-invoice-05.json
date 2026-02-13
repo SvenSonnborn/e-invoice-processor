@@ -1,0 +1,134 @@
+{
+  "document_id": "sample-invoice-05",
+  "processed_at": "2026-02-13T10:00:00Z",
+  "confidence": 0.91,
+  "invoice_data": {
+    "invoice_number": "ROS-GU-2026-0006",
+    "invoice_date": "2026-02-10",
+    "due_date": "2026-02-24",
+    "total_amount": -112.92,
+    "net_amount": -94.89,
+    "tax_amount": -18.03,
+    "tax_rate": 19,
+    "currency": "EUR",
+    "document_type": "CREDIT_NOTE",
+    "vendor": {
+      "name": "Rheinland Office Supplies GmbH",
+      "address": "Aachener Straße 88, 50674 Köln, Deutschland",
+      "tax_id": "DE556677889",
+      "contact": "accounts@rhein-office.example"
+    },
+    "buyer": {
+      "name": "Büro Fischer KG",
+      "address": "Fischmarkt 3, 28195 Bremen, Deutschland",
+      "tax_id": "DE998877665"
+    },
+    "line_items": [
+      {
+        "description": "Gutschrift für Retoure: Toner Kartusche (RMA 58421)",
+        "quantity": 1,
+        "unit": "Stk",
+        "unit_price": -89.9,
+        "total": -89.9
+      },
+      {
+        "description": "Gutschrift Versandkosten",
+        "quantity": 1,
+        "unit": "Stk",
+        "unit_price": -4.99,
+        "total": -4.99
+      }
+    ],
+    "payment_reference": "ROS-GU-2026-0006",
+    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX",
+    "notes": "Negative amounts indicate a refund/credit to the buyer."
+  },
+  "document_ai_like": {
+    "mime_type": "application/pdf",
+    "pages": 1,
+    "entities": [
+      {
+        "type": "invoice_number",
+        "mention_text": "ROS-GU-2026-0006",
+        "confidence": 0.95,
+        "normalized_value": {
+          "text": "ROS-GU-2026-0006"
+        }
+      },
+      {
+        "type": "invoice_date",
+        "mention_text": "10.02.2026",
+        "confidence": 0.93,
+        "normalized_value": {
+          "text": "2026-02-10"
+        }
+      },
+      {
+        "type": "due_date",
+        "mention_text": "24.02.2026",
+        "confidence": 0.9,
+        "normalized_value": {
+          "text": "2026-02-24"
+        }
+      },
+      {
+        "type": "document_type",
+        "mention_text": "Gutschrift / Credit Note",
+        "confidence": 0.92,
+        "normalized_value": {
+          "text": "CREDIT_NOTE"
+        }
+      },
+      {
+        "type": "supplier_name",
+        "mention_text": "Rheinland Office Supplies GmbH",
+        "confidence": 0.94
+      },
+      {
+        "type": "supplier_vat_id",
+        "mention_text": "DE556677889",
+        "confidence": 0.9
+      },
+      {
+        "type": "customer_name",
+        "mention_text": "Büro Fischer KG",
+        "confidence": 0.92
+      },
+      {
+        "type": "customer_vat_id",
+        "mention_text": "DE998877665",
+        "confidence": 0.88
+      },
+      {
+        "type": "net_amount",
+        "mention_text": "-94,89 €",
+        "confidence": 0.89,
+        "normalized_value": {
+          "amount": -94.89,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "tax_amount",
+        "mention_text": "-18,03 €",
+        "confidence": 0.86,
+        "normalized_value": {
+          "amount": -18.03,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "total_amount",
+        "mention_text": "-112,92 €",
+        "confidence": 0.9,
+        "normalized_value": {
+          "amount": -112.92,
+          "currency_code": "EUR"
+        }
+      }
+    ],
+    "warnings": [
+      "Negative totals detected (credit note). Ensure business logic supports refunds/credits."
+    ]
+  }
+}

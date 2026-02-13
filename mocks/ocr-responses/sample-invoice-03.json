@@ -1,0 +1,120 @@
+{
+  "document_id": "sample-invoice-03",
+  "processed_at": "2026-02-13T10:00:00Z",
+  "confidence": 0.9,
+  "invoice_data": {
+    "invoice_number": "AC-EU-2026-0057",
+    "invoice_date": "2026-02-02",
+    "due_date": "2026-02-16",
+    "total_amount": 1640.0,
+    "net_amount": 1640.0,
+    "tax_amount": 0.0,
+    "tax_rate": 0,
+    "currency": "EUR",
+    "vendor": {
+      "name": "AlpenCloud Solutions GmbH",
+      "address": "Innsbrucker Ring 3, 81673 München, Deutschland",
+      "tax_id": "DE314159265",
+      "contact": "finance@alpencloud.example"
+    },
+    "buyer": {
+      "name": "BlueRiver Consulting Sp. z o.o.",
+      "address": "ul. Marszałkowska 10, 00-590 Warszawa, Poland",
+      "tax_id": "PL1234567890"
+    },
+    "line_items": [
+      {
+        "description": "SaaS Subscription – Enterprise (Feb 2026)",
+        "quantity": 1,
+        "unit": "Month",
+        "unit_price": 990.0,
+        "total": 990.0
+      },
+      {
+        "description": "Onboarding Workshop (remote)",
+        "quantity": 1,
+        "unit": "Day",
+        "unit_price": 650.0,
+        "total": 650.0
+      }
+    ],
+    "tax_notes": "Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers. Umsatzsteuer wird nicht ausgewiesen.",
+    "payment_reference": "AC-EU-2026-0057",
+    "payment_details": "Bank: Testbank Europa AG, IBAN: DE00 0000 0000 0000 0000 00, BIC: TSTBDEFFXXX"
+  },
+  "document_ai_like": {
+    "mime_type": "application/pdf",
+    "pages": 1,
+    "entities": [
+      {
+        "type": "invoice_number",
+        "mention_text": "AC-EU-2026-0057",
+        "confidence": 0.95,
+        "normalized_value": {
+          "text": "AC-EU-2026-0057"
+        }
+      },
+      {
+        "type": "invoice_date",
+        "mention_text": "02.02.2026",
+        "confidence": 0.93,
+        "normalized_value": {
+          "text": "2026-02-02"
+        }
+      },
+      {
+        "type": "due_date",
+        "mention_text": "16.02.2026",
+        "confidence": 0.9,
+        "normalized_value": {
+          "text": "2026-02-16"
+        }
+      },
+      {
+        "type": "supplier_name",
+        "mention_text": "AlpenCloud Solutions GmbH",
+        "confidence": 0.94
+      },
+      {
+        "type": "supplier_vat_id",
+        "mention_text": "DE314159265",
+        "confidence": 0.89
+      },
+      {
+        "type": "customer_name",
+        "mention_text": "BlueRiver Consulting Sp. z o.o.",
+        "confidence": 0.92
+      },
+      {
+        "type": "customer_vat_id",
+        "mention_text": "PL1234567890",
+        "confidence": 0.9
+      },
+      {
+        "type": "total_amount",
+        "mention_text": "1.640,00 €",
+        "confidence": 0.91,
+        "normalized_value": {
+          "amount": 1640.0,
+          "currency_code": "EUR"
+        }
+      },
+      {
+        "type": "tax_rate",
+        "mention_text": "0%",
+        "confidence": 0.86,
+        "normalized_value": {
+          "number_value": 0
+        }
+      },
+      {
+        "type": "tax_note",
+        "mention_text": "Reverse-Charge Hinweis",
+        "confidence": 0.88
+      }
+    ],
+    "warnings": [
+      "VAT not charged (Reverse-Charge). Ensure downstream logic handles 0% VAT with note."
+    ]
+  }
+}
