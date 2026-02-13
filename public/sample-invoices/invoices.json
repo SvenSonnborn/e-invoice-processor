@@ -1,0 +1,276 @@
+{
+  "invoices": [
+    {
+      "filename": "sample-invoice-01.pdf",
+      "type": "DE_B2B",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de/en",
+      "layout": "classic",
+      "special_features": [
+        "Klassisch, DE B2B, USt-IdNr., St.-Nr., Zahlungsziel"
+      ],
+      "invoice_no": "NL-2026-00041",
+      "issue_date": "09.02.2026",
+      "due_date": "23.02.2026",
+      "seller": {
+        "name": "Nordlicht IT Services GmbH",
+        "address": "Hafenstraße 12\n20457 Hamburg\nDeutschland",
+        "vat_id": "DE123456789",
+        "tax_no": "46/123/45678",
+        "email": "billing@nordlicht-it.example",
+        "web": "nordlicht-it.example"
+      },
+      "buyer": {
+        "name": "Kronberg Maschinenbau AG",
+        "address": "Industriepark 5\n60486 Frankfurt am Main\nDeutschland",
+        "vat_id": "DE987654321",
+        "customer_no": "KB-100284"
+      },
+      "vat_info": "Standard VAT 19%",
+      "totals": {
+        "net": 2090.0,
+        "gross": 2487.1
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-02.pdf",
+      "type": "DE_B2C",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de",
+      "layout": "modern",
+      "special_features": [
+        "Modernes Header-Band, B2C, kurze Tabelle"
+      ],
+      "invoice_no": "PP-RE-2026-0198",
+      "issue_date": "11.02.2026",
+      "due_date": "25.02.2026",
+      "seller": {
+        "name": "Studio Pixel & Papier",
+        "address": "Schönhauser Allee 44\n10435 Berlin\nDeutschland",
+        "vat_id": "DE246802468",
+        "tax_no": "21/987/65432",
+        "email": "rechnung@pixelpapier.example",
+        "web": "pixelpapier.example"
+      },
+      "buyer": {
+        "name": "Max Mustermann",
+        "address": "Musterweg 7\n10115 Berlin\nDeutschland",
+        "vat_id": "",
+        "customer_no": "B2C-77819"
+      },
+      "vat_info": "Standard VAT 19%",
+      "totals": {
+        "net": 95.28999999999999,
+        "gross": 113.39509999999999
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-03.pdf",
+      "type": "EU_B2B_REVERSE_CHARGE",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "en/de",
+      "layout": "classic",
+      "special_features": [
+        "EU B2B, Reverse Charge Hinweis, 0% VAT"
+      ],
+      "invoice_no": "AC-EU-2026-0057",
+      "issue_date": "02.02.2026",
+      "due_date": "16.02.2026",
+      "seller": {
+        "name": "AlpenCloud Solutions GmbH",
+        "address": "Innsbrucker Ring 3\n81673 München\nDeutschland",
+        "vat_id": "DE314159265",
+        "tax_no": "143/234/56789",
+        "email": "finance@alpencloud.example",
+        "web": "alpencloud.example"
+      },
+      "buyer": {
+        "name": "BlueRiver Consulting Sp. z o.o.",
+        "address": "ul. Marszałkowska 10\n00-590 Warszawa\nPoland",
+        "vat_id": "PL1234567890",
+        "customer_no": "BR-PL-4021"
+      },
+      "vat_info": "Reverse Charge (0% VAT)",
+      "totals": {
+        "net": 1640.0,
+        "gross": 1640.0
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-04.pdf",
+      "type": "DE_SMALL_BUSINESS_19_USTG",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de",
+      "layout": "classic",
+      "special_features": [
+        "Kleinunternehmer §19 UStG Hinweis, keine USt"
+      ],
+      "invoice_no": "KKD-2026-00012",
+      "issue_date": "06.02.2026",
+      "due_date": "20.02.2026",
+      "seller": {
+        "name": "Klein & Klar Design",
+        "address": "Bergstraße 2\n70174 Stuttgart\nDeutschland",
+        "vat_id": "",
+        "tax_no": "99/111/22222",
+        "email": "hello@kleinundklar.example",
+        "web": "kleinundklar.example"
+      },
+      "buyer": {
+        "name": "Café Morgenrot GmbH",
+        "address": "Sonnenplatz 1\n80331 München\nDeutschland",
+        "vat_id": "DE112233445",
+        "customer_no": "CM-0192"
+      },
+      "vat_info": "Kleinunternehmer §19 UStG",
+      "totals": {
+        "net": 1100.0,
+        "gross": 1100.0
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-05.pdf",
+      "type": "CREDIT_NOTE",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de/en",
+      "layout": "modern",
+      "special_features": [
+        "Gutschrift, negative Beträge, modern"
+      ],
+      "invoice_no": "ROS-GU-2026-0006",
+      "issue_date": "10.02.2026",
+      "due_date": "24.02.2026",
+      "seller": {
+        "name": "Rheinland Office Supplies GmbH",
+        "address": "Aachener Straße 88\n50674 Köln\nDeutschland",
+        "vat_id": "DE556677889",
+        "tax_no": "214/556/77889",
+        "email": "accounts@rhein-office.example",
+        "web": "rhein-office.example"
+      },
+      "buyer": {
+        "name": "Büro Fischer KG",
+        "address": "Fischmarkt 3\n28195 Bremen\nDeutschland",
+        "vat_id": "DE998877665",
+        "customer_no": "BF-33010"
+      },
+      "vat_info": "Standard VAT 19%",
+      "totals": {
+        "net": -94.89,
+        "gross": -112.9191
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-06.pdf",
+      "type": "DE_MULTI_PAGE_TABLE_HEAVY",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de",
+      "layout": "classic",
+      "special_features": [
+        "2-seitig, sehr tabellenlastig, viele Zusatzpositionen"
+      ],
+      "invoice_no": "WSM-2026-0149",
+      "issue_date": "31.01.2026",
+      "due_date": "14.02.2026",
+      "seller": {
+        "name": "Werkstatt & Service Müller GmbH",
+        "address": "Handwerkerweg 9\n90403 Nürnberg\nDeutschland",
+        "vat_id": "DE135792468",
+        "tax_no": "241/135/79246",
+        "email": "service@mueller-werkstatt.example",
+        "web": "mueller-werkstatt.example"
+      },
+      "buyer": {
+        "name": "Stadtwerke Beispielstadt AöR",
+        "address": "Rathausplatz 1\n01067 Dresden\nDeutschland",
+        "vat_id": "DE223344556",
+        "customer_no": "SW-7721"
+      },
+      "vat_info": "Standard VAT 19%",
+      "totals": {
+        "net": 1395.0,
+        "gross": 1660.05
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-07.pdf",
+      "type": "EU_B2B_ENGLISH",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "en",
+      "layout": "modern",
+      "special_features": [
+        "English, EU cross-border, Reverse Charge/0% VAT"
+      ],
+      "invoice_no": "BA-INV-2026-0210",
+      "issue_date": "07.02.2026",
+      "due_date": "21.02.2026",
+      "seller": {
+        "name": "Baltic Analytics OÜ",
+        "address": "Maakri 19\n10145 Tallinn\nEstonia",
+        "vat_id": "EE123456789",
+        "tax_no": "-",
+        "email": "billing@baltic-analytics.example",
+        "web": "baltic-analytics.example"
+      },
+      "buyer": {
+        "name": "Sonnenhof Ventures GmbH",
+        "address": "Kurfürstendamm 210\n10719 Berlin\nGermany",
+        "vat_id": "DE445566778",
+        "customer_no": "SHV-2201"
+      },
+      "vat_info": "Reverse Charge (0% VAT)",
+      "totals": {
+        "net": 1149.0,
+        "gross": 1149.0
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    },
+    {
+      "filename": "sample-invoice-08.pdf",
+      "type": "DE_DISCOUNT_AND_SHIPPING",
+      "country": "DE/EU",
+      "currency": "EUR",
+      "language": "de",
+      "layout": "classic",
+      "special_features": [
+        "B2C, Rabattposition + Versand"
+      ],
+      "invoice_no": "GC-2026-774402",
+      "issue_date": "12.02.2026",
+      "due_date": "26.02.2026",
+      "seller": {
+        "name": "GreenCart eCommerce GmbH",
+        "address": "Marktstraße 14\n04109 Leipzig\nDeutschland",
+        "vat_id": "DE102938475",
+        "tax_no": "231/102/93847",
+        "email": "rechnung@greencart.example",
+        "web": "greencart.example"
+      },
+      "buyer": {
+        "name": "Freizeit & Familie Schmidt",
+        "address": "Am Park 22\n50931 Köln\nDeutschland",
+        "vat_id": "",
+        "customer_no": "GC-ORDER-774402"
+      },
+      "vat_info": "Standard VAT 19%",
+      "totals": {
+        "net": 54.699999999999996,
+        "gross": 65.09299999999999
+      },
+      "notes": "All parties and banking details are fictitious test data."
+    }
+  ]
+}
