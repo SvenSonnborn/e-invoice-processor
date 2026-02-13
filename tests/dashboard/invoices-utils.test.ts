@@ -18,7 +18,9 @@ describe('dashboard invoice helpers', () => {
       'PARSED',
       'VALIDATED',
     ]);
-    expect(getInvoiceStatusesForDashboardGroup('exported')).toEqual(['EXPORTED']);
+    expect(getInvoiceStatusesForDashboardGroup('exported')).toEqual([
+      'EXPORTED',
+    ]);
     expect(getInvoiceStatusesForDashboardGroup(undefined)).toBeUndefined();
   });
 

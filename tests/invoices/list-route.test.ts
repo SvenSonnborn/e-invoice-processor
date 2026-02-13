@@ -57,7 +57,11 @@ mock.module('@/src/lib/db/client', () => ({
       findFirst: () => Promise.resolve({ organizationId: 'org-123' }),
     },
     invoice: {
-      findMany: async (args: { where: unknown; take: number; skip?: number }) => {
+      findMany: async (args: {
+        where: unknown;
+        take: number;
+        skip?: number;
+      }) => {
         capturedFindManyArgs.push(args);
         capturedWhere.push(args.where);
         if (args.take === 3) {

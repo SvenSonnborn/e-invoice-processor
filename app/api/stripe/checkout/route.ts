@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
       throw ApiError.validationError('Request body must be a JSON object');
     }
 
-    const { priceId, successUrl, cancelUrl } = body as Record<string, string | undefined>;
+    const { priceId, successUrl, cancelUrl } = body as Record<
+      string,
+      string | undefined
+    >;
 
     if (!priceId) {
       throw ApiError.validationError('Price ID is required');

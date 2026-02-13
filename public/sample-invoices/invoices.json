@@ -41,9 +41,7 @@
       "currency": "EUR",
       "language": "de",
       "layout": "modern",
-      "special_features": [
-        "Modernes Header-Band, B2C, kurze Tabelle"
-      ],
+      "special_features": ["Modernes Header-Band, B2C, kurze Tabelle"],
       "invoice_no": "PP-RE-2026-0198",
       "issue_date": "11.02.2026",
       "due_date": "25.02.2026",
@@ -75,9 +73,7 @@
       "currency": "EUR",
       "language": "en/de",
       "layout": "classic",
-      "special_features": [
-        "EU B2B, Reverse Charge Hinweis, 0% VAT"
-      ],
+      "special_features": ["EU B2B, Reverse Charge Hinweis, 0% VAT"],
       "invoice_no": "AC-EU-2026-0057",
       "issue_date": "02.02.2026",
       "due_date": "16.02.2026",
@@ -109,9 +105,7 @@
       "currency": "EUR",
       "language": "de",
       "layout": "classic",
-      "special_features": [
-        "Kleinunternehmer §19 UStG Hinweis, keine USt"
-      ],
+      "special_features": ["Kleinunternehmer §19 UStG Hinweis, keine USt"],
       "invoice_no": "KKD-2026-00012",
       "issue_date": "06.02.2026",
       "due_date": "20.02.2026",
@@ -143,9 +137,7 @@
       "currency": "EUR",
       "language": "de/en",
       "layout": "modern",
-      "special_features": [
-        "Gutschrift, negative Beträge, modern"
-      ],
+      "special_features": ["Gutschrift, negative Beträge, modern"],
       "invoice_no": "ROS-GU-2026-0006",
       "issue_date": "10.02.2026",
       "due_date": "24.02.2026",
@@ -211,9 +203,7 @@
       "currency": "EUR",
       "language": "en",
       "layout": "modern",
-      "special_features": [
-        "English, EU cross-border, Reverse Charge/0% VAT"
-      ],
+      "special_features": ["English, EU cross-border, Reverse Charge/0% VAT"],
       "invoice_no": "BA-INV-2026-0210",
       "issue_date": "07.02.2026",
       "due_date": "21.02.2026",
@@ -245,9 +235,7 @@
       "currency": "EUR",
       "language": "de",
       "layout": "classic",
-      "special_features": [
-        "B2C, Rabattposition + Versand"
-      ],
+      "special_features": ["B2C, Rabattposition + Versand"],
       "invoice_no": "GC-2026-774402",
       "issue_date": "12.02.2026",
       "due_date": "26.02.2026",

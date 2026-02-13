@@ -1,12 +1,12 @@
 {
   "ocrResult": {
     "text": "AlpenCloud Solutions GmbH\nInnsbrucker Ring 3\n81673 München\n\nRechnung\n\nRechnungsnummer: AC-EU-2026-0057\nRechnungsdatum: 02.02.2026\nFällig: 16.02.2026\n\nAn:\nBlueRiver Consulting Sp. z o.o.\nul. Marszałkowska 10\n00-590 Warszawa, Poland\n\nUSt-IdNr. Kunde: PL1234567890\n\nPos.  Beschreibung                              Menge  Einzelpreis  Gesamt\n1     SaaS Subscription – Enterprise (Feb 2026)  1 Mon  € 990,00     € 990,00\n2     Onboarding Workshop (remote)               1 Tag  € 650,00     € 650,00\n\nNettobetrag:                                                        € 1.640,00\nMwSt. (0%):                                                         € 0,00\nGesamtbetrag:                                                       EUR 1.640,00\n\nReverse Charge: Steuerschuldnerschaft des Leistungsempfängers.\nUmsatzsteuer wird nicht ausgewiesen.\n\nZahlungsreferenz: AC-EU-2026-0057\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr. Lieferant: DE314159265\nKontakt: finance@alpencloud.example",
-    "confidence": 0.90,
+    "confidence": 0.9,
     "pages": [
       {
         "pageNumber": 1,
         "text": "AlpenCloud Solutions GmbH\nInnsbrucker Ring 3\n81673 München\n\nRechnung\n\nRechnungsnummer: AC-EU-2026-0057\nRechnungsdatum: 02.02.2026\nFällig: 16.02.2026\n\nAn:\nBlueRiver Consulting Sp. z o.o.\nul. Marszałkowska 10\n00-590 Warszawa, Poland\n\nUSt-IdNr. Kunde: PL1234567890\n\nPos.  Beschreibung                              Menge  Einzelpreis  Gesamt\n1     SaaS Subscription – Enterprise (Feb 2026)  1 Mon  € 990,00     € 990,00\n2     Onboarding Workshop (remote)               1 Tag  € 650,00     € 650,00\n\nNettobetrag:                                                        € 1.640,00\nMwSt. (0%):                                                         € 0,00\nGesamtbetrag:                                                       EUR 1.640,00\n\nReverse Charge: Steuerschuldnerschaft des Leistungsempfängers.\nUmsatzsteuer wird nicht ausgewiesen.\n\nZahlungsreferenz: AC-EU-2026-0057\nBank: Testbank Europa AG\nIBAN: DE00 0000 0000 0000 0000 00\nBIC: TSTBDEFFXXX\n\nUSt-IdNr. Lieferant: DE314159265\nKontakt: finance@alpencloud.example",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "blocks": [
           {
             "text": "AlpenCloud Solutions GmbH Innsbrucker Ring 3 81673 München",

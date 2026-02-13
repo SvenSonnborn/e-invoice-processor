@@ -128,7 +128,9 @@ type DatevColumn = (typeof DATEV_COLUMNS)[number];
 type DatevRow = Record<DatevColumn, string>;
 
 function buildDatevRow(values: Partial<DatevRow>): string {
-  const row = Object.fromEntries(DATEV_COLUMNS.map((column) => [column, ''])) as DatevRow;
+  const row = Object.fromEntries(
+    DATEV_COLUMNS.map((column) => [column, ''])
+  ) as DatevRow;
   Object.assign(row, values);
   return DATEV_COLUMNS.map((column) => row[column]).join(';');
 }

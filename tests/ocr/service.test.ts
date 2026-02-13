@@ -60,7 +60,8 @@ const buildImageResponse = () =>
 const originalFetch = global.fetch;
 
 const setFetchResponse = (payload: unknown) => {
-  global.fetch = (async () => buildJsonResponse(payload)) as unknown as typeof fetch;
+  global.fetch = (async () =>
+    buildJsonResponse(payload)) as unknown as typeof fetch;
 };
 
 describe('OcrService', () => {
@@ -68,7 +69,8 @@ describe('OcrService', () => {
 
   beforeEach(() => {
     service = new OcrService('test-api-key', 'test-project');
-    global.fetch = (async () => buildImageResponse()) as unknown as typeof fetch;
+    global.fetch = (async () =>
+      buildImageResponse()) as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -96,7 +98,9 @@ describe('OcrService', () => {
     it('should reject unsupported file types', async () => {
       const buffer = Buffer.from('fake-data');
 
-      await expect(service.processFile(buffer, 'text/plain')).rejects.toBeInstanceOf(
+      await expect(
+        service.processFile(buffer, 'text/plain')
+      ).rejects.toBeInstanceOf(
         OcrError as unknown as new (...args: unknown[]) => unknown
       );
     });

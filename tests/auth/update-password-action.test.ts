@@ -48,7 +48,9 @@ describe('updatePassword action', () => {
   });
 
   it('rejects weak passwords before calling Supabase', async () => {
-    const result = await updatePassword(createPasswordFormData('short', 'short'));
+    const result = await updatePassword(
+      createPasswordFormData('short', 'short')
+    );
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -78,7 +80,9 @@ describe('updatePassword action', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error).toContain('Passwort konnte nicht aktualisiert werden');
+      expect(result.error).toContain(
+        'Passwort konnte nicht aktualisiert werden'
+      );
     }
     expect(updateUserCalls).toEqual([{ password: 'StrongPassword123' }]);
   });

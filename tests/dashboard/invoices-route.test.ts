@@ -4,7 +4,10 @@ type FindManyArgs = {
   where: {
     organizationId: string;
     status?: { in: string[] };
-    OR?: Array<{ number?: { contains: string } } | { supplierName?: { contains: string } }>;
+    OR?: Array<
+      | { number?: { contains: string } }
+      | { supplierName?: { contains: string } }
+    >;
   };
   orderBy: Array<{ createdAt?: 'desc' } | { id?: 'desc' }>;
   take: number;

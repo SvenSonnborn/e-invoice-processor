@@ -96,7 +96,8 @@ function DashboardDonutChart({
 }: {
   distribution: DashboardStatusDistribution;
 }) {
-  const total = distribution.uploaded + distribution.processed + distribution.exported;
+  const total =
+    distribution.uploaded + distribution.processed + distribution.exported;
   const safeTotal = total > 0 ? total : 1;
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -297,7 +298,9 @@ export function DashboardClient() {
 
         const payload = await response.json();
         if (!response.ok || !payload.success) {
-          throw new Error(payload?.error?.message ?? 'Dashboard konnte nicht geladen werden');
+          throw new Error(
+            payload?.error?.message ?? 'Dashboard konnte nicht geladen werden'
+          );
         }
 
         setData(payload as DashboardInvoicesResponse);
@@ -322,7 +325,8 @@ export function DashboardClient() {
     };
   }, [cursor, queryFromUrl, statusGroup]);
 
-  const distribution = data?.stats.statusDistribution ?? emptyDashboardStatusDistribution();
+  const distribution =
+    data?.stats.statusDistribution ?? emptyDashboardStatusDistribution();
   const primaryDetailsId = data?.items[0]?.id ?? null;
   const selectedGroupCount = statusGroup
     ? distribution[statusGroup]
@@ -342,7 +346,8 @@ export function DashboardClient() {
               Dashboard
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-neutral-600 sm:text-base">
-              Überblick über Belegeingang, Verarbeitungsstand und Exportfortschritt.
+              Überblick über Belegeingang, Verarbeitungsstand und
+              Exportfortschritt.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -416,7 +421,9 @@ export function DashboardClient() {
                 ? DASHBOARD_STATUS_GROUP_LABELS[statusGroup]
                 : 'Alle Status'}
             </CardDescription>
-            <CardTitle className="text-2xl tabular-nums">{selectedGroupCount}</CardTitle>
+            <CardTitle className="text-2xl tabular-nums">
+              {selectedGroupCount}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-neutral-500">
             Segmentgröße in der aktuellen Verteilung
@@ -487,7 +494,8 @@ export function DashboardClient() {
             </div>
           </div>
           <p className="text-xs text-neutral-500">
-            Filtert nach Rechnungsnummer (`number`) und Lieferantenname (`supplierName`).
+            Filtert nach Rechnungsnummer (`number`) und Lieferantenname
+            (`supplierName`).
           </p>
         </CardContent>
       </Card>
@@ -581,7 +589,9 @@ export function DashboardClient() {
                 {data.items.map((item) => {
                   const visual = getStatusVisual(item.status);
                   const StatusIcon = visual.icon;
-                  const mappedGroup = mapInvoiceStatusToDashboardGroup(item.status);
+                  const mappedGroup = mapInvoiceStatusToDashboardGroup(
+                    item.status
+                  );
                   return (
                     <article
                       key={item.id}
@@ -645,7 +655,9 @@ export function DashboardClient() {
                 <div className="mt-4 flex justify-end">
                   <Button
                     variant="outline"
-                    onClick={() => updateSearchParams({ cursor: data.nextCursor })}
+                    onClick={() =>
+                      updateSearchParams({ cursor: data.nextCursor })
+                    }
                   >
                     Nächste Seite
                   </Button>
