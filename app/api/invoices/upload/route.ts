@@ -109,7 +109,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       contentType: file.contentType || 'application/pdf',
     }).catch((ocrError: InvoiceProcessingError) => {
       logger.error(
-        { code: ocrError.code, message: ocrError.message, fileId: file.id, invoiceId: invoice.id },
+        {
+          code: ocrError.code,
+          message: ocrError.message,
+          fileId: file.id,
+          invoiceId: invoice.id,
+        },
         'Background OCR processing failed'
       );
     });

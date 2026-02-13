@@ -123,7 +123,15 @@ Uploads an invoice file, creates File + Invoice records, and automatically trigg
 ```json
 {
   "success": true,
-  "file": { "id": "...", "filename": "invoice.pdf", "contentType": "application/pdf", "sizeBytes": 125000, "storageKey": "invoices/...", "status": "PENDING", "createdAt": "..." },
+  "file": {
+    "id": "...",
+    "filename": "invoice.pdf",
+    "contentType": "application/pdf",
+    "sizeBytes": 125000,
+    "storageKey": "invoices/...",
+    "status": "PENDING",
+    "createdAt": "..."
+  },
   "invoice": { "id": "...", "fileId": "...", "status": "UPLOADED" }
 }
 ```
