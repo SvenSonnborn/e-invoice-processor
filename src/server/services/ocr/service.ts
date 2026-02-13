@@ -9,7 +9,12 @@ import { logger } from '@/src/lib/logging';
 import { VisionClient } from './vision-client';
 import { TextExtractor } from './text-extractor';
 import { OcrError, OcrErrorCode } from './errors';
-import type { IOcrService, OcrResult, OcrOptions, OcrInvoiceData } from './types';
+import type {
+  IOcrService,
+  OcrResult,
+  OcrOptions,
+  OcrInvoiceData,
+} from './types';
 
 const DEFAULT_OPTIONS: OcrOptions = {
   languageHints: ['de', 'en'],

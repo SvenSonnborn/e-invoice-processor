@@ -74,8 +74,7 @@ export class MockOcrService implements IOcrService {
   private currentIndex = 0;
 
   constructor(mockDir?: string) {
-    const dir =
-      mockDir || resolve(process.cwd(), 'mocks', 'ocr-responses');
+    const dir = mockDir || resolve(process.cwd(), 'mocks', 'ocr-responses');
     this.loadResponses(dir);
   }
 

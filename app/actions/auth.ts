@@ -27,9 +27,7 @@ const signInSchema = z.object({
 
 const updatePasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
+    password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
     confirmPassword: z.string().min(1, 'Bitte bestätigen Sie Ihr Passwort'),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -284,13 +282,15 @@ export async function updatePassword(
     if (error) {
       return {
         success: false,
-        error: 'Passwort konnte nicht aktualisiert werden. Bitte fordern Sie einen neuen Link an.',
+        error:
+          'Passwort konnte nicht aktualisiert werden. Bitte fordern Sie einen neuen Link an.',
       };
     }
 
     return {
       success: true,
-      message: 'Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.',
+      message:
+        'Passwort erfolgreich aktualisiert. Sie können sich jetzt anmelden.',
     };
   } catch (error) {
     console.error('Password update error:', error);

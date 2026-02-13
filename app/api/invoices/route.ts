@@ -88,7 +88,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const statusGroupStatuses = getInvoiceStatusesForDashboardGroup(rawStatusGroup);
+    const statusGroupStatuses =
+      getInvoiceStatusesForDashboardGroup(rawStatusGroup);
     const parsedStatuses = rawStatus
       ? rawStatus
           .split(',')
@@ -181,53 +182,61 @@ export async function GET(request: NextRequest) {
 
     const monthStart = startOfCurrentMonthInServerTimezone();
 
-    const [invoiceRows, totalCount, currentMonthCount, grossAmountAggregate, rawStatusCounts] =
-      await Promise.all([
-        prisma.invoice.findMany({
-          where,
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-          take: limit + 1,
-          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-          ...(offset !== undefined ? { skip: offset } : {}),
-          select: {
-            id: true,
-            number: true,
-            supplierName: true,
-            status: true,
-            grossAmount: true,
-            createdAt: true,
-            issueDate: true,
+    const [
+      invoiceRows,
+      totalCount,
+      currentMonthCount,
+      grossAmountAggregate,
+      rawStatusCounts,
+    ] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        ...(offset !== undefined ? { skip: offset } : {}),
+        select: {
+          id: true,
+          number: true,
+          supplierName: true,
+          status: true,
+          grossAmount: true,
+          createdAt: true,
+          issueDate: true,
+        },
+      }),
+      prisma.invoice.count({ where }),
+      prisma.invoice.count({
+        where: {
+          ...where,
+          createdAt: {
+            gte: monthStart,
           },
-        }),
-        prisma.invoice.count({ where }),
-        prisma.invoice.count({
-          where: {
-            ...where,
-            createdAt: {
-              gte: monthStart,
-            },
-          },
-        }),
-        prisma.invoice.aggregate({
-          where,
-          _sum: {
-            grossAmount: true,
-          },
-        }),
-        prisma.invoice.groupBy({
-          by: ['status'],
-          where,
-          _count: {
-            _all: true,
-          },
-        }),
-      ]);
+        },
+      }),
+      prisma.invoice.aggregate({
+        where,
+        _sum: {
+          grossAmount: true,
+        },
+      }),
+      prisma.invoice.groupBy({
+        by: ['status'],
+        where,
+        _count: {
+          _all: true,
+        },
+      }),
+    ]);
 
     const hasMore = invoiceRows.length > limit;
     const paginatedRows = hasMore ? invoiceRows.slice(0, limit) : invoiceRows;
-    const nextCursor = hasMore ? paginatedRows[paginatedRows.length - 1].id : null;
+    const nextCursor = hasMore
+      ? paginatedRows[paginatedRows.length - 1].id
+      : null;
     const effectiveOffset = offset ?? 0;
-    const statusDistribution = aggregateDashboardStatusDistribution(rawStatusCounts);
+    const statusDistribution =
+      aggregateDashboardStatusDistribution(rawStatusCounts);
     const totalGrossAmount = coerceGrossAmountToNumber(
       grossAmountAggregate._sum.grossAmount
     );

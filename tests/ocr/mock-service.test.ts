@@ -298,8 +298,7 @@ describe('MockOcrService', () => {
       const standardIndex = fixtureFiles.indexOf('invoice-standard.json');
       expect(standardIndex).toBeGreaterThanOrEqual(0);
 
-      const { service: svc, result } =
-        await getResultForFixture(standardIndex);
+      const { service: svc, result } = await getResultForFixture(standardIndex);
       const invoiceData = await svc.parseInvoice(result);
 
       expect(invoiceData.number).toBe('RE-2024-001');

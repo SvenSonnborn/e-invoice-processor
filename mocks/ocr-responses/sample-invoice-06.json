@@ -20,7 +20,7 @@
           },
           {
             "text": "Stadtwerke Beispielstadt AöR Rathausplatz 1 01067 Dresden",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "boundingBox": { "x": 50, "y": 260, "width": 380, "height": 60 }
           },
           {

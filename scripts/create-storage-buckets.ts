@@ -25,6 +25,20 @@ async function createBuckets() {
   try {
     console.log('📦 Creating storage buckets...');
 
+    // Invoices bucket (uploaded invoice files)
+    await pool.query(`
+      INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+      VALUES (
+        'invoices',
+        'invoices',
+        false,
+        10485760,
+        ARRAY['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/tiff']
+      )
+      ON CONFLICT (id) DO NOTHING
+    `);
+    console.log('✅ Invoices bucket created/verified');
+
     // Documents bucket
     await pool.query(`
       INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -57,7 +71,7 @@ async function createBuckets() {
     const result = await pool.query(`
       SELECT id, name, public, file_size_limit, allowed_mime_types
       FROM storage.buckets
-      WHERE id IN ('documents', 'exports')
+      WHERE id IN ('invoices', 'documents', 'exports')
     `);
 
     console.log('\n📋 Storage Buckets:');

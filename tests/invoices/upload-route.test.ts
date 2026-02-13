@@ -140,7 +140,10 @@ describe('POST /api/invoices/upload', () => {
 
   it('returns 415 for unsupported file types', async () => {
     const formData = new FormData();
-    formData.append('file', new File(['hello'], 'invoice.txt', { type: 'text/plain' }));
+    formData.append(
+      'file',
+      new File(['hello'], 'invoice.txt', { type: 'text/plain' })
+    );
     const request = new Request('http://localhost/api/invoices/upload', {
       method: 'POST',
       body: formData,

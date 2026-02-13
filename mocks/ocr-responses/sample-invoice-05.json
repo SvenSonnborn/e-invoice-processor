@@ -30,7 +30,7 @@
           },
           {
             "text": "Gesamtbetrag: EUR -112,92",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "boundingBox": { "x": 300, "y": 480, "width": 250, "height": 25 }
           }
         ]

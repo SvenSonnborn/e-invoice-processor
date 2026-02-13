@@ -8,12 +8,14 @@ export const DASHBOARD_STATUS_GROUPS = [
 
 export type DashboardStatusGroup = (typeof DASHBOARD_STATUS_GROUPS)[number];
 
-export const DASHBOARD_STATUS_GROUP_LABELS: Record<DashboardStatusGroup, string> =
-  {
-    uploaded: 'Eingegangen',
-    processed: 'Verarbeitet',
-    exported: 'Exportiert',
-  };
+export const DASHBOARD_STATUS_GROUP_LABELS: Record<
+  DashboardStatusGroup,
+  string
+> = {
+  uploaded: 'Eingegangen',
+  processed: 'Verarbeitet',
+  exported: 'Exportiert',
+};
 
 export const DASHBOARD_STATUS_GROUP_TO_INVOICE_STATUS: Record<
   DashboardStatusGroup,
