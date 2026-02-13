@@ -50,9 +50,31 @@ Die Funktion `processInvoiceOcr()` aus `src/server/services/invoice-processing.t
 1. Download der Datei aus Supabase Storage
 2. OCR-Text-Extraktion (Mock oder Google Cloud Vision)
 3. Invoice-Daten parsen
-4. Status-Updates: UPLOADED → PARSED → VALIDATED
-5. Line Items erstellen
-6. Bei Fehler: FAILED setzen mit Fehlermeldung
+4. **Daten-Validierung** via Zod-Schema (siehe unten)
+5. Status-Updates: UPLOADED → PARSED → VALIDATED
+6. Line Items erstellen
+7. Bei Fehler: FAILED setzen mit Fehlermeldung
+
+### Daten-Validierung (PARSED → VALIDATED)
+
+Zwischen PARSED und VALIDATED werden die OCR-Daten durch den Invoice-Parser (`src/server/parsers/invoice/index.ts`) validiert und normalisiert:
+
+- **Zod-Schema-Validierung** aller Felder (Format, Nummer, Lieferant, Kunde, Datum, Beträge, Positionen)
+- **Datum-Parsing**: ISO-Format (`YYYY-MM-DD`) und deutsches Format (`DD.MM.YYYY`) werden automatisch erkannt
+- **Betrags-Normalisierung**: String-Beträge werden in Zahlen konvertiert, inklusive deutsches Format (`1.234,56`)
+- **Gutschriften**: Negative Beträge werden akzeptiert (z.B. Stornos)
+- **Flattening**: Verschachtelte Strukturen (`supplier.name`, `totals.netAmount`) werden in flache DB-Felder überführt
+
+Bei Validierungsfehlern wird die Invoice mit Status `FAILED` und einer detaillierten Fehlermeldung markiert (z.B. `"Invoice data validation failed: Ungültiger Betrag; Ungültiges Datum"`).
+
+```typescript
+import { parseOcrInvoiceData } from '@/src/server/parsers/invoice';
+
+const result = parseOcrInvoiceData(ocrInvoiceData);
+if (!result.success) {
+  // result.errors: Array<{ path: string, message: string }>
+}
+```
 
 ### Manueller Trigger
 

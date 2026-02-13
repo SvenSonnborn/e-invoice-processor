@@ -17,6 +17,7 @@ import {
   markAsValidated,
   markAsFailed,
 } from '@/src/lib/invoices/processor';
+import { parseOcrInvoiceData } from '@/src/server/parsers/invoice';
 
 // ---------------------------------------------------------------------------
 // Error
@@ -144,57 +145,41 @@ export async function processInvoiceOcr(
     // 5. Mark as PARSED (creates revision with raw data)
     await markAsParsed(invoiceId, rawJson);
 
-    // 6. Mark as VALIDATED with structured fields
-    await markAsValidated(invoiceId, {
-      number: invoiceData.number,
-      supplierName: invoiceData.supplier?.name,
-      customerName: invoiceData.customer?.name,
-      issueDate: invoiceData.issueDate
-        ? new Date(invoiceData.issueDate)
-        : undefined,
-      dueDate: invoiceData.dueDate
-        ? new Date(invoiceData.dueDate)
-        : undefined,
-      netAmount: invoiceData.totals?.netAmount
-        ? parseFloat(invoiceData.totals.netAmount)
-        : undefined,
-      taxAmount: invoiceData.totals?.taxAmount
-        ? parseFloat(invoiceData.totals.taxAmount)
-        : undefined,
-      grossAmount: invoiceData.totals?.grossAmount
-        ? parseFloat(invoiceData.totals.grossAmount)
-        : undefined,
-    });
+    // 6. Validate and normalize invoice data
+    const parseResult = parseOcrInvoiceData(invoiceData);
 
-    // 7. Update file status to PROCESSED
+    if (!parseResult.success) {
+      throw new InvoiceProcessingError(
+        InvoiceProcessingErrorCode.PARSE_FAILED,
+        `Invoice data validation failed: ${parseResult.errors.map((e) => e.message).join('; ')}`,
+        { fileId, invoiceId, validationErrors: parseResult.errors }
+      );
+    }
+
+    // 7. Mark as VALIDATED with structured fields
+    await markAsValidated(invoiceId, parseResult.invoiceFields);
+
+    // 8. Update file status to PROCESSED
     await prisma.file.update({
       where: { id: fileId },
       data: { status: 'PROCESSED' },
     });
 
-    // 8. Create line items if available
-    if (invoiceData.lineItems && invoiceData.lineItems.length > 0) {
+    // 9. Create line items if available
+    if (parseResult.lineItems.length > 0) {
       await prisma.invoiceLineItem.createMany({
-        data: invoiceData.lineItems.map((item, index) => ({
+        data: parseResult.lineItems.map((item) => ({
           invoiceId,
-          positionIndex: index + 1,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          grossAmount: item.total,
+          ...item,
         })),
       });
     }
 
-    // 9. Update invoice format if detected
-    if (
-      invoiceData.format &&
-      invoiceData.format !== 'UNKNOWN' &&
-      (invoiceData.format === 'ZUGFERD' || invoiceData.format === 'XRECHNUNG')
-    ) {
+    // 10. Update invoice format if detected
+    if (parseResult.format !== 'UNKNOWN') {
       await prisma.invoice.update({
         where: { id: invoiceId },
-        data: { format: invoiceData.format },
+        data: { format: parseResult.format },
       });
     }
 
@@ -239,7 +224,12 @@ export async function processInvoiceOcr(
     }
 
     logger.error(
-      { code: processingError.code, details: processingError.details, fileId, invoiceId },
+      {
+        code: processingError.code,
+        details: processingError.details,
+        fileId,
+        invoiceId,
+      },
       `Invoice processing failed: ${processingError.message}`
     );
 
