@@ -71,6 +71,8 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export class MockOcrService implements IOcrService {
   private responses: MockResponseFile[] = [];
+  private fixtureByBaseName = new Map<string, MockResponseFile>();
+  private lastServedResponse: MockResponseFile | null = null;
   private currentIndex = 0;
 
   constructor(mockDir?: string) {
@@ -90,7 +92,11 @@ export class MockOcrService implements IOcrService {
 
     this.validateFile(fileBuffer, mimeType);
 
-    const response = this.getNextResponse();
+    const response =
+      (options.sourceFileName
+        ? this.getResponseForSourceFileName(options.sourceFileName)
+        : undefined) ?? this.getNextResponse();
+    this.lastServedResponse = response;
     const threshold = options.confidenceThreshold ?? 0.95;
 
     if (response.ocrResult.confidence < threshold) {
@@ -141,7 +147,7 @@ export class MockOcrService implements IOcrService {
     }
 
     // Fallback: return the last served response's invoice data
-    const fallback = this.responses[Math.max(0, this.currentIndex - 1)];
+    const fallback = this.lastServedResponse;
     if (fallback) {
       return this.toOcrInvoiceData(fallback.invoiceData);
     }
@@ -184,6 +190,10 @@ export class MockOcrService implements IOcrService {
 
   private loadResponses(dir: string): void {
     try {
+      this.responses = [];
+      this.fixtureByBaseName.clear();
+      this.lastServedResponse = null;
+
       const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
 
       if (files.length === 0) {
@@ -200,6 +210,7 @@ export class MockOcrService implements IOcrService {
         const content = readFileSync(filePath, 'utf-8');
         const parsed = JSON.parse(content) as MockResponseFile;
         this.responses.push(parsed);
+        this.fixtureByBaseName.set(this.normalizeFixtureBaseName(file), parsed);
         logger.debug({ file }, 'Mock OCR: Loaded response fixture');
       }
 
@@ -220,6 +231,46 @@ export class MockOcrService implements IOcrService {
     const response = this.responses[this.currentIndex % this.responses.length];
     this.currentIndex++;
     return response;
+  }
+
+  private getResponseForSourceFileName(
+    sourceFileName: string
+  ): MockResponseFile | undefined {
+    const normalized = this.normalizeFixtureBaseName(sourceFileName);
+    if (!normalized) return undefined;
+
+    const direct = this.fixtureByBaseName.get(normalized);
+    if (direct) {
+      logger.debug(
+        { sourceFileName, fixture: normalized },
+        'Mock OCR: Matched fixture by source filename'
+      );
+      return direct;
+    }
+
+    // Storage keys can look like: 1700000000-uuid-sample-invoice-05.pdf
+    const withoutPrefix = normalized.replace(/^\d+-[0-9a-f-]{8,}-/i, '');
+    if (withoutPrefix && withoutPrefix !== normalized) {
+      const fromPrefixedKey = this.fixtureByBaseName.get(withoutPrefix);
+      if (fromPrefixedKey) {
+        logger.debug(
+          { sourceFileName, fixture: withoutPrefix },
+          'Mock OCR: Matched fixture from prefixed storage key'
+        );
+        return fromPrefixedKey;
+      }
+    }
+
+    return undefined;
+  }
+
+  private normalizeFixtureBaseName(fileName: string): string {
+    const withSlashesNormalized = fileName.replace(/\\/g, '/');
+    const segment = withSlashesNormalized.split('/').pop() ?? fileName;
+    return segment
+      .trim()
+      .toLowerCase()
+      .replace(/\.[a-z0-9]+$/i, '');
   }
 
   private getDefaultResponse(): MockResponseFile {

@@ -60,6 +60,7 @@ export interface ProcessInvoiceParams {
   invoiceId: string;
   storageKey: string;
   contentType: string;
+  sourceFileName?: string;
 }
 
 export interface ProcessInvoiceResult {
@@ -87,7 +88,8 @@ export interface ProcessInvoiceResult {
 export async function processInvoiceOcr(
   params: ProcessInvoiceParams
 ): Promise<ProcessInvoiceResult> {
-  const { fileId, invoiceId, storageKey, contentType } = params;
+  const { fileId, invoiceId, storageKey, contentType, sourceFileName } =
+    params;
 
   logger.info({ fileId, invoiceId }, 'Starting invoice OCR processing');
 
@@ -108,7 +110,9 @@ export async function processInvoiceOcr(
     const ocrService = await getOcrService();
     let ocrResult;
     try {
-      ocrResult = await ocrService.processFile(fileBuffer, contentType);
+      ocrResult = await ocrService.processFile(fileBuffer, contentType, {
+        sourceFileName,
+      });
     } catch (error) {
       throw new InvoiceProcessingError(
         InvoiceProcessingErrorCode.OCR_FAILED,

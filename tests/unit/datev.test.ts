@@ -33,6 +33,7 @@ describe('DATEV Exporter', () => {
     issueDate: new Date('2024-01-15'),
     dueDate: new Date('2024-02-15'),
     currency: 'EUR',
+    taxId: null,
     netAmount: d(1000.0),
     taxAmount: d(190.0),
     grossAmount: d(1190.0),

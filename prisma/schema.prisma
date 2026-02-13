@@ -161,6 +161,7 @@ model Invoice {
   issueDate      DateTime?
   dueDate        DateTime?
   currency       String?       @default("EUR")
+  taxId          String?
   netAmount      Decimal?      @db.Decimal(18, 2)
   taxAmount      Decimal?      @db.Decimal(18, 2)
   grossAmount    Decimal?      @db.Decimal(18, 2)
@@ -191,6 +192,7 @@ model Invoice {
   @@index([format])
   @@index([issueDate])
   @@index([status])
+  @@index([taxId])
   @@index([createdBy])
 }
 
