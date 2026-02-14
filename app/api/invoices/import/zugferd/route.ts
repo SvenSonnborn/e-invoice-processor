@@ -1,26 +1,167 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import type { InvoiceStatus } from '@/src/generated/prisma/client';
 import {
   parseInvoice,
   parseInvoiceFromPDF,
   parseInvoiceFromXML,
   parseInvoicesBatch,
+  type InvoiceParseResult,
 } from '@/src/lib/zugferd/parser';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { mapInvoiceStatusToApiStatusGroup } from '@/src/lib/invoices/status';
 import { logger } from '@/src/lib/logging';
+import { persistParsedInvoice } from '@/src/server/services/invoice-import';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_BATCH_FILES = 50;
 
+const saveQuerySchema = z
+  .enum(['true', 'false', '1', '0'])
+  .optional()
+  .transform((value) => value === 'true' || value === '1');
+
+interface ImportRequestContext {
+  organizationId: string;
+  userId: string;
+  saveToDatabase: boolean;
+}
+
+interface PersistencePayload {
+  saved: true;
+  invoiceId: string;
+  action: 'created' | 'updated';
+  status: InvoiceStatus;
+  statusGroup: ReturnType<typeof mapInvoiceStatusToApiStatusGroup>;
+  number: string | null;
+}
+
+function mapParseResult(
+  result: InvoiceParseResult & { filename?: string }
+): {
+  success: boolean;
+  filename?: string;
+  invoice?: unknown;
+  extendedData?: unknown;
+  rawData?: unknown;
+  validation: unknown;
+  detection: unknown;
+  errors: string[];
+  warnings: string[];
+} {
+  return {
+    success: result.success,
+    filename: result.filename,
+    invoice: result.invoice,
+    extendedData: result.extendedData,
+    rawData: result.rawData,
+    validation: result.validation,
+    detection: result.detection,
+    errors: result.errors,
+    warnings: result.warnings,
+  };
+}
+
+async function persistResultIfNeeded(
+  parseResult: InvoiceParseResult,
+  ctx: ImportRequestContext,
+  source: { mode: 'multipart' | 'json'; filename?: string }
+): Promise<PersistencePayload | null> {
+  if (!ctx.saveToDatabase) return null;
+
+  const persisted = await persistParsedInvoice({
+    organizationId: ctx.organizationId,
+    userId: ctx.userId,
+    parseResult,
+    source,
+  });
+
+  return {
+    saved: true,
+    invoiceId: persisted.invoiceId,
+    action: persisted.action,
+    status: persisted.status,
+    statusGroup: mapInvoiceStatusToApiStatusGroup(persisted.status),
+    number: persisted.number,
+  };
+}
+
+type MappedParseResult = ReturnType<typeof mapParseResult> & {
+  persistence?: PersistencePayload;
+};
+
+async function mapAndPersistBatchResults(
+  results: Array<InvoiceParseResult & { filename?: string }>,
+  ctx: ImportRequestContext,
+  mode: 'multipart' | 'json'
+): Promise<{ allSuccess: boolean; mappedResults: MappedParseResult[] }> {
+  let allSuccess = true;
+  const mappedResults: MappedParseResult[] = [];
+
+  for (const result of results) {
+    const mapped = mapParseResult(result);
+
+    if (!result.success) {
+      allSuccess = false;
+      mappedResults.push(mapped);
+      continue;
+    }
+
+    if (!ctx.saveToDatabase) {
+      mappedResults.push(mapped);
+      continue;
+    }
+
+    try {
+      const persistence = await persistResultIfNeeded(result, ctx, {
+        mode,
+        filename: result.filename,
+      });
+      mappedResults.push({
+        ...mapped,
+        ...(persistence ? { persistence } : {}),
+      });
+    } catch (error) {
+      allSuccess = false;
+      logger.error(
+        { error, organizationId: ctx.organizationId, filename: result.filename },
+        `Failed to persist parsed invoice from ${mode} batch`
+      );
+      mappedResults.push({
+        ...mapped,
+        success: false,
+        errors: [...mapped.errors, 'Persistence failed'],
+      });
+    }
+  }
+
+  return { allSuccess, mappedResults };
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    await getMyOrganizationIdOrThrow();
+    const { user, organizationId } = await getMyOrganizationIdOrThrow();
+    const saveQuery =
+      new URL(request.url).searchParams.get('save') ?? undefined;
+    const parsedSave = saveQuerySchema.safeParse(saveQuery);
+    if (!parsedSave.success) {
+      throw ApiError.validationError(
+        'Invalid "save" query parameter. Use true/false or 1/0.'
+      );
+    }
+
+    const ctx: ImportRequestContext = {
+      organizationId,
+      userId: user.id,
+      saveToDatabase: parsedSave.data,
+    };
 
     const contentType = request.headers.get('content-type') || '';
     if (contentType.includes('multipart/form-data'))
-      return await handleFileUpload(request);
+      return await handleFileUpload(request, ctx);
     if (contentType.includes('application/json'))
-      return await handleJSONBody(request);
+      return await handleJSONBody(request, ctx);
 
     throw ApiError.validationError('Unsupported content type');
   } catch (error) {
@@ -30,7 +171,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
+async function handleFileUpload(
+  request: NextRequest,
+  ctx: ImportRequestContext
+): Promise<NextResponse> {
   const formData = await request.formData();
   const files = formData
     .getAll('file')
@@ -77,6 +221,21 @@ async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
         },
         { status: 400 }
       );
+
+    let persistence: PersistencePayload | null = null;
+    try {
+      persistence = await persistResultIfNeeded(result, ctx, {
+        mode: 'multipart',
+        filename,
+      });
+    } catch (error) {
+      logger.error(
+        { error, organizationId: ctx.organizationId, filename },
+        'Failed to persist parsed invoice'
+      );
+      return ApiError.internal('Failed to persist parsed invoice').toResponse();
+    }
+
     return NextResponse.json({
       success: true,
       invoice: result.invoice,
@@ -86,6 +245,7 @@ async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
       detection: result.detection,
       warnings: result.warnings,
       filename,
+      ...(persistence ? { persistence } : {}),
     });
   }
 
@@ -93,28 +253,26 @@ async function handleFileUpload(request: NextRequest): Promise<NextResponse> {
     items.map(({ buffer, filename }) => ({ buffer, filename })),
     { concurrency: 5 }
   );
-  const allSuccess = results.every((r) => r.success);
+  const { allSuccess, mappedResults } = await mapAndPersistBatchResults(
+    results,
+    ctx,
+    'multipart'
+  );
+
   return NextResponse.json(
     {
       success: allSuccess,
       batch: true,
-      results: results.map((r) => ({
-        success: r.success,
-        filename: r.filename,
-        invoice: r.invoice,
-        extendedData: r.extendedData,
-        rawData: r.rawData,
-        validation: r.validation,
-        detection: r.detection,
-        errors: r.errors,
-        warnings: r.warnings,
-      })),
+      results: mappedResults,
     },
     { status: allSuccess ? 200 : 207 }
   );
 }
 
-async function handleJSONBody(request: NextRequest): Promise<NextResponse> {
+async function handleJSONBody(
+  request: NextRequest,
+  ctx: ImportRequestContext
+): Promise<NextResponse> {
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -155,22 +313,17 @@ async function handleJSONBody(request: NextRequest): Promise<NextResponse> {
     }
 
     const results = await parseInvoicesBatch(items, { concurrency: 5 });
-    const allSuccess = results.every((r) => r.success);
+    const { allSuccess, mappedResults } = await mapAndPersistBatchResults(
+      results,
+      ctx,
+      'json'
+    );
+
     return NextResponse.json(
       {
         success: allSuccess,
         batch: true,
-        results: results.map((r) => ({
-          success: r.success,
-          filename: r.filename,
-          invoice: r.invoice,
-          extendedData: r.extendedData,
-          rawData: r.rawData,
-          validation: r.validation,
-          detection: r.detection,
-          errors: r.errors,
-          warnings: r.warnings,
-        })),
+        results: mappedResults,
       },
       { status: allSuccess ? 200 : 207 }
     );
@@ -197,6 +350,20 @@ async function handleJSONBody(request: NextRequest): Promise<NextResponse> {
       { status: 400 }
     );
 
+  let persistence: PersistencePayload | null = null;
+  try {
+    persistence = await persistResultIfNeeded(result, ctx, {
+      mode: 'json',
+      filename: format === 'pdf' ? 'single.pdf' : 'single.xml',
+    });
+  } catch (error) {
+    logger.error(
+      { error, organizationId: ctx.organizationId },
+      'Failed to persist parsed invoice'
+    );
+    return ApiError.internal('Failed to persist parsed invoice').toResponse();
+  }
+
   return NextResponse.json({
     success: true,
     invoice: result.invoice,
@@ -205,6 +372,7 @@ async function handleJSONBody(request: NextRequest): Promise<NextResponse> {
     validation: result.validation,
     detection: result.detection,
     warnings: result.warnings,
+    ...(persistence ? { persistence } : {}),
   });
 }
 

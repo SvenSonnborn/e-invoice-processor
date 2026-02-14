@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test';
 
 let invoiceExists = true;
 let vatValidationMode: 'valid' | 'invalid' | 'unavailable' = 'valid';
+let throwDuplicateInvoiceNumberError = false;
 let storedInvoice = {
   id: 'inv-1',
   organizationId: 'org-123',
@@ -199,6 +200,13 @@ mock.module('@/src/lib/db/client', () => ({
           throw new Error('Invoice not found in update');
         }
 
+        if (throwDuplicateInvoiceNumberError) {
+          throw {
+            code: 'P2002',
+            meta: { target: ['organizationId', 'number'] },
+          };
+        }
+
         storedInvoice = {
           ...storedInvoice,
           number: args.data.number,
@@ -227,6 +235,7 @@ describe('GET/PUT /api/invoices/[invoiceId]', () => {
   beforeEach(() => {
     invoiceExists = true;
     vatValidationMode = 'valid';
+    throwDuplicateInvoiceNumberError = false;
     storedInvoice = {
       id: 'inv-1',
       organizationId: 'org-123',
@@ -262,6 +271,8 @@ describe('GET/PUT /api/invoices/[invoiceId]', () => {
       currency: 'EUR',
       vendorName: 'Muster GmbH',
       taxId: null,
+      status: 'PARSED',
+      statusGroup: 'processing',
     });
   });
 
@@ -356,6 +367,7 @@ describe('GET/PUT /api/invoices/[invoiceId]', () => {
       vendorName: 'Neue Lieferantin AG',
       taxId: 'DE123456789',
       status: 'VALIDATED',
+      statusGroup: 'processed',
     });
     const reviewData = (storedInvoice.rawJson ?? {}) as Record<string, unknown>;
     const normalized = reviewData.reviewData as
@@ -425,5 +437,25 @@ describe('GET/PUT /api/invoices/[invoiceId]', () => {
       | { status?: string }
       | undefined;
     expect(vatValidation?.status).toBe('unavailable');
+  });
+
+  it('returns 409 when invoice number already exists in the organization', async () => {
+    throwDuplicateInvoiceNumberError = true;
+
+    const request = new Request('http://localhost/api/invoices/inv-1', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validReviewPayload),
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await PUT(request as any, {
+      params: Promise.resolve({ invoiceId: 'inv-1' }),
+    });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe('DUPLICATE_INVOICE_NUMBER');
   });
 });

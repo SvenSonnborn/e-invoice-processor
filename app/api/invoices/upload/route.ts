@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/db/client';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { mapInvoiceStatusToApiStatusGroup } from '@/src/lib/invoices/status';
 import { logger } from '@/src/lib/logging';
 import { storage } from '@/src/lib/storage';
 import { isSupportedMimeType } from '@/src/server/parsers/ocr';
@@ -136,6 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           id: invoice.id,
           fileId: invoice.fileId,
           status: invoice.status,
+          statusGroup: mapInvoiceStatusToApiStatusGroup(invoice.status),
         },
       },
       { status: 201 }

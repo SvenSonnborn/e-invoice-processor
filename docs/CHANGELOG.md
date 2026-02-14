@@ -2,6 +2,77 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-14: Supabase RLS alignment with current schema
+
+### Changes
+
+#### Updated: RLS SQL scripts
+
+- Updated RLS policies from legacy `Upload` table to current `File` table in:
+  - `prisma/migrations/setup_rls_policies.sql`
+  - `prisma/migrations/fix_rls_recursion.sql`
+
+#### Updated: RLS setup automation
+
+- `scripts/setup-rls.ts` now applies both:
+  - base RLS policies
+  - recursion-fix helpers/policies
+
+#### Documentation
+
+- Updated `docs/runbooks/supabase-rls.md` to reflect current `OrganizationMember`-based model and execution flow.
+- Updated `docs/SETUP.md` and `scripts/supabase/README.md` for the new one-step RLS setup.
+
+## 2026-02-14: Invoice API `statusGroup` Mapping
+
+### Changes
+
+#### Updated: Invoice API responses
+
+- Added `statusGroup` to invoice response payloads for:
+  - `GET /api/invoices`
+  - `GET /api/invoices/[invoiceId]`
+  - `PUT /api/invoices/[invoiceId]`
+  - `POST /api/invoices/upload`
+  - `POST /api/process-invoice/[fileId]`
+  - `POST /api/invoices/import/zugferd?save=true` (`persistence.statusGroup`)
+- Extended `GET /api/invoices?statusGroup=` filter to: `uploaded`, `processing`, `processed`, `failed`, `exported`.
+
+#### New: Shared status-group mapper
+
+- Added `mapInvoiceStatusToApiStatusGroup()` in `src/lib/invoices/status.ts`.
+- API grouping is now standardized as:
+  - `uploaded`, `processing`, `processed`, `failed`, `exported`
+
+#### Tests
+
+- Extended invoice API route tests to assert `statusGroup` in response payloads.
+
+## 2026-02-14: ZUGFeRD Import mit optionaler Persistierung
+
+### Changes
+
+#### Updated: `POST /api/invoices/import/zugferd`
+
+- Neuer Query-Parameter `save=true|false|1|0` für optionales Speichern der geparsten Rechnungen.
+- Parse-only bleibt Standard, wenn `save` nicht gesetzt ist.
+- Bei `save=true` werden erfolgreiche Parse-Ergebnisse in `Invoice` persistiert.
+- Re-Processing ist integriert: gleiche `organizationId` + `number` führt zu Update statt Duplikat-Erstellung.
+- Batch-Import mit `save=true` unterstützt Partial-Failures (`207 Multi-Status`), wenn einzelne Persistierungen fehlschlagen.
+
+#### New: Invoice Import Persistence Service
+
+- Neue Service-Logik in `src/server/services/invoice-import.ts`.
+- Setzt Status bei Persistierung auf `VALIDATED` (oder behält `EXPORTED` bei Updates).
+- Aktualisiert/ersetzt Line Items beim Re-Processing.
+- Speichert Parse-/Validierungsmetadaten in `Invoice.rawJson`.
+
+#### Documentation
+
+- `docs/api/README.md` — `save`-Parameter, Persistierungsverhalten und Response-Erweiterung dokumentiert.
+
+---
+
 ## 2026-02-12: Mock OCR Service
 
 ### Changes

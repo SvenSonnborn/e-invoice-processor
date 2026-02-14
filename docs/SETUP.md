@@ -95,14 +95,16 @@ Dieser Befehl:
 
 - Aktiviert RLS auf allen Tabellen
 - Erstellt Policies für Multi-Tenant-Isolation
+- Wendet den Recursion-Fix (`fix_rls_recursion.sql`) inkl. Helper-Funktionen an
 - Richtet Storage-Policies ein
 
 **Ausgabe:**
 
 ```
 📊 Connecting to database...
-🔒 Executing RLS policies...
-✅ RLS policies successfully applied!
+🔒 Executing base RLS policies...
+🛠️ Applying RLS recursion fix helpers/policies...
+✅ RLS policies successfully applied (including recursion fix)!
 ```
 
 ## 7. Supabase Storage Buckets erstellen

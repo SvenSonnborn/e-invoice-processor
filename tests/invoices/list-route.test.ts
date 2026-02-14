@@ -126,7 +126,7 @@ describe('GET /api/invoices', () => {
 
   it('returns filtered invoice list with stats and cursor', async () => {
     const request = new Request(
-      'http://localhost/api/invoices?statusGroup=processed&q=acme&limit=2'
+      'http://localhost/api/invoices?statusGroup=processing&q=acme&limit=2'
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await GET(request as any);
@@ -135,6 +135,16 @@ describe('GET /api/invoices', () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(payload.items).toHaveLength(2);
+    expect(payload.items[0]).toMatchObject({
+      id: 'inv-1',
+      status: 'PARSED',
+      statusGroup: 'processing',
+    });
+    expect(payload.items[1]).toMatchObject({
+      id: 'inv-2',
+      status: 'VALIDATED',
+      statusGroup: 'processed',
+    });
     expect(payload.nextCursor).toBe(payload.items[payload.items.length - 1].id);
     expect(payload.pagination).toEqual({
       limit: 2,
@@ -154,7 +164,7 @@ describe('GET /api/invoices', () => {
     expect(capturedWhere.length).toBeGreaterThan(0);
     expect(capturedWhere[0]).toMatchObject({
       organizationId: 'org-123',
-      status: { in: ['PARSED', 'VALIDATED'] },
+      status: { in: ['PARSED'] },
       OR: [
         { number: { contains: 'acme', mode: 'insensitive' } },
         { supplierName: { contains: 'acme', mode: 'insensitive' } },
@@ -199,9 +209,25 @@ describe('GET /api/invoices', () => {
     });
   });
 
-  it('returns 400 for invalid statusGroup', async () => {
+  it('accepts failed statusGroup filter', async () => {
     const request = new Request(
       'http://localhost/api/invoices?statusGroup=failed'
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await GET(request as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(capturedWhere[0]).toMatchObject({
+      organizationId: 'org-123',
+      status: { in: ['FAILED'] },
+    });
+  });
+
+  it('returns 400 for invalid statusGroup', async () => {
+    const request = new Request(
+      'http://localhost/api/invoices?statusGroup=unknown'
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await GET(request as any);

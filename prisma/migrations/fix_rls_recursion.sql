@@ -91,23 +91,23 @@ USING (public.is_org_member_with_role(
   "id", auth.uid(), ARRAY['OWNER']::text[]));
 
 -- ============================================================================
--- Drop & recreate Upload / Invoice / Export / etc. policies (use helpers)
+-- Drop & recreate File / Invoice / Export / etc. policies (use helpers)
 -- ============================================================================
 
-DROP POLICY IF EXISTS "uploads_select_member" ON "Upload";
-CREATE POLICY "uploads_select_member" ON "Upload" FOR SELECT
+DROP POLICY IF EXISTS "files_select_member" ON "File";
+CREATE POLICY "files_select_member" ON "File" FOR SELECT
 USING ("organizationId" IS NOT NULL AND public.is_org_member("organizationId"::text, auth.uid()));
 
-DROP POLICY IF EXISTS "uploads_insert_member" ON "Upload";
-CREATE POLICY "uploads_insert_member" ON "Upload" FOR INSERT
+DROP POLICY IF EXISTS "files_insert_member" ON "File";
+CREATE POLICY "files_insert_member" ON "File" FOR INSERT
 WITH CHECK ("organizationId" IS NOT NULL AND public.is_org_member("organizationId"::text, auth.uid()));
 
-DROP POLICY IF EXISTS "uploads_update_member" ON "Upload";
-CREATE POLICY "uploads_update_member" ON "Upload" FOR UPDATE
+DROP POLICY IF EXISTS "files_update_member" ON "File";
+CREATE POLICY "files_update_member" ON "File" FOR UPDATE
 USING ("organizationId" IS NOT NULL AND public.is_org_member("organizationId"::text, auth.uid()));
 
-DROP POLICY IF EXISTS "uploads_delete_member" ON "Upload";
-CREATE POLICY "uploads_delete_member" ON "Upload" FOR DELETE
+DROP POLICY IF EXISTS "files_delete_member" ON "File";
+CREATE POLICY "files_delete_member" ON "File" FOR DELETE
 USING ("organizationId" IS NOT NULL AND public.is_org_member("organizationId"::text, auth.uid()));
 
 DROP POLICY IF EXISTS "invoices_select_member" ON "Invoice";
@@ -247,10 +247,29 @@ USING (
 -- Storage policies (storage.objects)
 -- ============================================================================
 
+DROP POLICY IF EXISTS "invoices_member_access" ON storage.objects;
+CREATE POLICY "invoices_member_access"
+ON storage.objects FOR ALL
+USING (
+  bucket_id = 'invoices'
+  AND (string_to_array(name, '/'))[1] IS NOT NULL
+  AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
+)
+WITH CHECK (
+  bucket_id = 'invoices'
+  AND (string_to_array(name, '/'))[1] IS NOT NULL
+  AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
+);
+
 DROP POLICY IF EXISTS "documents_member_access" ON storage.objects;
 CREATE POLICY "documents_member_access"
 ON storage.objects FOR ALL
 USING (
+  bucket_id = 'documents'
+  AND (string_to_array(name, '/'))[1] IS NOT NULL
+  AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
+)
+WITH CHECK (
   bucket_id = 'documents'
   AND (string_to_array(name, '/'))[1] IS NOT NULL
   AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
@@ -263,4 +282,27 @@ USING (
   bucket_id = 'exports'
   AND (string_to_array(name, '/'))[1] IS NOT NULL
   AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
+)
+WITH CHECK (
+  bucket_id = 'exports'
+  AND (string_to_array(name, '/'))[1] IS NOT NULL
+  AND public.is_org_member((string_to_array(name, '/'))[1], auth.uid())
 );
+
+-- ============================================================================
+-- Grants for Supabase API roles (required in addition to RLS policies)
+-- ============================================================================
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  "Organization",
+  "User",
+  "OrganizationMember",
+  "File",
+  "Invoice",
+  "InvoiceLineItem",
+  "InvoiceRevision",
+  "Export",
+  "ExportInvoice"
+TO authenticated;

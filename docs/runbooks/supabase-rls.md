@@ -1,131 +1,85 @@
 ## Supabase RLS & Multi-Tenant Model
 
-This runbook describes how to wire Row Level Security (RLS) for multi-tenant
-access control when using Supabase Auth together with this app's Prisma schema.
+This runbook describes the current RLS setup for this project with:
 
-### 1. Mapping Supabase users to app users
+- Supabase Auth (`auth.uid()`)
+- Prisma models (`Organization`, `User`, `OrganizationMember`, `File`, `Invoice`, `Export`, ...)
+- org-based tenant isolation through `organizationId`
 
-Current Prisma schema models:
+### 1. Membership model used by policies
 
-- `Organization` – corresponds to a workspace
-- `User` – application user, currently not linked to Supabase `auth.users`
-
-Recommended additions (via a Prisma migration):
-
-- Add `supabaseUserId` column to `User`:
-
-```sql
-ALTER TABLE "User" ADD COLUMN "supabaseUserId" uuid UNIQUE;
-```
-
-- Ensure that `supabaseUserId` is populated when a user signs up via Supabase
-  (Server Action or API route using `auth.getUser()`).
-
-### 2. Basic RLS setup
-
-Enable RLS on tenant-aware tables. For now we treat `Organization` as workspace
-and scope related tables (`Upload`, `Invoice`, `Export`) by `organizationId`.
-
-Run the following SQL in the Supabase SQL editor (or via MCP):
-
-```sql
--- Enable RLS
-ALTER TABLE "Organization" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Upload" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Invoice" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Export" ENABLE ROW LEVEL SECURITY;
-```
-
-### 3. Policies based on auth.uid() + membership
-
-For now, we consider a user a member of an organization if:
+RLS membership checks are based on:
 
 - `User.supabaseUserId = auth.uid()`
-- `User.organizationId = Organization.id`
+- `OrganizationMember.userId = User.id`
+- `OrganizationMember.organizationId = <row.organizationId>`
 
-Example policies (adapt as your schema evolves toward explicit memberships):
+This means users can access tenant data only for organizations where they are members.
 
-```sql
--- Users can see and update their own user row
-CREATE POLICY "users_select_own"
-ON "User"
-FOR SELECT
-USING ("supabaseUserId" = auth.uid());
+### 2. Source of truth SQL files
 
-CREATE POLICY "users_update_own"
-ON "User"
-FOR UPDATE
-USING ("supabaseUserId" = auth.uid());
+Current policy scripts live in:
 
--- Organizations: a user can see their own organization
-CREATE POLICY "organizations_select_own"
-ON "Organization"
-FOR SELECT
-USING (EXISTS (
-  SELECT 1
-  FROM "User" u
-  WHERE u."id" = "Organization"."id"
-    AND u."supabaseUserId" = auth.uid()
-));
+- `prisma/migrations/setup_rls_policies.sql`
+- `prisma/migrations/fix_rls_recursion.sql`
 
--- Uploads scoped by organization
-CREATE POLICY "uploads_select_own_org"
-ON "Upload"
-FOR SELECT
-USING (EXISTS (
-  SELECT 1
-  FROM "User" u
-  WHERE u."organizationId" = "Upload"."organizationId"
-    AND u."supabaseUserId" = auth.uid()
-));
+Important: the schema now uses `File` (not `Upload`). Policies are defined for `File`, `Invoice`, `Export`, and related tables.
 
-CREATE POLICY "uploads_insert_own_org"
-ON "Upload"
-FOR INSERT
-WITH CHECK (EXISTS (
-  SELECT 1
-  FROM "User" u
-  WHERE u."organizationId" = "Upload"."organizationId"
-    AND u."supabaseUserId" = auth.uid()
-));
+### 3. Apply policies
 
--- Invoices scoped by organization
-CREATE POLICY "invoices_select_own_org"
-ON "Invoice"
-FOR SELECT
-USING (EXISTS (
-  SELECT 1
-  FROM "User" u
-  WHERE u."organizationId" = "Invoice"."organizationId"
-    AND u."supabaseUserId" = auth.uid()
-));
+Preferred:
 
--- Exports scoped by organization
-CREATE POLICY "exports_select_own_org"
-ON "Export"
-FOR SELECT
-USING (EXISTS (
-  SELECT 1
-  FROM "User" u
-  WHERE u."organizationId" = "Export"."organizationId"
-    AND u."supabaseUserId" = auth.uid()
-));
+```bash
+bun scripts/setup-rls.ts
 ```
 
-### 4. Prisma vs. RLS responsibilities
+This executes both SQL files in order:
 
-- **Prisma (application layer):**
-  - Always filter by `organizationId` (workspace) in repositories/services.
-  - Validate that the current user is a member of the workspace before
-    accessing or mutating tenant data.
+1. base policies (`setup_rls_policies.sql`)
+2. recursion fix + helper functions (`fix_rls_recursion.sql`)
 
-- **Supabase RLS (defense-in-depth + SDK reads):**
-  - Protects access for any queries executed through the Supabase SDK where the
-    auth JWT is attached (e.g. simple reads, Storage policies).
-  - Ensures that even if an API route forgets a tenant filter, the database
-    still enforces tenant isolation for Supabase-authenticated calls.
+Manual alternative (Supabase SQL editor or psql):
 
-> NOTE: As you introduce explicit `workspaces` and `memberships` tables, you
-> should update the policies above to reference those tables instead of the
-> implicit `Organization`/`User` relationship.
+```sql
+-- 1) prisma/migrations/setup_rls_policies.sql
+-- 2) prisma/migrations/fix_rls_recursion.sql
+```
+
+### 4. Why the recursion fix exists
+
+Policies on `OrganizationMember` can recurse when they query the same table.
+The fix introduces SECURITY DEFINER helper functions:
+
+- `public.is_org_member(org_id text, supabase_uid uuid)`
+- `public.is_org_member_with_role(org_id text, supabase_uid uuid, roles text[])`
+
+Other table policies then use these helpers, avoiding recursive evaluation.
+
+### 5. Verification
+
+Run the project test flow:
+
+```bash
+bun run supabase:setup
+bun run supabase:test
+```
+
+Relevant scripts:
+
+- `scripts/supabase/test-03-download-user-b-forbidden.ts`
+- `scripts/supabase/test-04-invoice-rls-user-b.ts`
+
+Expected:
+
+- User B cannot read User A's storage object (RLS denied)
+- User B sees only invoices from Organization B
+
+### 6. Prisma vs Supabase RLS responsibilities
+
+- Prisma service code in this app must always scope by `organizationId` and enforce membership via `getMyOrganizationIdOrThrow()`.
+- Supabase RLS is defense-in-depth for Supabase SDK access paths (including storage).
+
+Practical note:
+
+- Server-side Prisma connections commonly use elevated DB credentials and may bypass RLS depending on role privileges.
+- Therefore, application-level org scoping is mandatory even when RLS is enabled.

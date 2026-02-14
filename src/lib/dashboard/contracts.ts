@@ -1,7 +1,7 @@
 import type { InvoiceStatus } from '@/src/generated/prisma/client';
+import type { ApiInvoiceStatusGroup } from '@/src/lib/invoices/status';
 import type {
   DashboardStatusDistribution,
-  DashboardStatusGroup,
 } from '@/src/lib/dashboard/invoices';
 
 export interface DashboardInvoiceItem {
@@ -9,6 +9,7 @@ export interface DashboardInvoiceItem {
   number: string | null;
   supplierName: string | null;
   status: InvoiceStatus;
+  statusGroup: ApiInvoiceStatusGroup;
   grossAmount: number | null;
   createdAt: string;
   issueDate: string | null;
@@ -35,7 +36,7 @@ export interface DashboardInvoicesResponse {
 }
 
 export interface DashboardInvoicesQuery {
-  statusGroup?: DashboardStatusGroup;
+  statusGroup?: ApiInvoiceStatusGroup;
   status?: string;
   q?: string;
   search?: string;

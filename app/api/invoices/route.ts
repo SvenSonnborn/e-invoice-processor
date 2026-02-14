@@ -8,10 +8,13 @@ import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client';
 import {
   aggregateDashboardStatusDistribution,
   coerceGrossAmountToNumber,
-  getInvoiceStatusesForDashboardGroup,
-  isDashboardStatusGroup,
   startOfCurrentMonthInServerTimezone,
 } from '@/src/lib/dashboard/invoices';
+import {
+  getInvoiceStatusesForApiStatusGroup,
+  isApiInvoiceStatusGroup,
+  mapInvoiceStatusToApiStatusGroup,
+} from '@/src/lib/invoices/status';
 import type { DashboardInvoicesResponse } from '@/src/lib/dashboard/contracts';
 
 const listInvoicesQuerySchema = z.object({
@@ -81,15 +84,15 @@ export async function GET(request: NextRequest) {
     }
     if (
       rawStatusGroup !== undefined &&
-      !isDashboardStatusGroup(rawStatusGroup)
+      !isApiInvoiceStatusGroup(rawStatusGroup)
     ) {
       throw ApiError.validationError(
-        'statusGroup must be one of uploaded, processed, exported'
+        'statusGroup must be one of uploaded, processing, processed, failed, exported'
       );
     }
 
     const statusGroupStatuses =
-      getInvoiceStatusesForDashboardGroup(rawStatusGroup);
+      getInvoiceStatusesForApiStatusGroup(rawStatusGroup);
     const parsedStatuses = rawStatus
       ? rawStatus
           .split(',')
@@ -248,6 +251,7 @@ export async function GET(request: NextRequest) {
         number: invoice.number,
         supplierName: invoice.supplierName,
         status: invoice.status,
+        statusGroup: mapInvoiceStatusToApiStatusGroup(invoice.status),
         grossAmount:
           invoice.grossAmount === null
             ? null

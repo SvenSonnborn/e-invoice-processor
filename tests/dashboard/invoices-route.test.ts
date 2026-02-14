@@ -154,7 +154,7 @@ describe('GET /api/invoices', () => {
 
   it('returns filtered invoice items and aggregated stats', async () => {
     const request = new Request(
-      'http://localhost/api/invoices?statusGroup=processed&q=acme&limit=2&cursor=inv-99'
+      'http://localhost/api/invoices?statusGroup=processing&q=acme&limit=2&cursor=inv-99'
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,6 +164,16 @@ describe('GET /api/invoices', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.items).toHaveLength(2);
+    expect(data.items[0]).toMatchObject({
+      id: 'inv-3',
+      status: 'PARSED',
+      statusGroup: 'processing',
+    });
+    expect(data.items[1]).toMatchObject({
+      id: 'inv-2',
+      status: 'VALIDATED',
+      statusGroup: 'processed',
+    });
     expect(data.nextCursor).toBe('inv-2');
     expect(data.stats.totalCount).toBe(7);
     expect(data.stats.currentMonthCount).toBe(2);
@@ -180,7 +190,7 @@ describe('GET /api/invoices', () => {
     expect(findManyCalls[0].skip).toBe(1);
     expect(findManyCalls[0].where.organizationId).toBe('org-123');
     expect(findManyCalls[0].where.status).toEqual({
-      in: ['PARSED', 'VALIDATED'],
+      in: ['PARSED'],
     });
     expect(findManyCalls[0].where.OR).toBeDefined();
     expect(countCalls).toHaveLength(2);

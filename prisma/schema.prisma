@@ -194,6 +194,7 @@ model Invoice {
   @@index([status])
   @@index([taxId])
   @@index([createdBy])
+  @@unique([organizationId, number])
 }
 
 model InvoiceRevision {

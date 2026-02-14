@@ -17,6 +17,25 @@ enum InvoiceStatus {
 }
 ```
 
+Zusätzlich liefern API-Responses ein vereinfachtes `statusGroup` Feld:
+
+```typescript
+type ApiInvoiceStatusGroup =
+  | 'uploaded'
+  | 'processing'
+  | 'processed'
+  | 'failed'
+  | 'exported';
+```
+
+Mapping:
+
+- `UPLOADED`, `CREATED` -> `uploaded`
+- `PARSED` -> `processing`
+- `VALIDATED` -> `processed`
+- `FAILED` -> `failed`
+- `EXPORTED` -> `exported`
+
 ## Verarbeitungs-Pipeline
 
 ```
@@ -33,7 +52,7 @@ enum InvoiceStatus {
                      └────────┘
                           │
                           ▼
-                  (Retry → UPLOADED/CREATED)
+                  (Retry → UPLOADED/CREATED/PARSED)
 ```
 
 ## Automatische OCR-Verarbeitung nach Upload
@@ -52,7 +71,7 @@ Die Funktion `processInvoiceOcr()` aus `src/server/services/invoice-processing.t
 3. Invoice-Daten parsen
 4. **Daten-Validierung** via Zod-Schema (siehe unten)
 5. Status-Updates: UPLOADED → PARSED → VALIDATED
-6. Line Items erstellen
+6. Line Items ersetzen (idempotent bei Re-Processing)
 7. Bei Fehler: FAILED setzen mit Fehlermeldung
 
 ### Daten-Validierung (PARSED → VALIDATED)
@@ -65,7 +84,7 @@ Zwischen PARSED und VALIDATED werden die OCR-Daten durch den Invoice-Parser (`sr
 - **Gutschriften**: Negative Beträge werden akzeptiert (z.B. Stornos)
 - **Flattening**: Verschachtelte Strukturen (`supplier.name`, `totals.netAmount`) werden in flache DB-Felder überführt
 
-Bei Validierungsfehlern wird die Invoice mit Status `FAILED` und einer detaillierten Fehlermeldung markiert (z.B. `"Invoice data validation failed: Ungültiger Betrag; Ungültiges Datum"`).
+Bei Validierungsfehlern wird die Invoice mit Status `FAILED` und einer detaillierten Fehlermeldung markiert (z.B. `"Invoice data validation failed: Ungültiger Betrag; Ungültiges Datum"`). Bei Konflikten mit einer bereits vorhandenen Rechnungsnummer in derselben Organisation wird ebenfalls `FAILED` gesetzt und der Konflikt geloggt.
 
 ```typescript
 import { parseOcrInvoiceData } from '@/src/server/parsers/invoice';
@@ -84,7 +103,7 @@ OCR kann auch manuell über die API getriggert werden:
 POST /api/process-invoice/[fileId]
 ```
 
-Erfordert Authentifizierung und Organisation-Zugehörigkeit. Invoice muss im Status `UPLOADED` oder `CREATED` sein.
+Erfordert Authentifizierung und Organisation-Zugehörigkeit. Die Route unterstützt auch Re-Processing, sofern der aktuelle Status nach `PARSED` überführt werden darf.
 
 ## Status-Details
 
@@ -210,10 +229,10 @@ Erfordert Authentifizierung und Organisation-Zugehörigkeit. Invoice muss im Sta
 
 ```typescript
 CREATED    → PARSED, FAILED
-PARSED     → VALIDATED, FAILED
-VALIDATED  → EXPORTED, FAILED
-EXPORTED   → VALIDATED, FAILED  // Re-processing
-FAILED     → CREATED            // Retry
+PARSED     → PARSED, VALIDATED, FAILED
+VALIDATED  → PARSED, EXPORTED, FAILED
+EXPORTED   → PARSED, VALIDATED, FAILED  // Re-processing
+FAILED     → UPLOADED, CREATED, PARSED  // Retry / direct re-processing
 ```
 
 ### Validierung

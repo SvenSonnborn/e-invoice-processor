@@ -138,6 +138,7 @@ export interface ValidatedInvoiceFields {
   customerName?: string;
   issueDate?: Date;
   dueDate?: Date;
+  currency?: string;
   netAmount?: number;
   taxAmount?: number;
   grossAmount?: number;
@@ -200,6 +201,7 @@ export const parseOcrInvoiceData = (data: unknown): ParseOcrInvoiceResult => {
     customerName: parsed.customer?.name,
     issueDate: parsed.issueDate,
     dueDate: parsed.dueDate,
+    currency: parsed.totals?.currency ?? 'EUR',
     netAmount: parsed.totals?.netAmount,
     taxAmount: parsed.totals?.taxAmount,
     grossAmount: parsed.totals?.grossAmount,

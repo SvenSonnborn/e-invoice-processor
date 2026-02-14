@@ -5,8 +5,7 @@ Skripte zum Testen der Supabase-Integration: Storage (Upload/Download), RLS und 
 ## Preconditions
 
 - Supabase-Projekt läuft
-- DB-Schema und RLS-Policies sind aktiv (`setup_rls_policies.sql` angewendet)
-- **RLS-Rekursion-Fix:** Danach `fix_rls_recursion.sql` anwenden (oder Migration `fix_rls_recursion_v2`), sonst „infinite recursion“ bei Storage/Invoice.
+- DB-Schema und RLS-Policies sind aktiv (`bun scripts/setup-rls.ts` ausgeführt; beinhaltet Basis-Policies + Recursion-Fix)
 - Storage-Buckets `documents` und `exports` existieren (`bun run scripts/create-storage-buckets.ts` oder Supabase Dashboard)
 - `.env.local` enthält:
   - `NEXT_PUBLIC_SUPABASE_URL`

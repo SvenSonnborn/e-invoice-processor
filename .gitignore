@@ -45,10 +45,14 @@ next-env.d.ts
 /src/generated
 
 #custom
-.cursor
-CLAUDE.md
 .agents
 .claude
+.cursor
+.codex
+AGENTS.md
+AGENTS.override.md
+CLAUDE.md
+TEMPLATE.md
 
 # Supabase integration test config (contains test credentials)
 scripts/supabase/test-config.json
