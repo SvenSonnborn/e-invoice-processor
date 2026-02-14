@@ -1,59 +1,79 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { InvoiceParseResult } from '@/src/lib/zugferd/parser';
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 
 let persistCalls = 0;
 const persistFailuresByFilename = new Set<string>();
 
-let singleParseResult = {
-  success: true,
-  invoice: {
-    id: 'parsed-1',
-    format: 'ZUGFERD',
-    number: 'INV-2026-001',
-    supplier: { name: 'Lieferant GmbH' },
-    customer: { name: 'Kunde AG' },
-    issueDate: '2026-02-10',
-    dueDate: '2026-02-24',
-    totals: {
-      currency: 'EUR',
-      netAmount: '100.00',
-      taxAmount: '19.00',
-      grossAmount: '119.00',
-    },
-  },
-  extendedData: { lineItems: [] },
-  rawData: {},
-  validation: { valid: true, errors: [], warnings: [] },
-  detection: { flavor: 'ZUGFeRD' },
-  errors: [],
-  warnings: [],
-} as unknown as InvoiceParseResult;
+const buildValidCiiXml = (
+  documentNumber: string
+): string => `<?xml version="1.0" encoding="UTF-8"?>
+<CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
+  <ExchangedDocument>
+    <ID>${documentNumber}</ID>
+    <TypeCode>380</TypeCode>
+    <IssueDateTime>
+      <DateTimeString format="102">20260110</DateTimeString>
+    </IssueDateTime>
+  </ExchangedDocument>
+  <SupplyChainTradeTransaction>
+    <ApplicableHeaderTradeAgreement>
+      <SellerTradeParty>
+        <Name>Lieferant GmbH</Name>
+      </SellerTradeParty>
+      <BuyerTradeParty>
+        <Name>Kunde AG</Name>
+      </BuyerTradeParty>
+    </ApplicableHeaderTradeAgreement>
+    <ApplicableHeaderTradeSettlement>
+      <InvoiceCurrencyCode>EUR</InvoiceCurrencyCode>
+      <SpecifiedTradeSettlementHeaderMonetarySummation>
+        <GrandTotalAmount currencyID="EUR">119.00</GrandTotalAmount>
+      </SpecifiedTradeSettlementHeaderMonetarySummation>
+    </ApplicableHeaderTradeSettlement>
+  </SupplyChainTradeTransaction>
+</CrossIndustryInvoice>`;
 
-let batchParseResults: Array<InvoiceParseResult & { filename?: string }> = [
-  {
-    ...singleParseResult,
-    invoice: {
-      ...singleParseResult.invoice!,
-      number: 'INV-2026-101',
-    },
-    filename: 'item-0.xml',
-  },
-  {
-    ...singleParseResult,
-    invoice: {
-      ...singleParseResult.invoice!,
-      number: 'INV-2026-102',
-    },
-    filename: 'item-1.xml',
-  },
-];
-
-mock.module('@/src/lib/auth/session', () => ({
-  getMyOrganizationIdOrThrow: () =>
+mock.module('@/src/lib/supabase/server', () => ({
+  createSupabaseServerClient: () =>
     Promise.resolve({
-      user: { id: 'user-1' },
-      organizationId: 'org-123',
+      auth: {
+        getUser: () =>
+          Promise.resolve({
+            data: { user: { id: 'sup-123', email: 'user@example.com' } },
+            error: null,
+          }),
+      },
     }),
+}));
+
+mock.module('@/src/lib/db/client', () => ({
+  prisma: {
+    user: {
+      findUnique: () =>
+        Promise.resolve({
+          id: 'user-1',
+          email: 'user@example.com',
+          supabaseUserId: 'sup-123',
+        }),
+    },
+    organizationMember: {
+      findUnique: () => Promise.resolve({ organizationId: 'org-123' }),
+      findFirst: () => Promise.resolve({ organizationId: 'org-123' }),
+    },
+  },
+}));
+
+mock.module('next/headers', () => ({
+  cookies: () =>
+    Promise.resolve({
+      get: (name: string) =>
+        name === 'active-org-id' ? { value: 'org-123' } : undefined,
+    }),
+}));
+
+mock.module('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  },
 }));
 
 mock.module('@/src/lib/logging', () => ({
@@ -65,17 +85,10 @@ mock.module('@/src/lib/logging', () => ({
   },
 }));
 
-mock.module('@/src/lib/zugferd/parser', () => ({
-  parseInvoice: async () => singleParseResult,
-  parseInvoiceFromPDF: async () => singleParseResult,
-  parseInvoiceFromXML: async () => singleParseResult,
-  parseInvoicesBatch: async () => batchParseResults,
-}));
-
 mock.module('@/src/server/services/invoice-import', () => ({
   persistParsedInvoice: async (params: {
     source: { filename?: string };
-    parseResult: InvoiceParseResult;
+    parseResult: { invoice?: { number?: string | null } };
   }) => {
     persistCalls += 1;
 
@@ -99,56 +112,21 @@ describe('POST /api/invoices/import/zugferd', () => {
   beforeEach(() => {
     persistCalls = 0;
     persistFailuresByFilename.clear();
-    singleParseResult = {
-      success: true,
-      invoice: {
-        id: 'parsed-1',
-        format: 'ZUGFERD',
-        number: 'INV-2026-001',
-        supplier: { name: 'Lieferant GmbH' },
-        customer: { name: 'Kunde AG' },
-        issueDate: '2026-02-10',
-        dueDate: '2026-02-24',
-        totals: {
-          currency: 'EUR',
-          netAmount: '100.00',
-          taxAmount: '19.00',
-          grossAmount: '119.00',
-        },
-      },
-      extendedData: { lineItems: [] },
-      rawData: {},
-      validation: { valid: true, errors: [], warnings: [] },
-      detection: { flavor: 'ZUGFeRD' },
-      errors: [],
-      warnings: [],
-    } as unknown as InvoiceParseResult;
-    batchParseResults = [
-      {
-        ...singleParseResult,
-        invoice: {
-          ...singleParseResult.invoice!,
-          number: 'INV-2026-101',
-        },
-        filename: 'item-0.xml',
-      },
-      {
-        ...singleParseResult,
-        invoice: {
-          ...singleParseResult.invoice!,
-          number: 'INV-2026-102',
-        },
-        filename: 'item-1.xml',
-      },
-    ];
+  });
+
+  afterAll(() => {
+    mock.restore?.();
   });
 
   it('keeps parse-only behavior by default', async () => {
-    const request = new Request('http://localhost/api/invoices/import/zugferd', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ xml: '<invoice />' }),
-    });
+    const request = new Request(
+      'http://localhost/api/invoices/import/zugferd',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xml: buildValidCiiXml('INV-2026-001') }),
+      }
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await POST(request as any);
@@ -166,7 +144,7 @@ describe('POST /api/invoices/import/zugferd', () => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xml: '<invoice />' }),
+        body: JSON.stringify({ xml: buildValidCiiXml('INV-2026-001') }),
       }
     );
 
@@ -191,7 +169,7 @@ describe('POST /api/invoices/import/zugferd', () => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xml: '<invoice />' }),
+        body: JSON.stringify({ xml: buildValidCiiXml('INV-2026-001') }),
       }
     );
 
@@ -213,7 +191,10 @@ describe('POST /api/invoices/import/zugferd', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          invoices: [{ xml: '<invoice-a />' }, { xml: '<invoice-b />' }],
+          invoices: [
+            { xml: buildValidCiiXml('INV-2026-101') },
+            { xml: buildValidCiiXml('INV-2026-102') },
+          ],
         }),
       }
     );

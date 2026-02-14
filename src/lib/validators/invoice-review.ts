@@ -67,9 +67,7 @@ const positiveNumberSchema = z.preprocess(
 
 const requiredTextSchema = z.preprocess(
   trimString,
-  z
-    .string({ error: 'Feld ist erforderlich.' })
-    .min(1, 'Feld ist erforderlich.')
+  z.string({ error: 'Feld ist erforderlich.' }).min(1, 'Feld ist erforderlich.')
 );
 
 const optionalTextSchema = z.preprocess(
@@ -258,8 +256,7 @@ export const invoiceReviewSchema = invoiceReviewSchemaCore.superRefine(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['payment', 'termsText'],
-        message:
-          'Bitte Fälligkeitsdatum oder Zahlungsbedingungen hinterlegen.',
+        message: 'Bitte Fälligkeitsdatum oder Zahlungsbedingungen hinterlegen.',
       });
     }
 
@@ -312,7 +309,9 @@ export function normalizeInvoiceReviewPayload(
       postCode: value.seller.postCode.trim(),
       city: value.seller.city.trim(),
       countryCode: value.seller.countryCode.toUpperCase(),
-      vatId: value.seller.vatId ? normalizeVatId(value.seller.vatId) : undefined,
+      vatId: value.seller.vatId
+        ? normalizeVatId(value.seller.vatId)
+        : undefined,
       taxNumber: value.seller.taxNumber?.trim(),
     },
     buyer: {

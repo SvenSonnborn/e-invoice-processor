@@ -37,9 +37,7 @@ interface PersistencePayload {
   number: string | null;
 }
 
-function mapParseResult(
-  result: InvoiceParseResult & { filename?: string }
-): {
+function mapParseResult(result: InvoiceParseResult & { filename?: string }): {
   success: boolean;
   filename?: string;
   invoice?: unknown;
@@ -125,7 +123,11 @@ async function mapAndPersistBatchResults(
     } catch (error) {
       allSuccess = false;
       logger.error(
-        { error, organizationId: ctx.organizationId, filename: result.filename },
+        {
+          error,
+          organizationId: ctx.organizationId,
+          filename: result.filename,
+        },
         `Failed to persist parsed invoice from ${mode} batch`
       );
       mappedResults.push({

@@ -2,6 +2,29 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-14: XRechnung CII Generator + XSD Validation
+
+### Changes
+
+#### New: XRechnung generator
+
+- Added `src/lib/generators/xrechnungGenerator.ts` to generate human-readable
+  XRechnung XML (CII flavor) from DB invoice data.
+- Added shim export at `lib/generators/xrechnungGenerator.ts` for direct
+  project-root path usage.
+- Generator maps `Invoice` + `InvoiceLineItem[]` + optional
+  `rawJson.extendedData` into `@e-invoice-eu/core` input format and enforces
+  required invoice fields.
+
+#### New: Offline XSD validation for generated XML
+
+- Added offline CII/EN16931 XSD bundle under
+  `src/lib/generators/schemas/xrechnung/`.
+- Added validation pipeline using `xmllint --schema` with structured error
+  reporting.
+- Added explicit profile check for XRechnung 3.0 guideline id
+  (`xrechnung_3.0`) before returning generated XML.
+
 ## 2026-02-14: Supabase RLS alignment with current schema
 
 ### Changes

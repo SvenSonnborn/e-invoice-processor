@@ -180,9 +180,7 @@ function extractTagValue(xml: string, tagName: string): string | null {
   ).exec(xml);
   if (!match) return null;
 
-  const value = match[1]
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .trim();
+  const value = match[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
   return value.length > 0 ? value : null;
 }
 
@@ -313,7 +311,10 @@ export async function validateSellerVatId(
     );
   }
 
-  if (!parsedVatId || !isLocalFormatValid(parsedVatId.countryCode, parsedVatId.vatNumber)) {
+  if (
+    !parsedVatId ||
+    !isLocalFormatValid(parsedVatId.countryCode, parsedVatId.vatNumber)
+  ) {
     return buildResult(
       normalizedVatId,
       parsedVatId,

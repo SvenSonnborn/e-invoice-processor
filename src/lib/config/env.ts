@@ -12,7 +12,10 @@ const envSchema = z.object({
   VIES_VALIDATION_ENABLED: z.enum(['true', 'false']).optional(),
   VIES_TIMEOUT_MS: z
     .string()
-    .regex(/^\d+$/, 'VIES_TIMEOUT_MS must be a positive integer in milliseconds')
+    .regex(
+      /^\d+$/,
+      'VIES_TIMEOUT_MS must be a positive integer in milliseconds'
+    )
     .optional(),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])

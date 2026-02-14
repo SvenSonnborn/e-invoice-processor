@@ -24,6 +24,7 @@
     "supabase:test": "bun run supabase:test-01 && bun run supabase:test-02 && bun run supabase:test-03 && bun run supabase:test-04"
   },
   "dependencies": {
+    "@e-invoice-eu/core": "^2.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",

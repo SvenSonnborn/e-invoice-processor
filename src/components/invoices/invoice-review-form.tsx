@@ -315,7 +315,9 @@ export function InvoiceReviewForm({
 
       let payload: ApiErrorPayload | ApiSuccessPayload | null = null;
       try {
-        payload = (await response.json()) as ApiErrorPayload | ApiSuccessPayload;
+        payload = (await response.json()) as
+          | ApiErrorPayload
+          | ApiSuccessPayload;
       } catch {
         payload = null;
       }
@@ -372,7 +374,11 @@ export function InvoiceReviewForm({
       </CardHeader>
 
       <CardContent>
-        <form className="space-y-8" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form
+          className="space-y-8"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <section className="space-y-4">
             <h3 className="text-base font-semibold">Header</h3>
             <div className="grid gap-4 md:grid-cols-2">
@@ -407,7 +413,10 @@ export function InvoiceReviewForm({
                   Rechnungsnummer
                   {confidenceBadge(fieldConfidence, 'header.invoiceNumber')}
                 </Label>
-                <Input id="header.invoiceNumber" {...register('header.invoiceNumber')} />
+                <Input
+                  id="header.invoiceNumber"
+                  {...register('header.invoiceNumber')}
+                />
                 <FieldError message={errors.header?.invoiceNumber?.message} />
               </div>
 
@@ -504,7 +513,10 @@ export function InvoiceReviewForm({
                   Land (ISO2)
                   {confidenceBadge(fieldConfidence, 'seller.countryCode')}
                 </Label>
-                <Input id="seller.countryCode" {...register('seller.countryCode')} />
+                <Input
+                  id="seller.countryCode"
+                  {...register('seller.countryCode')}
+                />
                 <FieldError message={errors.seller?.countryCode?.message} />
               </div>
 
@@ -522,7 +534,10 @@ export function InvoiceReviewForm({
                   Steuernummer
                   {confidenceBadge(fieldConfidence, 'seller.taxNumber')}
                 </Label>
-                <Input id="seller.taxNumber" {...register('seller.taxNumber')} />
+                <Input
+                  id="seller.taxNumber"
+                  {...register('seller.taxNumber')}
+                />
                 <FieldError message={errors.seller?.taxNumber?.message} />
               </div>
             </div>
@@ -572,7 +587,10 @@ export function InvoiceReviewForm({
                   Land (ISO2)
                   {confidenceBadge(fieldConfidence, 'buyer.countryCode')}
                 </Label>
-                <Input id="buyer.countryCode" {...register('buyer.countryCode')} />
+                <Input
+                  id="buyer.countryCode"
+                  {...register('buyer.countryCode')}
+                />
                 <FieldError message={errors.buyer?.countryCode?.message} />
               </div>
             </div>
@@ -621,7 +639,10 @@ export function InvoiceReviewForm({
                   Zahlungsbedingungen
                   {confidenceBadge(fieldConfidence, 'payment.termsText')}
                 </Label>
-                <Input id="payment.termsText" {...register('payment.termsText')} />
+                <Input
+                  id="payment.termsText"
+                  {...register('payment.termsText')}
+                />
                 <FieldError message={errors.payment?.termsText?.message} />
               </div>
             </div>
@@ -680,13 +701,18 @@ export function InvoiceReviewForm({
                       id={`lines.${index}.description`}
                       {...register(`lines.${index}.description`)}
                     />
-                    <FieldError message={errors.lines?.[index]?.description?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.description?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor={`lines.${index}.quantity`}>
                       Menge
-                      {confidenceBadge(fieldConfidence, `lines.${index}.quantity`)}
+                      {confidenceBadge(
+                        fieldConfidence,
+                        `lines.${index}.quantity`
+                      )}
                     </Label>
                     <Input
                       id={`lines.${index}.quantity`}
@@ -694,7 +720,9 @@ export function InvoiceReviewForm({
                       step="0.0001"
                       {...register(`lines.${index}.quantity`)}
                     />
-                    <FieldError message={errors.lines?.[index]?.quantity?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.quantity?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -702,14 +730,22 @@ export function InvoiceReviewForm({
                       Einheit
                       {confidenceBadge(fieldConfidence, `lines.${index}.unit`)}
                     </Label>
-                    <Input id={`lines.${index}.unit`} {...register(`lines.${index}.unit`)} />
-                    <FieldError message={errors.lines?.[index]?.unit?.message} />
+                    <Input
+                      id={`lines.${index}.unit`}
+                      {...register(`lines.${index}.unit`)}
+                    />
+                    <FieldError
+                      message={errors.lines?.[index]?.unit?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor={`lines.${index}.unitPrice`}>
                       Einzelpreis
-                      {confidenceBadge(fieldConfidence, `lines.${index}.unitPrice`)}
+                      {confidenceBadge(
+                        fieldConfidence,
+                        `lines.${index}.unitPrice`
+                      )}
                     </Label>
                     <Input
                       id={`lines.${index}.unitPrice`}
@@ -717,13 +753,18 @@ export function InvoiceReviewForm({
                       step="0.01"
                       {...register(`lines.${index}.unitPrice`)}
                     />
-                    <FieldError message={errors.lines?.[index]?.unitPrice?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.unitPrice?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor={`lines.${index}.netAmount`}>
                       Nettobetrag
-                      {confidenceBadge(fieldConfidence, `lines.${index}.netAmount`)}
+                      {confidenceBadge(
+                        fieldConfidence,
+                        `lines.${index}.netAmount`
+                      )}
                     </Label>
                     <Input
                       id={`lines.${index}.netAmount`}
@@ -731,13 +772,18 @@ export function InvoiceReviewForm({
                       step="0.01"
                       {...register(`lines.${index}.netAmount`)}
                     />
-                    <FieldError message={errors.lines?.[index]?.netAmount?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.netAmount?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor={`lines.${index}.vatRate`}>
                       USt. Satz
-                      {confidenceBadge(fieldConfidence, `lines.${index}.vatRate`)}
+                      {confidenceBadge(
+                        fieldConfidence,
+                        `lines.${index}.vatRate`
+                      )}
                     </Label>
                     <Controller
                       control={control}
@@ -745,7 +791,9 @@ export function InvoiceReviewForm({
                       render={({ field: vatField }) => (
                         <Select
                           value={String(vatField.value)}
-                          onValueChange={(value) => vatField.onChange(Number(value))}
+                          onValueChange={(value) =>
+                            vatField.onChange(Number(value))
+                          }
                         >
                           <SelectTrigger id={`lines.${index}.vatRate`}>
                             <SelectValue placeholder="USt. Satz" />
@@ -760,7 +808,9 @@ export function InvoiceReviewForm({
                         </Select>
                       )}
                     />
-                    <FieldError message={errors.lines?.[index]?.vatRate?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.vatRate?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -775,7 +825,9 @@ export function InvoiceReviewForm({
                       id={`lines.${index}.vatCategory`}
                       {...register(`lines.${index}.vatCategory`)}
                     />
-                    <FieldError message={errors.lines?.[index]?.vatCategory?.message} />
+                    <FieldError
+                      message={errors.lines?.[index]?.vatCategory?.message}
+                    />
                   </div>
                 </div>
               </div>
@@ -864,7 +916,9 @@ export function InvoiceReviewForm({
                       render={({ field: rateField }) => (
                         <Select
                           value={String(rateField.value)}
-                          onValueChange={(value) => rateField.onChange(Number(value))}
+                          onValueChange={(value) =>
+                            rateField.onChange(Number(value))
+                          }
                         >
                           <SelectTrigger id={`taxBreakdown.${index}.rate`}>
                             <SelectValue placeholder="Satz" />
@@ -879,7 +933,9 @@ export function InvoiceReviewForm({
                         </Select>
                       )}
                     />
-                    <FieldError message={errors.taxBreakdown?.[index]?.rate?.message} />
+                    <FieldError
+                      message={errors.taxBreakdown?.[index]?.rate?.message}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -897,7 +953,9 @@ export function InvoiceReviewForm({
                       {...register(`taxBreakdown.${index}.taxableAmount`)}
                     />
                     <FieldError
-                      message={errors.taxBreakdown?.[index]?.taxableAmount?.message}
+                      message={
+                        errors.taxBreakdown?.[index]?.taxableAmount?.message
+                      }
                     />
                   </div>
 
