@@ -40,7 +40,9 @@ async function setupRLS() {
     console.log('🛠️ Applying RLS recursion fix helpers/policies...');
     await pool.query(recursionFixSql);
 
-    console.log('✅ RLS policies successfully applied (including recursion fix)!');
+    console.log(
+      '✅ RLS policies successfully applied (including recursion fix)!'
+    );
     console.log('');
     console.log('Next steps:');
     console.log('1. Create storage buckets in Supabase Dashboard:');

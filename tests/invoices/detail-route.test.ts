@@ -378,9 +378,7 @@ describe('GET/PUT /api/invoices/[invoiceId]', () => {
       | undefined;
 
     expect(normalized?.header?.currency).toBe('EUR');
-    expect(normalized?.payment?.iban).toBe(
-      'DE44500105175407324931'
-    );
+    expect(normalized?.payment?.iban).toBe('DE44500105175407324931');
   });
 
   it('returns 400 when VIES marks vat id as invalid', async () => {

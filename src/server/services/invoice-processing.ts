@@ -123,8 +123,7 @@ function toDbUpdateProcessingError(
 export async function processInvoiceOcr(
   params: ProcessInvoiceParams
 ): Promise<ProcessInvoiceResult> {
-  const { fileId, invoiceId, storageKey, contentType, sourceFileName } =
-    params;
+  const { fileId, invoiceId, storageKey, contentType, sourceFileName } = params;
 
   logger.info({ fileId, invoiceId }, 'Starting invoice OCR processing');
 

@@ -170,7 +170,12 @@ Uploads an invoice file, creates File + Invoice records, and automatically trigg
     "status": "PENDING",
     "createdAt": "..."
   },
-  "invoice": { "id": "...", "fileId": "...", "status": "UPLOADED", "statusGroup": "uploaded" }
+  "invoice": {
+    "id": "...",
+    "fileId": "...",
+    "status": "UPLOADED",
+    "statusGroup": "uploaded"
+  }
 }
 ```
 
@@ -316,16 +321,16 @@ All API routes return a consistent structured error format:
 
 ### Error codes
 
-| Code                         | HTTP Status | Description                         |
-| ---------------------------- | ----------- | ----------------------------------- |
-| `UNAUTHENTICATED`            | 401         | No valid session                    |
-| `NO_ORGANIZATION`            | 403         | User has no organization membership |
-| `ORGANIZATION_LOOKUP_FAILED` | 400         | Organization lookup failed          |
-| `VALIDATION_ERROR`           | 400         | Invalid request data                |
-| `NOT_FOUND`                  | 404         | Resource not found                  |
-| `FORBIDDEN`                  | 403         | Access denied                       |
-| `RATE_LIMIT_EXCEEDED`        | 429         | Rate limit exceeded                 |
-| `INTERNAL_ERROR`             | 500         | Internal server error               |
+| Code                         | HTTP Status | Description                          |
+| ---------------------------- | ----------- | ------------------------------------ |
+| `UNAUTHENTICATED`            | 401         | No valid session                     |
+| `NO_ORGANIZATION`            | 403         | User has no organization membership  |
+| `ORGANIZATION_LOOKUP_FAILED` | 400         | Organization lookup failed           |
+| `VALIDATION_ERROR`           | 400         | Invalid request data                 |
+| `NOT_FOUND`                  | 404         | Resource not found                   |
+| `FORBIDDEN`                  | 403         | Access denied                        |
+| `RATE_LIMIT_EXCEEDED`        | 429         | Rate limit exceeded                  |
+| `INTERNAL_ERROR`             | 500         | Internal server error                |
 | `DUPLICATE_INVOICE_NUMBER`   | 409         | Invoice number already exists in org |
 
 ## Rate Limiting

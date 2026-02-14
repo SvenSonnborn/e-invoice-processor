@@ -1,8 +1,6 @@
 import type { InvoiceStatus } from '@/src/generated/prisma/client';
 import type { ApiInvoiceStatusGroup } from '@/src/lib/invoices/status';
-import type {
-  DashboardStatusDistribution,
-} from '@/src/lib/dashboard/invoices';
+import type { DashboardStatusDistribution } from '@/src/lib/dashboard/invoices';
 
 export interface DashboardInvoiceItem {
   id: string;

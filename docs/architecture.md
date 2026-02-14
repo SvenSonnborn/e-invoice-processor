@@ -105,6 +105,13 @@ All API routes require authentication except:
 - CSV exporter in `src/server/exporters/csv/`
 - DATEV exporter in `src/server/exporters/datev/`
 
+### Generators
+
+- XRechnung CII generator in `src/lib/generators/xrechnungGenerator.ts`
+  (based on `@e-invoice-eu/core`)
+- Offline CII/EN16931 XSD files for generator validation in
+  `src/lib/generators/schemas/xrechnung/`
+
 ## Data Flow
 
 1. User uploads invoice file

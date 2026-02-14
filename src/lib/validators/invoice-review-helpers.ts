@@ -115,11 +115,15 @@ export function validateInvoiceBusinessRules(
   if (!approximatelyEqual(sumTaxable, data.totals.netAmount)) {
     issues.push({
       path: ['taxBreakdown'],
-      message: 'Summe der steuerpflichtigen Beträge passt nicht zum Nettobetrag.',
+      message:
+        'Summe der steuerpflichtigen Beträge passt nicht zum Nettobetrag.',
     });
   }
 
-  const sumTax = data.taxBreakdown.reduce((sum, item) => sum + item.taxAmount, 0);
+  const sumTax = data.taxBreakdown.reduce(
+    (sum, item) => sum + item.taxAmount,
+    0
+  );
   if (!approximatelyEqual(sumTax, data.totals.vatAmount)) {
     issues.push({
       path: ['totals', 'vatAmount'],

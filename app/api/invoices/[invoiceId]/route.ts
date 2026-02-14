@@ -136,7 +136,9 @@ export async function PUT(
     try {
       payload = await request.json();
     } catch {
-      throw ApiError.validationError('Ungültiger Request-Body (JSON erwartet).');
+      throw ApiError.validationError(
+        'Ungültiger Request-Body (JSON erwartet).'
+      );
     }
 
     const parsed = invoiceReviewSchema.safeParse(payload);
@@ -245,10 +247,16 @@ export async function PUT(
     } catch (error) {
       if (
         isPrismaUniqueConstraintError(error, ['organizationId', 'number']) ||
-        isPrismaUniqueConstraintError(error, ['Invoice_organizationId_number_key'])
+        isPrismaUniqueConstraintError(error, [
+          'Invoice_organizationId_number_key',
+        ])
       ) {
         logger.warn(
-          { invoiceId, organizationId, number: normalized.header.invoiceNumber },
+          {
+            invoiceId,
+            organizationId,
+            number: normalized.header.invoiceNumber,
+          },
           'Duplicate invoice number rejected during manual review update'
         );
         return NextResponse.json(

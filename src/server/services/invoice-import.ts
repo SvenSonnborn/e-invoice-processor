@@ -1,9 +1,6 @@
 import { prisma } from '@/src/lib/db/client';
 import { isPrismaUniqueConstraintError } from '@/src/lib/db/prisma-errors';
-import type {
-  InvoiceStatus,
-  Prisma,
-} from '@/src/generated/prisma/client';
+import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client';
 import type { InvoiceParseResult } from '@/src/lib/zugferd/parser';
 
 export interface PersistParsedInvoiceParams {
@@ -63,9 +60,7 @@ function normalizeNumber(value: string | undefined): string | null {
   return normalized;
 }
 
-function mapLineItems(
-  parseResult: InvoiceParseResult
-): Array<{
+function mapLineItems(parseResult: InvoiceParseResult): Array<{
   positionIndex: number;
   description: string | null;
   quantity: number | null;

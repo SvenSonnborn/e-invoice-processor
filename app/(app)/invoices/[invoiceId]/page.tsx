@@ -124,8 +124,10 @@ export default async function InvoiceDetailPage({
     ? (reviewData?.taxBreakdown as Array<Record<string, unknown>>)
     : [];
 
-  const fallbackNet = asNumber(invoice.netAmount) ?? asNumber(ocrTotals?.netAmount) ?? 0;
-  const fallbackVat = asNumber(invoice.taxAmount) ?? asNumber(ocrTotals?.taxAmount) ?? 0;
+  const fallbackNet =
+    asNumber(invoice.netAmount) ?? asNumber(ocrTotals?.netAmount) ?? 0;
+  const fallbackVat =
+    asNumber(invoice.taxAmount) ?? asNumber(ocrTotals?.taxAmount) ?? 0;
   const fallbackGross =
     (invoice.grossAmount === null
       ? undefined
@@ -231,11 +233,9 @@ export default async function InvoiceDetailPage({
                     asNumber(line.total) ??
                     asNumber(line.grossAmount) ??
                     0,
-                  vatRate:
-                    ((asNumber(line.vatRate) ?? asNumber(line.taxRate) ?? 19) as
-                      | 0
-                      | 7
-                      | 19),
+                  vatRate: (asNumber(line.vatRate) ??
+                    asNumber(line.taxRate) ??
+                    19) as 0 | 7 | 19,
                   vatCategory: asString(line.vatCategory) ?? 'S',
                 }))
               : undefined,
@@ -247,7 +247,7 @@ export default async function InvoiceDetailPage({
           taxBreakdown:
             taxBreakdownCandidates.length > 0
               ? taxBreakdownCandidates.map((item) => ({
-                  rate: ((asNumber(item.rate) ?? 19) as 0 | 7 | 19),
+                  rate: (asNumber(item.rate) ?? 19) as 0 | 7 | 19,
                   taxableAmount: asNumber(item.taxableAmount) ?? 0,
                   taxAmount: asNumber(item.taxAmount) ?? 0,
                 }))

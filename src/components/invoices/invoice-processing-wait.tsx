@@ -102,7 +102,11 @@ export function InvoiceProcessingWait({
             Die Verarbeitung dauert länger als erwartet. Bitte erneut prüfen.
           </p>
         )}
-        <Button type="button" variant="outline" onClick={() => router.refresh()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.refresh()}
+        >
           Erneut prüfen
         </Button>
       </CardContent>
