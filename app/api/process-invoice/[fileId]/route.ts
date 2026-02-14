@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/src/lib/db/client';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import {
+  isValidStatusTransition,
+  mapInvoiceStatusToApiStatusGroup,
+} from '@/src/lib/invoices/status';
 import { logger } from '@/src/lib/logging';
 import {
   processInvoiceOcr,
   InvoiceProcessingError,
+  InvoiceProcessingErrorCode,
 } from '@/src/server/services/invoice-processing';
 
 export const runtime = 'nodejs';
@@ -16,7 +21,7 @@ export const dynamic = 'force-dynamic';
  *
  * Manually triggers OCR processing for an uploaded invoice file.
  * Delegates to the shared processInvoiceOcr service.
- * Flow: UPLOADED → PARSED → VALIDATED (or → FAILED on error)
+ * Supports both initial processing and manual re-processing.
  */
 export async function POST(
   _request: NextRequest,
@@ -46,13 +51,13 @@ export async function POST(
       throw ApiError.notFound(`No invoice linked to file ${fileId}`);
     }
 
-    if (invoice.status !== 'UPLOADED' && invoice.status !== 'CREATED') {
+    if (!isValidStatusTransition(invoice.status, 'PARSED')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: 'ALREADY_PROCESSED',
-            message: `Invoice is already in status "${invoice.status}" and cannot be re-processed from this endpoint`,
+            code: 'INVALID_STATUS_TRANSITION',
+            message: `Invoice in status "${invoice.status}" cannot be moved to PARSED for processing`,
           },
         },
         { status: 409 }
@@ -77,6 +82,7 @@ export async function POST(
       invoice: {
         id: updatedInvoice!.id,
         status: updatedInvoice!.status,
+        statusGroup: mapInvoiceStatusToApiStatusGroup(updatedInvoice!.status),
         number: updatedInvoice!.number,
         supplierName: updatedInvoice!.supplierName,
         customerName: updatedInvoice!.customerName,
@@ -94,6 +100,25 @@ export async function POST(
     if (error instanceof ApiError) return error.toResponse();
 
     if (error instanceof InvoiceProcessingError) {
+      if (error.code === InvoiceProcessingErrorCode.DB_UPDATE_FAILED) {
+        const conflictField =
+          typeof error.details.conflictField === 'string'
+            ? error.details.conflictField
+            : undefined;
+        if (conflictField === 'number') {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: 'DUPLICATE_INVOICE_NUMBER',
+                message: error.message,
+              },
+            },
+            { status: 409 }
+          );
+        }
+      }
+
       logger.error(
         { code: error.code, details: error.details, fileId },
         `Invoice processing failed: ${error.message}`

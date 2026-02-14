@@ -14,10 +14,27 @@ This directory contains API documentation for the E-Rechnung application.
 - `PUT /api/invoices/[invoiceId]` - Update invoice
 - `DELETE /api/invoices/[invoiceId]` - Delete invoice
 
+#### Invoice API status groups
+
+Several invoice endpoints return both:
+
+- `status` (database enum: `UPLOADED`, `CREATED`, `PARSED`, `VALIDATED`, `FAILED`, `EXPORTED`)
+- `statusGroup` (API grouping: `uploaded`, `processing`, `processed`, `failed`, `exported`)
+
+Mapping:
+
+- `UPLOADED`, `CREATED` -> `uploaded`
+- `PARSED` -> `processing`
+- `VALIDATED` -> `processed`
+- `FAILED` -> `failed`
+- `EXPORTED` -> `exported`
+
+`GET /api/invoices` supports `statusGroup` filtering with all five values above.
+
 ### ZUGFeRD / XRechnung Import
 
 - `GET /api/invoices/import/zugferd` - API metadata and supported formats
-- `POST /api/invoices/import/zugferd` - Parse ZUGFeRD/XRechnung files (single or batch); parse-only, no persistence
+- `POST /api/invoices/import/zugferd` - Parse ZUGFeRD/XRechnung files (single or batch); optional persistence with `save=true`
 
 ### Exports
 
@@ -70,7 +87,13 @@ Returns API metadata and supported formats.
 
 **POST /api/invoices/import/zugferd**
 
-Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (validate/preview): it does not persist invoices to the database. Use it to validate files or to preview extracted data before committing. Persistence (e.g. a separate “import and save” endpoint or an optional `save=true` query parameter) may be added in a future release.
+Parses one or more ZUGFeRD/XRechnung files. By default the endpoint is parse-only (validate/preview). With query parameter `save=true` (or `save=1`), successful parse results are persisted to the `Invoice` table.
+
+When `save=true`:
+
+- A new invoice is created if no invoice with the same `number` exists in the organization.
+- Existing invoice data is updated on re-processing (same `organizationId` + `number`).
+- Invoices with `EXPORTED` status keep `EXPORTED`; others are set to `VALIDATED`.
 
 **Content types:** `multipart/form-data` (file upload) or `application/json`.
 
@@ -96,6 +119,21 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
 }
 ```
 
+When `save=true`, successful responses additionally include:
+
+```json
+{
+  "persistence": {
+    "saved": true,
+    "invoiceId": "...",
+    "action": "created | updated",
+    "status": "VALIDATED | EXPORTED",
+    "statusGroup": "processed | exported",
+    "number": "..."
+  }
+}
+```
+
 **Success (batch, 200 or 207):** When all items succeed → 200. When at least one fails → 207 Multi-Status.
 
 ```json
@@ -103,13 +141,13 @@ Parses one or more ZUGFeRD/XRechnung files. This endpoint is **parse-only** (val
   "success": false,
   "batch": true,
   "results": [
-    { "success": true, "filename": "inv1.pdf", "invoice": { ... }, "extendedData": { ... }, "validation": { ... }, "detection": { ... }, "errors": [], "warnings": [] },
+    { "success": true, "filename": "inv1.pdf", "invoice": { ... }, "extendedData": { ... }, "validation": { ... }, "detection": { ... }, "errors": [], "warnings": [], "persistence": { "saved": true, "invoiceId": "...", "action": "created", "status": "VALIDATED", "statusGroup": "processed", "number": "..." } },
     { "success": false, "filename": "inv2.xml", "errors": ["..."], "warnings": [], "validation": { ... }, "detection": { ... } }
   ]
 }
 ```
 
-**Error (400):** Missing/invalid body, file too large, too many files, or parse failure (single request).
+**Error (400):** Missing/invalid body, invalid `save` query value, file too large, too many files, or parse failure (single request).
 **Error (500):** Internal server error.
 
 ## Invoice Processing
@@ -132,7 +170,7 @@ Uploads an invoice file, creates File + Invoice records, and automatically trigg
     "status": "PENDING",
     "createdAt": "..."
   },
-  "invoice": { "id": "...", "fileId": "...", "status": "UPLOADED" }
+  "invoice": { "id": "...", "fileId": "...", "status": "UPLOADED", "statusGroup": "uploaded" }
 }
 ```
 
@@ -142,7 +180,7 @@ OCR runs asynchronously after the response is returned. The invoice status will 
 
 **POST /api/process-invoice/[fileId]**
 
-Manually triggers OCR processing for an uploaded invoice. Requires the invoice to be in `UPLOADED` or `CREATED` status.
+Manually triggers OCR processing for an uploaded invoice. Supports initial processing and re-processing if the current status can transition to `PARSED`.
 
 **Response (200):**
 
@@ -152,6 +190,7 @@ Manually triggers OCR processing for an uploaded invoice. Requires the invoice t
   "invoice": {
     "id": "...",
     "status": "VALIDATED",
+    "statusGroup": "processed",
     "number": "RE-2024-001",
     "supplierName": "Firma GmbH",
     "customerName": "Kunde AG",
@@ -164,7 +203,7 @@ Manually triggers OCR processing for an uploaded invoice. Requires the invoice t
 }
 ```
 
-**Error (409):** Invoice already processed (not in `UPLOADED`/`CREATED` status).
+**Error (409):** Invalid status transition to `PARSED` or duplicate `invoice number` conflict.
 **Error (404):** File or linked invoice not found.
 **Error (403):** File belongs to different organization.
 
@@ -287,6 +326,7 @@ All API routes return a consistent structured error format:
 | `FORBIDDEN`                  | 403         | Access denied                       |
 | `RATE_LIMIT_EXCEEDED`        | 429         | Rate limit exceeded                 |
 | `INTERNAL_ERROR`             | 500         | Internal server error               |
+| `DUPLICATE_INVOICE_NUMBER`   | 409         | Invoice number already exists in org |
 
 ## Rate Limiting
 

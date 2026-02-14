@@ -4,8 +4,14 @@
 -- This script enables RLS on all tables and creates policies for multi-tenant
 -- access control based on OrganizationMember relationships.
 --
--- Run this script in the Supabase SQL Editor or via MCP:
--- psql $DATABASE_URL -f prisma/migrations/setup_rls_policies.sql
+-- IMPORTANT: This file uses inline subqueries on OrganizationMember.
+-- The companion script `fix_rls_recursion.sql` MUST be applied afterwards.
+-- It drops and recreates key policies using SECURITY DEFINER helper functions
+-- to avoid infinite recursion when OrganizationMember policies evaluate
+-- subqueries against OrganizationMember itself.
+--
+-- Preferred execution: `bun scripts/setup-rls.ts` (applies both in order).
+-- Manual: psql $DATABASE_URL -f prisma/migrations/setup_rls_policies.sql
 -- ============================================================================
 
 -- ============================================================================
@@ -15,7 +21,7 @@
 ALTER TABLE "Organization" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "OrganizationMember" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Upload" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "File" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Invoice" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "InvoiceLineItem" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "InvoiceRevision" ENABLE ROW LEVEL SECURITY;
@@ -152,49 +158,49 @@ USING (
 );
 
 -- ============================================================================
--- 5. UPLOAD POLICIES
+-- 5. FILE POLICIES
 -- ============================================================================
 
-CREATE POLICY "uploads_select_member"
-ON "Upload" FOR SELECT
+CREATE POLICY "files_select_member"
+ON "File" FOR SELECT
 USING (
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om
     JOIN "User" u ON u."id" = om."userId"
-    WHERE om."organizationId" = "Upload"."organizationId"
+    WHERE om."organizationId" = "File"."organizationId"
     AND u."supabaseUserId"::text = auth.uid()::text
   )
 );
 
-CREATE POLICY "uploads_insert_member"
-ON "Upload" FOR INSERT
+CREATE POLICY "files_insert_member"
+ON "File" FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om
     JOIN "User" u ON u."id" = om."userId"
-    WHERE om."organizationId" = "Upload"."organizationId"
+    WHERE om."organizationId" = "File"."organizationId"
     AND u."supabaseUserId"::text = auth.uid()::text
   )
 );
 
-CREATE POLICY "uploads_update_member"
-ON "Upload" FOR UPDATE
+CREATE POLICY "files_update_member"
+ON "File" FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om
     JOIN "User" u ON u."id" = om."userId"
-    WHERE om."organizationId" = "Upload"."organizationId"
+    WHERE om."organizationId" = "File"."organizationId"
     AND u."supabaseUserId"::text = auth.uid()::text
   )
 );
 
-CREATE POLICY "uploads_delete_member"
-ON "Upload" FOR DELETE
+CREATE POLICY "files_delete_member"
+ON "File" FOR DELETE
 USING (
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om
     JOIN "User" u ON u."id" = om."userId"
-    WHERE om."organizationId" = "Upload"."organizationId"
+    WHERE om."organizationId" = "File"."organizationId"
     AND u."supabaseUserId"::text = auth.uid()::text
   )
 );
@@ -416,16 +422,47 @@ USING (
 );
 
 -- ============================================================================
--- 11. STORAGE POLICIES (for buckets: documents, exports)
+-- 11. STORAGE POLICIES (for buckets: invoices, documents, exports)
 -- ============================================================================
 -- NOTE: These policies assume the file path structure:
 --       {bucket}/{organizationId}/...
 -- Storage policies are applied to the storage.objects table.
 
+-- Invoices bucket: Only members can access
+CREATE POLICY "invoices_member_access"
+ON storage.objects FOR ALL
+USING (
+  bucket_id = 'invoices' AND
+  EXISTS (
+    SELECT 1 FROM "OrganizationMember" om
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE u."supabaseUserId"::text = auth.uid()::text
+    AND om."organizationId" = (string_to_array(name, '/'))[1]
+  )
+)
+WITH CHECK (
+  bucket_id = 'invoices' AND
+  EXISTS (
+    SELECT 1 FROM "OrganizationMember" om
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE u."supabaseUserId"::text = auth.uid()::text
+    AND om."organizationId" = (string_to_array(name, '/'))[1]
+  )
+);
+
 -- Documents bucket: Only members can access
 CREATE POLICY "documents_member_access"
 ON storage.objects FOR ALL
 USING (
+  bucket_id = 'documents' AND
+  EXISTS (
+    SELECT 1 FROM "OrganizationMember" om
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE u."supabaseUserId"::text = auth.uid()::text
+    AND om."organizationId" = (string_to_array(name, '/'))[1]
+  )
+)
+WITH CHECK (
   bucket_id = 'documents' AND
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om
@@ -439,6 +476,15 @@ USING (
 CREATE POLICY "exports_member_access"
 ON storage.objects FOR ALL
 USING (
+  bucket_id = 'exports' AND
+  EXISTS (
+    SELECT 1 FROM "OrganizationMember" om
+    JOIN "User" u ON u."id" = om."userId"
+    WHERE u."supabaseUserId"::text = auth.uid()::text
+    AND om."organizationId" = (string_to_array(name, '/'))[1]
+  )
+)
+WITH CHECK (
   bucket_id = 'exports' AND
   EXISTS (
     SELECT 1 FROM "OrganizationMember" om

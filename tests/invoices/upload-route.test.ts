@@ -180,6 +180,7 @@ describe('POST /api/invoices/upload', () => {
     expect(data.invoice.id).toBe('invoice-1');
     expect(data.invoice.fileId).toBe('upload-1');
     expect(data.invoice.status).toBe('UPLOADED');
+    expect(data.invoice.statusGroup).toBe('uploaded');
     expect(uploadedStorageKeys).toHaveLength(1);
     expect(uploadedStorageKeys[0]).toContain('invoices/org-123/user-123/');
     expect(deletedStorageKeys).toHaveLength(0);

@@ -14,11 +14,56 @@ export const VALID_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> =
   {
     UPLOADED: ['PARSED', 'FAILED'],
     CREATED: ['PARSED', 'FAILED'],
-    PARSED: ['VALIDATED', 'FAILED'],
-    VALIDATED: ['EXPORTED', 'FAILED'],
-    EXPORTED: ['VALIDATED', 'FAILED'], // Allow re-processing
-    FAILED: ['UPLOADED', 'CREATED'], // Allow retry from beginning
+    PARSED: ['PARSED', 'VALIDATED', 'FAILED'], // Allow re-parse
+    VALIDATED: ['PARSED', 'EXPORTED', 'FAILED'], // Allow re-processing
+    EXPORTED: ['PARSED', 'VALIDATED', 'FAILED'], // Allow re-processing
+    FAILED: ['UPLOADED', 'CREATED', 'PARSED'], // Allow direct re-processing
   };
+
+export const API_INVOICE_STATUS_GROUPS = [
+  'uploaded',
+  'processing',
+  'processed',
+  'failed',
+  'exported',
+] as const;
+
+export type ApiInvoiceStatusGroup = (typeof API_INVOICE_STATUS_GROUPS)[number];
+
+export const API_STATUS_GROUP_TO_INVOICE_STATUSES: Record<
+  ApiInvoiceStatusGroup,
+  readonly InvoiceStatus[]
+> = {
+  uploaded: ['UPLOADED', 'CREATED'],
+  processing: ['PARSED'],
+  processed: ['VALIDATED'],
+  failed: ['FAILED'],
+  exported: ['EXPORTED'],
+};
+
+export function isApiInvoiceStatusGroup(
+  value: string | null | undefined
+): value is ApiInvoiceStatusGroup {
+  if (!value) return false;
+  return API_INVOICE_STATUS_GROUPS.includes(value as ApiInvoiceStatusGroup);
+}
+
+export function getInvoiceStatusesForApiStatusGroup(
+  group: ApiInvoiceStatusGroup | null | undefined
+): readonly InvoiceStatus[] | undefined {
+  if (!group) return undefined;
+  return API_STATUS_GROUP_TO_INVOICE_STATUSES[group];
+}
+
+export function mapInvoiceStatusToApiStatusGroup(
+  status: InvoiceStatus
+): ApiInvoiceStatusGroup {
+  if (status === 'UPLOADED' || status === 'CREATED') return 'uploaded';
+  if (status === 'PARSED') return 'processing';
+  if (status === 'VALIDATED') return 'processed';
+  if (status === 'FAILED') return 'failed';
+  return 'exported';
+}
 
 /**
  * Check if a status transition is valid

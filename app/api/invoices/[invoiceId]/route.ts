@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
+import { isPrismaUniqueConstraintError } from '@/src/lib/db/prisma-errors';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { mapInvoiceStatusToApiStatusGroup } from '@/src/lib/invoices/status';
 import { logger } from '@/src/lib/logging';
 import { prisma } from '@/src/lib/db/client';
 import type { InvoiceStatus, Prisma } from '@/src/generated/prisma/client';
@@ -25,6 +27,7 @@ interface InvoiceDetailsResponse {
   vendorName: string | null;
   taxId: string | null;
   status: InvoiceStatus;
+  statusGroup: ReturnType<typeof mapInvoiceStatusToApiStatusGroup>;
 }
 
 interface ApiWarning {
@@ -61,6 +64,7 @@ function mapInvoiceForDetailsResponse(invoice: {
     vendorName: invoice.supplierName,
     taxId: invoice.taxId,
     status: invoice.status,
+    statusGroup: mapInvoiceStatusToApiStatusGroup(invoice.status),
   };
 }
 
@@ -203,39 +207,65 @@ export async function PUT(
         ? (existingInvoice.rawJson as Record<string, unknown>)
         : {};
 
-    const updatedInvoice = await prisma.invoice.update({
-      where: { id: existingInvoice.id },
-      data: {
-        number: normalized.header.invoiceNumber,
-        issueDate,
-        dueDate,
-        currency: normalized.header.currency,
-        supplierName: normalized.seller.name,
-        customerName: normalized.buyer.name,
-        taxId: normalized.seller.vatId ?? normalized.seller.taxNumber ?? null,
-        netAmount: normalized.totals.netAmount,
-        taxAmount: normalized.totals.vatAmount,
-        grossAmount: normalized.totals.grossAmount,
-        rawJson: toPrismaJson({
-          ...rawJsonBase,
-          reviewData: normalized,
-          vatValidation,
-          reviewValidatedAt: new Date().toISOString(),
-        }),
-        status:
-          existingInvoice.status === 'EXPORTED' ? 'EXPORTED' : 'VALIDATED',
-      },
-      select: {
-        id: true,
-        number: true,
-        issueDate: true,
-        grossAmount: true,
-        currency: true,
-        supplierName: true,
-        taxId: true,
-        status: true,
-      },
-    });
+    let updatedInvoice;
+    try {
+      updatedInvoice = await prisma.invoice.update({
+        where: { id: existingInvoice.id },
+        data: {
+          number: normalized.header.invoiceNumber,
+          issueDate,
+          dueDate,
+          currency: normalized.header.currency,
+          supplierName: normalized.seller.name,
+          customerName: normalized.buyer.name,
+          taxId: normalized.seller.vatId ?? normalized.seller.taxNumber ?? null,
+          netAmount: normalized.totals.netAmount,
+          taxAmount: normalized.totals.vatAmount,
+          grossAmount: normalized.totals.grossAmount,
+          rawJson: toPrismaJson({
+            ...rawJsonBase,
+            reviewData: normalized,
+            vatValidation,
+            reviewValidatedAt: new Date().toISOString(),
+          }),
+          status:
+            existingInvoice.status === 'EXPORTED' ? 'EXPORTED' : 'VALIDATED',
+        },
+        select: {
+          id: true,
+          number: true,
+          issueDate: true,
+          grossAmount: true,
+          currency: true,
+          supplierName: true,
+          taxId: true,
+          status: true,
+        },
+      });
+    } catch (error) {
+      if (
+        isPrismaUniqueConstraintError(error, ['organizationId', 'number']) ||
+        isPrismaUniqueConstraintError(error, ['Invoice_organizationId_number_key'])
+      ) {
+        logger.warn(
+          { invoiceId, organizationId, number: normalized.header.invoiceNumber },
+          'Duplicate invoice number rejected during manual review update'
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'DUPLICATE_INVOICE_NUMBER',
+              message:
+                'Eine Rechnung mit dieser Rechnungsnummer existiert bereits in dieser Organisation.',
+            },
+          },
+          { status: 409 }
+        );
+      }
+
+      throw error;
+    }
 
     return NextResponse.json({
       success: true,

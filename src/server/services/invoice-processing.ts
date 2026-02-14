@@ -9,6 +9,8 @@
  */
 
 import { prisma } from '@/src/lib/db/client';
+import { isPrismaUniqueConstraintError } from '@/src/lib/db/prisma-errors';
+import { replaceLineItems } from '@/src/lib/invoices/line-items';
 import { logger } from '@/src/lib/logging';
 import { storage } from '@/src/lib/storage';
 import { getOcrService } from '@/src/server/services/ocr/service';
@@ -68,6 +70,39 @@ export interface ProcessInvoiceResult {
   status: string;
   confidence: number;
   pageCount: number;
+}
+
+function toDbUpdateProcessingError(
+  error: unknown,
+  context: {
+    fileId: string;
+    invoiceId: string;
+    invoiceNumber?: string;
+  }
+): InvoiceProcessingError {
+  if (
+    isPrismaUniqueConstraintError(error, ['organizationId', 'number']) ||
+    isPrismaUniqueConstraintError(error, ['Invoice_organizationId_number_key'])
+  ) {
+    return new InvoiceProcessingError(
+      InvoiceProcessingErrorCode.DB_UPDATE_FAILED,
+      `Duplicate invoice number "${context.invoiceNumber ?? 'unknown'}" in this organization`,
+      {
+        ...context,
+        conflictField: 'number',
+      }
+    );
+  }
+
+  return new InvoiceProcessingError(
+    InvoiceProcessingErrorCode.DB_UPDATE_FAILED,
+    `Failed to persist processed invoice ${context.invoiceId}`,
+    {
+      ...context,
+      originalError:
+        error instanceof Error ? error.message : 'Unknown database error',
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -160,30 +195,37 @@ export async function processInvoiceOcr(
       );
     }
 
-    // 7. Mark as VALIDATED with structured fields
-    await markAsValidated(invoiceId, parseResult.invoiceFields);
+    // 7. Persist structured fields and related processing state.
+    //    This path is also used for re-processing: existing line items are replaced.
+    try {
+      await markAsValidated(invoiceId, parseResult.invoiceFields);
 
-    // 8. Update file status to PROCESSED
-    await prisma.file.update({
-      where: { id: fileId },
-      data: { status: 'PROCESSED' },
-    });
-
-    // 9. Create line items if available
-    if (parseResult.lineItems.length > 0) {
-      await prisma.invoiceLineItem.createMany({
-        data: parseResult.lineItems.map((item) => ({
-          invoiceId,
-          ...item,
-        })),
+      await prisma.file.update({
+        where: { id: fileId },
+        data: { status: 'PROCESSED', errorMessage: null },
       });
-    }
 
-    // 10. Update invoice format if detected
-    if (parseResult.format !== 'UNKNOWN') {
-      await prisma.invoice.update({
-        where: { id: invoiceId },
-        data: { format: parseResult.format },
+      await replaceLineItems(
+        invoiceId,
+        parseResult.lineItems.map((item) => ({
+          ...item,
+          taxRate: null,
+          netAmount: null,
+          taxAmount: null,
+        }))
+      );
+
+      if (parseResult.format !== 'UNKNOWN') {
+        await prisma.invoice.update({
+          where: { id: invoiceId },
+          data: { format: parseResult.format },
+        });
+      }
+    } catch (error) {
+      throw toDbUpdateProcessingError(error, {
+        fileId,
+        invoiceId,
+        invoiceNumber: parseResult.invoiceFields.number,
       });
     }
 

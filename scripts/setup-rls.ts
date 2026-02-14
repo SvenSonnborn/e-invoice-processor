@@ -26,15 +26,21 @@ async function setupRLS() {
   try {
     console.log('📊 Connecting to database...');
 
-    const sql = readFileSync(
+    const setupSql = readFileSync(
       'prisma/migrations/setup_rls_policies.sql',
       'utf-8'
     );
+    const recursionFixSql = readFileSync(
+      'prisma/migrations/fix_rls_recursion.sql',
+      'utf-8'
+    );
 
-    console.log('🔒 Executing RLS policies...');
-    await pool.query(sql);
+    console.log('🔒 Executing base RLS policies...');
+    await pool.query(setupSql);
+    console.log('🛠️ Applying RLS recursion fix helpers/policies...');
+    await pool.query(recursionFixSql);
 
-    console.log('✅ RLS policies successfully applied!');
+    console.log('✅ RLS policies successfully applied (including recursion fix)!');
     console.log('');
     console.log('Next steps:');
     console.log('1. Create storage buckets in Supabase Dashboard:');

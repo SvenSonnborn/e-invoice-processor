@@ -16,6 +16,12 @@ export type {
 } from './invoice-processing';
 
 export {
+  persistParsedInvoice,
+  type PersistParsedInvoiceParams,
+  type PersistParsedInvoiceResult,
+} from './invoice-import';
+
+export {
   validateSellerVatId,
   type VatValidationResult,
   type VatValidationStatus,

@@ -113,6 +113,7 @@ export async function markAsValidated(
     customerName?: string;
     issueDate?: Date;
     dueDate?: Date;
+    currency?: string;
     netAmount?: number;
     taxAmount?: number;
     grossAmount?: number;
