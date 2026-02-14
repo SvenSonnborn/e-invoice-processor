@@ -104,6 +104,12 @@ All API routes require authentication except:
 
 - CSV exporter in `src/server/exporters/csv/`
 - DATEV exporter in `src/server/exporters/datev/`
+- XRechnung XML export via `src/server/services/export-service.ts`
+  (uses `src/lib/generators/xrechnungGenerator.ts`)
+- ZUGFeRD PDF/A-3 export via `src/server/services/export-service.ts`
+  (uses `src/lib/generators/zugferdGenerator.ts`)
+- E-invoice validation orchestration in
+  `src/server/services/einvoice-validation.ts` (built-in + optional official CLI validators)
 
 ### Generators
 
@@ -123,7 +129,8 @@ All API routes require authentication except:
 4. User validates/edits invoice via review form (`validatedInvoice`)
 5. XRechnung XML is generated (`xrechnungXml`)
 6. ZUGFeRD PDF/A-3 is generated from `validatedInvoice + xrechnungXml`
-7. User can view, edit, and export invoices
+7. Generated XRechnung/ZUGFeRD files are validated automatically
+8. User can view, edit, and export invoices
 
 ## Technology Stack
 

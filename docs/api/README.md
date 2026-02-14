@@ -39,7 +39,7 @@ Mapping:
 ### Exports
 
 - `GET /api/exports` - List exports for the current organization
-- `POST /api/exports` - Create a new export (CSV or DATEV format)
+- `POST /api/exports` - Create a new export (`CSV`, `DATEV`, `XRECHNUNG`, `ZUGFERD`)
 - `GET /api/exports/[exportId]/download` - Download a completed export file
 
 ### Invoice Upload & Processing
@@ -243,11 +243,15 @@ List exports for the current organization. Supports query parameters: `status` (
 
 Create a new export and generate the file.
 
+For `XRECHNUNG` and `ZUGFERD`, exactly one invoice ID must be provided per export.
+After generation, automated validation runs before status is set to `READY`.
+Validation failures are returned as export errors and stored in `errorMessage`.
+
 **Request body:**
 
 ```json
 {
-  "format": "CSV" | "DATEV",
+  "format": "CSV" | "DATEV" | "XRECHNUNG" | "ZUGFERD",
   "invoiceIds": ["inv-123", "inv-124"],
   "filename": "optional-custom-name.csv",
   "datevOptions": {
@@ -263,6 +267,12 @@ Create a new export and generate the file.
 ```
 
 `datevOptions` is only used when `format` is `"DATEV"` and is optional.
+
+Validation behavior by format:
+
+- `XRECHNUNG`: XML generation + XSD/profile validation + optional official validator command
+- `ZUGFERD`: PDF/A-3 generation + embedded XML checks + XML validation + optional official validator command
+- If no official validator CLI is configured, built-in validation still runs and manual official validation is possible.
 
 **Response (201):**
 

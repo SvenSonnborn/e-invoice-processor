@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/ui/button';
 import { Card } from '@/src/components/ui/card';
 import { ExportDialog } from '@/src/components/exports/export-dialog';
@@ -21,10 +22,19 @@ import {
 import { FileDown } from 'lucide-react';
 
 export default function ExportsPage() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedInvoiceId = searchParams.get('invoiceId');
+  const shouldOpenExportDialog = searchParams.get('openExport') === '1';
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [exports, setExports] = useState<ExportListItem[]>([]);
-  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>(() =>
+    preselectedInvoiceId ? [preselectedInvoiceId] : []
+  );
+  const [dialogOpen, setDialogOpen] = useState(
+    shouldOpenExportDialog && Boolean(preselectedInvoiceId)
+  );
   const [loadingInvoices, setLoadingInvoices] = useState(true);
   const [loadingExports, setLoadingExports] = useState(true);
 
@@ -41,12 +51,43 @@ export default function ExportsPage() {
         fetchInvoicesAction(),
         fetchExportsAction(),
       ]);
+
+      if (preselectedInvoiceId) {
+        const invoiceExists = invoiceData.some(
+          (invoice) => invoice.id === preselectedInvoiceId
+        );
+        if (!invoiceExists) {
+          setSelectedInvoiceIds([]);
+          setDialogOpen(false);
+        }
+      }
+
       setInvoices(invoiceData);
       setLoadingInvoices(false);
       setExports(exportData);
       setLoadingExports(false);
     })();
-  }, []);
+  }, [preselectedInvoiceId]);
+
+  useEffect(() => {
+    if (!preselectedInvoiceId && !shouldOpenExportDialog) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.delete('invoiceId');
+    nextSearchParams.delete('openExport');
+    const nextQuery = nextSearchParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    pathname,
+    preselectedInvoiceId,
+    router,
+    searchParams,
+    shouldOpenExportDialog,
+  ]);
 
   const handleExportCreated = () => {
     setSelectedInvoiceIds([]);
@@ -60,7 +101,7 @@ export default function ExportsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Exporte</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Rechnungen als CSV oder DATEV Buchungsstapel exportieren
+            Rechnungen als CSV, DATEV, XRechnung XML oder ZUGFeRD PDF/A-3 exportieren
           </p>
         </div>
         <Button

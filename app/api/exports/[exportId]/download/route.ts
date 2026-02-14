@@ -48,6 +48,8 @@ export async function GET(
     const contentTypeMap: Record<string, string> = {
       DATEV: 'text/csv; charset=utf-8',
       CSV: 'text/csv; charset=utf-8',
+      XRECHNUNG: 'application/xml; charset=utf-8',
+      ZUGFERD: 'application/pdf',
     };
     const contentType =
       contentTypeMap[exportRecord.format] ?? 'application/octet-stream';

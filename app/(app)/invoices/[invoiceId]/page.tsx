@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
+import { Button } from '@/src/components/ui/button';
 import { prisma } from '@/src/lib/db/client';
 import { coerceGrossAmountToNumber } from '@/src/lib/dashboard/invoices';
 import { InvoiceProcessingWait } from '@/src/components/invoices/invoice-processing-wait';
@@ -134,16 +136,22 @@ export default async function InvoiceDetailPage({
       : coerceGrossAmountToNumber(invoice.grossAmount)) ??
     asNumber(ocrTotals?.grossAmount) ??
     0;
+  const exportHref = `/exports?invoiceId=${encodeURIComponent(invoice.id)}&openExport=1`;
 
   return (
     <section className="mx-auto w-full max-w-5xl space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Rechnung prüfen
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Status: <span className="font-medium">{invoice.status}</span>
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            Rechnung prüfen
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Status: <span className="font-medium">{invoice.status}</span>
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href={exportHref}>Exportieren</Link>
+        </Button>
       </header>
 
       <InvoiceReviewForm

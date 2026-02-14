@@ -49,7 +49,7 @@ enum ExportStatus {
   id: string
   organizationId: string
   createdBy: string?           // FK to User (Audit Trail)
-  format: ExportFormat         // CSV | DATEV
+  format: ExportFormat         // CSV | DATEV | XRECHNUNG | ZUGFERD
   filename: string
   storageKey: string?          // Supabase Storage Key (gesetzt bei READY)
 
@@ -77,6 +77,35 @@ CREATE INDEX "Export_createdBy_idx" ON "Export"("createdBy");
 ```
 
 ## Verwendung
+
+### Unterstützte Formate
+
+- `CSV` - Sammel-CSV für mehrere Rechnungen
+- `DATEV` - DATEV Buchungsstapel (CSV)
+- `XRECHNUNG` - eine Rechnung als XRechnung-XML
+- `ZUGFERD` - eine Rechnung als ZUGFeRD PDF/A-3
+
+Hinweis: Für `XRECHNUNG` und `ZUGFERD` wird aktuell genau **eine** Rechnung pro Export unterstützt.
+
+### Automatische Validierung
+
+Nach der Generierung läuft für `XRECHNUNG`/`ZUGFERD` automatisch eine Validierung:
+
+- Built-in Prüfungen (XML/XSD/Profile, eingebettetes XML, PDF/A-3 Metadaten)
+- Optional offizielle CLI-Validatoren über:
+  - `XRECHNUNG_VALIDATOR_COMMAND`
+  - `ZUGFERD_VALIDATOR_COMMAND`
+
+Bei Validierungsfehlern:
+
+- Exportstatus wird auf `FAILED` gesetzt
+- `errorMessage` enthält die detaillierten Validator-Fehler
+- Fehler werden serverseitig geloggt
+
+Bei erfolgreicher Validierung:
+
+- Exportstatus wird auf `READY` gesetzt
+- Die UI zeigt für `XRECHNUNG`/`ZUGFERD` ein zusätzliches `Validiert`-Badge
 
 ### Export erstellen (mit Audit Trail)
 

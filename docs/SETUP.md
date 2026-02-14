@@ -75,6 +75,26 @@ DIRECT_URL=postgresql://postgres:PASSWORD@db.YOUR_REF.supabase.co:5432/postgres
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
+### 4.3 Optionale CLI-Validatoren (XRechnung/ZUGFeRD)
+
+Für automatische Validierung gegen offizielle Validatoren kannst du in `.env.local`
+zusätzlich Validator-Commands hinterlegen:
+
+```bash
+# optional: Timeout für CLI-Validierung
+EINVOICE_VALIDATOR_TIMEOUT_MS=30000
+
+# optional: offizieller XRechnung-Validator (Pfad/Wrapper-Script)
+XRECHNUNG_VALIDATOR_COMMAND=/usr/local/bin/validate-xrechnung {input}
+
+# optional: offizieller ZUGFeRD-Validator (Pfad/Wrapper-Script)
+ZUGFERD_VALIDATOR_COMMAND=/usr/local/bin/validate-zugferd {input}
+```
+
+`{input}` wird zur Laufzeit durch den Pfad zur generierten Datei ersetzt.
+Wenn kein Command gesetzt ist, laufen die eingebauten Validierungen und die
+offizielle Web-Validierung kann manuell erfolgen.
+
 ## 5. Datenbank-Migrations ausführen
 
 ```bash

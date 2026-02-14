@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 export const exportSchema = z.object({
-  format: z.enum(['csv', 'datev']),
+  format: z.enum(['csv', 'datev', 'xrechnung', 'zugferd']),
   dateRange: z.object({
     from: z.date(),
     to: z.date(),

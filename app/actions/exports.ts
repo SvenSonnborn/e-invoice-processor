@@ -29,7 +29,7 @@ async function requireOrgMembership() {
 // ---------------------------------------------------------------------------
 
 export interface CreateExportActionInput {
-  format: 'CSV' | 'DATEV';
+  format: 'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD';
   invoiceIds: string[];
   filename?: string;
   datevOptions?: DatevExportOptions;
@@ -58,6 +58,17 @@ export async function createExportAction(
   input: CreateExportActionInput
 ): Promise<CreateExportActionResult | ActionError> {
   try {
+    if (
+      (input.format === 'XRECHNUNG' || input.format === 'ZUGFERD') &&
+      input.invoiceIds.length !== 1
+    ) {
+      return {
+        success: false,
+        error:
+          'Für XRechnung und ZUGFeRD muss genau eine Rechnung ausgewählt werden.',
+      };
+    }
+
     const { user, organizationId } = await requireOrgMembership();
 
     // Check subscription limits

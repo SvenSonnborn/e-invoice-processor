@@ -17,6 +17,15 @@ const envSchema = z.object({
       'VIES_TIMEOUT_MS must be a positive integer in milliseconds'
     )
     .optional(),
+  EINVOICE_VALIDATOR_TIMEOUT_MS: z
+    .string()
+    .regex(
+      /^\d+$/,
+      'EINVOICE_VALIDATOR_TIMEOUT_MS must be a positive integer in milliseconds'
+    )
+    .optional(),
+  XRECHNUNG_VALIDATOR_COMMAND: z.string().optional(),
+  ZUGFERD_VALIDATOR_COMMAND: z.string().optional(),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
@@ -45,6 +54,9 @@ function buildRawEnv() {
       process.env.SUPABASE_SERVICE_ROLE_KEY || (isTest ? 'test' : undefined),
     VIES_VALIDATION_ENABLED: process.env.VIES_VALIDATION_ENABLED,
     VIES_TIMEOUT_MS: process.env.VIES_TIMEOUT_MS,
+    EINVOICE_VALIDATOR_TIMEOUT_MS: process.env.EINVOICE_VALIDATOR_TIMEOUT_MS,
+    XRECHNUNG_VALIDATOR_COMMAND: process.env.XRECHNUNG_VALIDATOR_COMMAND,
+    ZUGFERD_VALIDATOR_COMMAND: process.env.ZUGFERD_VALIDATOR_COMMAND,
     LOG_LEVEL: process.env.LOG_LEVEL,
   };
 }

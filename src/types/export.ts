@@ -1,4 +1,4 @@
-export type ExportFormat = 'CSV' | 'DATEV';
+export type ExportFormat = 'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD';
 
 export interface ExportJob {
   id: string;

@@ -44,8 +44,12 @@ export const ExportDialog = ({
   onOpenChange,
   onExportCreated,
 }: ExportDialogProps) => {
-  const [format, setFormat] = useState<'CSV' | 'DATEV'>('DATEV');
+  const [format, setFormat] = useState<
+    'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD'
+  >('DATEV');
   const [isPending, startTransition] = useTransition();
+  const requiresSingleInvoice =
+    format === 'XRECHNUNG' || format === 'ZUGFERD';
 
   // DATEV options state
   const [consultantNumber, setConsultantNumber] = useState('');
@@ -57,6 +61,14 @@ export const ExportDialog = ({
   const [batchName, setBatchName] = useState('');
 
   const handleSubmit = () => {
+    if (requiresSingleInvoice && invoiceIds.length !== 1) {
+      toast.error('Ungültige Auswahl', {
+        description:
+          'Für XRechnung und ZUGFeRD muss genau eine Rechnung ausgewählt sein.',
+      });
+      return;
+    }
+
     // Client-side validation for DATEV options
     if (format === 'DATEV') {
       const datevOpts = {
@@ -126,8 +138,7 @@ export const ExportDialog = ({
             Neuer Export
           </DialogTitle>
           <DialogDescription>
-            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? 'en' : ''}{' '}
-            exportieren
+            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? 'en' : ''} exportieren
           </DialogDescription>
         </DialogHeader>
 
@@ -137,7 +148,9 @@ export const ExportDialog = ({
             <Label htmlFor="export-format">Format</Label>
             <Select
               value={format}
-              onValueChange={(val) => setFormat(val as 'CSV' | 'DATEV')}
+              onValueChange={(val) =>
+                setFormat(val as 'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD')
+              }
             >
               <SelectTrigger id="export-format">
                 <SelectValue placeholder="Format wählen" />
@@ -145,9 +158,17 @@ export const ExportDialog = ({
               <SelectContent>
                 <SelectItem value="CSV">CSV (Standard)</SelectItem>
                 <SelectItem value="DATEV">DATEV Buchungsstapel</SelectItem>
+                <SelectItem value="XRECHNUNG">XRechnung XML</SelectItem>
+                <SelectItem value="ZUGFERD">ZUGFeRD PDF/A-3</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {requiresSingleInvoice && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Für dieses Format wird genau eine Rechnung pro Export unterstützt.
+            </div>
+          )}
 
           {/* DATEV Configuration Options */}
           {format === 'DATEV' && (
@@ -267,7 +288,12 @@ export const ExportDialog = ({
           >
             Abbrechen
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              isPending || (requiresSingleInvoice && invoiceIds.length !== 1)
+            }
+          >
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -2,6 +2,33 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-14: Automatisierte Validierung für XRechnung/ZUGFeRD Exporte
+
+### Changes
+
+#### New: Exportformate erweitert
+
+- `ExportFormat` um `XRECHNUNG` und `ZUGFERD` erweitert.
+- Exportdialog unterstützt jetzt CSV, DATEV, XRechnung XML und ZUGFeRD PDF/A-3.
+- Für `XRECHNUNG`/`ZUGFERD` wird aktuell genau eine Rechnung pro Export verarbeitet.
+
+#### New: Automatische E-Invoice-Validierung nach Export
+
+- Neues Validierungsmodul: `src/server/services/einvoice-validation.ts`.
+- `XRECHNUNG`: Built-in XML/XSD-Validierung + optional offizieller CLI-Validator.
+- `ZUGFERD`: Built-in PDF/XML-Checks + optional offizieller CLI-Validator.
+- Neue optionale ENV-Variablen:
+  - `EINVOICE_VALIDATOR_TIMEOUT_MS`
+  - `XRECHNUNG_VALIDATOR_COMMAND`
+  - `ZUGFERD_VALIDATOR_COMMAND`
+- Bei Validierungsfehlern wird der Export auf `FAILED` gesetzt und
+  `errorMessage` mit detaillierten Validator-Hinweisen befüllt.
+
+#### New: UI-Feedback
+
+- Exportliste zeigt für erfolgreiche `XRECHNUNG`/`ZUGFERD` Exporte ein
+  zusätzliches `Validiert`-Badge.
+
 ## 2026-02-14: ZUGFeRD PDF Generator (PDF/A-3)
 
 ### Changes

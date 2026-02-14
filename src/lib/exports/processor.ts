@@ -262,7 +262,7 @@ export async function failStuckExports(
 export async function createExport(
   data: {
     organizationId: string;
-    format: 'CSV' | 'DATEV';
+    format: 'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD';
     filename: string;
     invoiceIds: string[];
   },

@@ -1,6 +1,6 @@
 /**
  * Exports API Route
- * Handles invoice exports in various formats (CSV, DATEV)
+ * Handles invoice exports in various formats (CSV, DATEV, XRECHNUNG, ZUGFERD)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,7 +14,7 @@ import { logger } from '@/src/lib/logging';
 import type { ExportStatus } from '@/src/generated/prisma/client';
 
 const exportRequestSchema = z.object({
-  format: z.enum(['CSV', 'DATEV']),
+  format: z.enum(['CSV', 'DATEV', 'XRECHNUNG', 'ZUGFERD']),
   invoiceIds: z.array(z.string()).min(1),
   filename: z.string().optional(),
   datevOptions: z
@@ -106,6 +106,15 @@ export async function POST(request: NextRequest) {
 
     const { format, invoiceIds, filename, datevOptions } =
       validationResult.data;
+
+    if (
+      (format === 'XRECHNUNG' || format === 'ZUGFERD') &&
+      invoiceIds.length !== 1
+    ) {
+      throw ApiError.validationError(
+        `${format} export requires exactly one invoice ID`
+      );
+    }
 
     const exportCheck = await canCreateExport(user.id);
     if (!exportCheck.allowed) {

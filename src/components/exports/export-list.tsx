@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Clock,
   FileX,
+  ShieldCheck,
 } from 'lucide-react';
 import type { ExportListItem } from '@/app/actions/exports';
 
@@ -52,6 +53,14 @@ const statusConfig: Record<
 const formatConfig: Record<string, { label: string; className: string }> = {
   CSV: { label: 'CSV', className: 'bg-gray-100 text-gray-700' },
   DATEV: { label: 'DATEV', className: 'bg-indigo-50 text-indigo-700' },
+  XRECHNUNG: {
+    label: 'XRechnung',
+    className: 'bg-sky-50 text-sky-700',
+  },
+  ZUGFERD: {
+    label: 'ZUGFeRD',
+    className: 'bg-emerald-50 text-emerald-700',
+  },
 };
 
 const handleDownload = (exportId: string) => {
@@ -151,14 +160,23 @@ export const ExportList = ({ exports, loading }: ExportListProps) => {
                   </span>
                 </td>
                 <td className="py-3 px-3">
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
-                  >
-                    <StatusIcon
-                      className={`h-3 w-3 ${exp.status === 'GENERATING' ? 'animate-spin' : ''}`}
-                    />
-                    {status.label}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}
+                    >
+                      <StatusIcon
+                        className={`h-3 w-3 ${exp.status === 'GENERATING' ? 'animate-spin' : ''}`}
+                      />
+                      {status.label}
+                    </span>
+                    {(exp.format === 'XRECHNUNG' || exp.format === 'ZUGFERD') &&
+                      exp.status === 'READY' && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                          <ShieldCheck className="h-3 w-3" />
+                          Validiert
+                        </span>
+                      )}
+                  </div>
                   {exp.status === 'FAILED' && exp.errorMessage && (
                     <p
                       className="text-xs text-red-600 mt-0.5 truncate max-w-[200px]"

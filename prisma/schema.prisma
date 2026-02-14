@@ -37,6 +37,8 @@ enum UploadStatus {
 enum ExportFormat {
   CSV
   DATEV
+  XRECHNUNG
+  ZUGFERD
 }
 
 enum ExportStatus {
