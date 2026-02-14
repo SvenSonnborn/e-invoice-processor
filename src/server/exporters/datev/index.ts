@@ -126,6 +126,7 @@ const DATEV_COLUMNS = [
 
 type DatevColumn = (typeof DATEV_COLUMNS)[number];
 type DatevRow = Record<DatevColumn, string>;
+const FORMULA_PREFIX_PATTERN = /^[=+\-@]/;
 
 function buildDatevRow(values: Partial<DatevRow>): string {
   const row = Object.fromEntries(
@@ -252,6 +253,9 @@ function escapeField(value: string | null | undefined): string {
   let cleaned = String(value)
     .replace(/[\r\n]+/g, ' ')
     .trim();
+  if (FORMULA_PREFIX_PATTERN.test(cleaned)) {
+    cleaned = `'${cleaned}`;
+  }
   if (cleaned.includes(';') || cleaned.includes('"')) {
     cleaned = '"' + cleaned.replace(/"/g, '""') + '"';
   }
@@ -280,7 +284,7 @@ function generateDatevHeader(options: DatevExportOptions): string[] {
     clientNumber.padStart(5, '0'),
     fiscalYearStart,
     formatDate(new Date()),
-    batchName,
+    escapeField(batchName),
     dictationNumber,
     bookingType,
     accountingSystem,
@@ -366,12 +370,12 @@ function lineItemToDatevRow(
   return buildDatevRow({
     'Umsatz (ohne Soll/Haben-Kennzeichen)': formattedAmount,
     'Soll/Haben-Kennzeichen': sign,
-    'WKZ Umsatz': invoice.currency ?? 'EUR',
-    Konto: account,
-    Gegenkonto: contraAccount,
-    'BU-Schlüssel': taxKey,
+    'WKZ Umsatz': escapeField(invoice.currency ?? 'EUR'),
+    Konto: escapeField(account),
+    Gegenkonto: escapeField(contraAccount),
+    'BU-Schlüssel': escapeField(taxKey),
     Belegdatum: documentDate,
-    'Belegfeld 1': documentNumber.substring(0, 36),
+    'Belegfeld 1': escapeField(documentNumber).substring(0, 36),
     Buchungstext: escapeField(bookingText).substring(0, 60),
     Geschäftspartnername: escapeField(
       invoice.supplierName ?? invoice.customerName ?? ''
@@ -465,12 +469,12 @@ function invoiceToDatevRow(
   return buildDatevRow({
     'Umsatz (ohne Soll/Haben-Kennzeichen)': formattedAmount,
     'Soll/Haben-Kennzeichen': sign,
-    'WKZ Umsatz': invoice.currency ?? 'EUR',
-    Konto: account,
-    Gegenkonto: contraAccount,
-    'BU-Schlüssel': taxKey,
+    'WKZ Umsatz': escapeField(invoice.currency ?? 'EUR'),
+    Konto: escapeField(account),
+    Gegenkonto: escapeField(contraAccount),
+    'BU-Schlüssel': escapeField(taxKey),
     Belegdatum: documentDate,
-    'Belegfeld 1': documentNumber.substring(0, 36),
+    'Belegfeld 1': escapeField(documentNumber).substring(0, 36),
     Buchungstext: bookingText,
     Geschäftspartnername: partnerName,
     'Zugeordnete Fälligkeit': formatDate(invoice.dueDate),

@@ -12,6 +12,7 @@ import {
   markAsReady,
   markAsFailed,
 } from '@/src/lib/exports/processor';
+import { sanitizeExportFilename } from '@/src/lib/exports/filename';
 import { csv, datev } from '@/src/server/exporters';
 import { storage } from '@/src/lib/storage';
 import { logger } from '@/src/lib/logging';
@@ -124,11 +125,14 @@ export async function generateExport(
   }
 
   const finalFilename =
-    input.filename ??
-    generateExportFilename(
-      format,
-      datevOptions,
-      invoices[0]?.number || undefined
+    sanitizeExportFilename(
+      input.filename ??
+        generateExportFilename(
+          format,
+          datevOptions,
+          invoices[0]?.number || undefined
+        ),
+      format
     );
 
   // Create export record

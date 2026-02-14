@@ -585,6 +585,15 @@ async function processExport(exportId: string) {
 }
 ```
 
+## Dateinamen-Sicherheit
+
+- Benutzerdefinierte Export-Dateinamen werden serverseitig bereinigt
+  (Pfadsegmente, Steuerzeichen und unsichere Zeichen werden entfernt).
+- Die Dateiendung wird immer an das gewaehlte Exportformat angepasst
+  (`.csv`, `.xml`, `.pdf`).
+- Der bereinigte Dateiname wird sowohl fuer Storage-Keys als auch fuer
+  Download-Header verwendet.
+
 ## Performance-Optimierungen
 
 ### Batch Processing

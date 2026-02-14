@@ -268,6 +268,9 @@ Validation failures are returned as export errors and stored in `errorMessage`.
 ```
 
 `datevOptions` is only used when `format` is `"DATEV"` and is optional.
+`filename` is optional. If provided, it is normalized to a safe basename,
+limited to 120 characters, and forced to the correct extension for the selected
+export format.
 
 Validation behavior by format:
 
@@ -320,6 +323,64 @@ Responses:
 - `200`: File stream (`application/xml` for XRechnung, `application/pdf` for ZUGFeRD) with `Content-Disposition: attachment`
 - `400`: Invalid `format`, invoice in invalid status, missing review data, or validation failure
 - `404`: Invoice not found
+
+## Stripe
+
+**POST /api/stripe/checkout**
+
+Create a Stripe Checkout session.
+
+**Request body:**
+
+```json
+{
+  "priceId": "stripe-price-id",
+  "successUrl": "optional, same-origin URL or relative path",
+  "cancelUrl": "optional, same-origin URL or relative path"
+}
+```
+
+Security constraints:
+
+- `successUrl` and `cancelUrl` are optional.
+- If provided, they must resolve to the application origin
+  (`NEXT_PUBLIC_SITE_URL` origin).
+- External domains are rejected with `400 VALIDATION_ERROR`.
+
+---
+
+**POST /api/stripe/portal**
+
+Create a Stripe Customer Portal session.
+
+**Request body:**
+
+```json
+{
+  "returnUrl": "optional, same-origin URL or relative path"
+}
+```
+
+Security constraints:
+
+- `returnUrl` is optional.
+- If provided, it must resolve to the application origin
+  (`NEXT_PUBLIC_SITE_URL` origin).
+- External domains are rejected with `400 VALIDATION_ERROR`.
+
+## Waitlist
+
+**POST /api/waitlist/join**
+
+Public waitlist signup endpoint.
+
+Security/privacy behavior:
+
+- Valid requests always return a generic success response and do not reveal
+  whether an email already exists.
+- Referral metadata is sent via confirmation email only.
+- Duplicate-email checks are intentionally non-enumerable to reduce privacy
+  leakage.
 
 ## Authentication
 

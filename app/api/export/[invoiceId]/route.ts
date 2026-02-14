@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { buildAttachmentContentDisposition } from '@/src/lib/exports/filename';
 import { logger } from '@/src/lib/logging';
 import {
   generateInvoiceExport,
@@ -44,7 +45,9 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': result.contentType,
-        'Content-Disposition': `attachment; filename="${result.filename}"`,
+        'Content-Disposition': buildAttachmentContentDisposition(
+          result.filename
+        ),
         'Content-Length': String(result.fileBuffer.length),
         'Cache-Control': 'no-store',
       },

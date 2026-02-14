@@ -1,10 +1,24 @@
 import type { Invoice } from '@/src/types';
 
-function escapeCsvCell(value: string) {
-  if (value.includes('"') || value.includes(',') || value.includes('\n')) {
-    return `"${value.replaceAll('"', '""')}"`;
+const FORMULA_PREFIX_PATTERN = /^[\t\r ]*[=+\-@]/;
+
+function neutralizeFormulaCell(value: string): string {
+  if (FORMULA_PREFIX_PATTERN.test(value)) {
+    return `'${value}`;
   }
   return value;
+}
+
+function escapeCsvCell(value: string) {
+  const safeValue = neutralizeFormulaCell(value);
+  if (
+    safeValue.includes('"') ||
+    safeValue.includes(',') ||
+    safeValue.includes('\n')
+  ) {
+    return `"${safeValue.replaceAll('"', '""')}"`;
+  }
+  return safeValue;
 }
 
 export function invoicesToCsv(invoices: Invoice[]) {

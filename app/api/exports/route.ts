@@ -16,7 +16,15 @@ import type { ExportStatus } from '@/src/generated/prisma/client';
 const exportRequestSchema = z.object({
   format: z.enum(['CSV', 'DATEV', 'XRECHNUNG', 'ZUGFERD']),
   invoiceIds: z.array(z.string()).min(1),
-  filename: z.string().optional(),
+  filename: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) return undefined;
+      if (typeof value !== 'string') return value;
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    },
+    z.string().max(120).optional()
+  ),
   datevOptions: z
     .object({
       consultantNumber: z.string().optional(),

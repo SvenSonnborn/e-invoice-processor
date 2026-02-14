@@ -17,7 +17,7 @@ describe('Waitlist API', () => {
     expect(response.status).toBe(400);
   });
 
-  it('should return 409 for duplicate email', () => {
+  it('should keep duplicate-email handling non-enumerable', () => {
     // This test would need proper prisma mocking setup
     // For now, we just verify the API structure
   });

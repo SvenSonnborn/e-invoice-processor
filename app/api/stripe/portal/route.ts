@@ -13,6 +13,7 @@ import { prisma } from '@/src/lib/db/client';
 import { logger } from '@/src/lib/logging/logger';
 import { getMyUserOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { resolveStripeRedirectUrl } from '@/src/lib/stripe/redirect-url';
 
 const log = logger.child({ module: 'stripe-portal' });
 
@@ -30,7 +31,16 @@ export async function POST(request: NextRequest) {
       throw ApiError.validationError('Request body must be a JSON object');
     }
 
-    const { returnUrl } = body as Record<string, string | undefined>;
+    const returnUrl =
+      typeof body.returnUrl === 'string' ? body.returnUrl : undefined;
+
+    if (
+      body.returnUrl !== undefined &&
+      body.returnUrl !== null &&
+      typeof body.returnUrl !== 'string'
+    ) {
+      throw ApiError.validationError('returnUrl must be a string');
+    }
 
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -42,10 +52,16 @@ export async function POST(request: NextRequest) {
     }
 
     const customerId = dbUser.subscriptions[0].stripeCustomerId;
+    const safeReturnUrl = resolveStripeRedirectUrl({
+      requestUrl: request.url,
+      value: returnUrl,
+      defaultPath: '/settings',
+      fieldName: 'returnUrl',
+    });
 
     const session = await getStripe().billingPortal.sessions.create({
       customer: customerId,
-      return_url: returnUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/settings`,
+      return_url: safeReturnUrl,
     });
 
     log.info({ userId: dbUser.id }, 'Portal session created');

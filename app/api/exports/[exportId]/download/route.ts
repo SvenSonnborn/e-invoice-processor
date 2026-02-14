@@ -8,6 +8,7 @@ import { prisma } from '@/src/lib/db/client';
 import { storage } from '@/src/lib/storage';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { buildAttachmentContentDisposition } from '@/src/lib/exports/filename';
 import { logger } from '@/src/lib/logging';
 
 export async function GET(
@@ -58,7 +59,9 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${exportRecord.filename}"`,
+        'Content-Disposition': buildAttachmentContentDisposition(
+          exportRecord.filename
+        ),
         'Content-Length': String(fileBuffer.length),
       },
     });

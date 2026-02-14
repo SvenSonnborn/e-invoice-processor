@@ -171,6 +171,18 @@ describe('DATEV Exporter', () => {
       expect(fields[10]).toBe('RE-2024-001');
     });
 
+    it('should neutralize formula-like values in Belegfeld 1', () => {
+      const csv = invoiceToDatevCsv({
+        ...mockInvoice,
+        number: '=2+2',
+      });
+      const lines = csv.split('\r\n');
+      const dataLine = lines[2];
+      const fields = dataLine.split(';');
+
+      expect(fields[10]).toBe("'=2+2");
+    });
+
     it('should include supplier/customer name in Geschäftspartnername', () => {
       const csv = invoiceToDatevCsv(mockInvoice);
       const lines = csv.split('\r\n');
@@ -194,6 +206,21 @@ describe('DATEV Exporter', () => {
 
       expect(fields[6]).toBe('6000'); // Konto
       expect(fields[7]).toBe('2800'); // Gegenkonto
+    });
+
+    it('should neutralize formula-like account values', () => {
+      const options: DatevExportOptions = {
+        defaultExpenseAccount: '=6000',
+        defaultContraAccount: '+2800',
+      };
+
+      const csv = invoiceToDatevCsv(mockInvoice, options);
+      const lines = csv.split('\r\n');
+      const dataLine = lines[2];
+      const fields = dataLine.split(';');
+
+      expect(fields[6]).toBe("'=6000");
+      expect(fields[7]).toBe("'+2800");
     });
 
     it('should include consultant and client numbers in header', () => {

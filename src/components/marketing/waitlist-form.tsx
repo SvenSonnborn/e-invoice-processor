@@ -10,8 +10,6 @@ import {
   Loader2,
   Mail,
   ArrowRight,
-  Copy,
-  Check,
 } from 'lucide-react';
 
 const waitlistSchema = z.object({
@@ -47,12 +45,9 @@ export function WaitlistForm({
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [result, setResult] = useState<{
-    referralCode: string;
-    referralLink: string;
-    position: number;
-  } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(
+    "Thanks! If your signup is valid, you'll receive a confirmation email shortly."
+  );
 
   const validate = (): boolean => {
     try {
@@ -89,11 +84,16 @@ export function WaitlistForm({
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+      };
 
       if (response.ok) {
         setIsSuccess(true);
-        setResult(data);
+        if (typeof data.message === 'string' && data.message.trim().length > 0) {
+          setSuccessMessage(data.message);
+        }
       } else {
         setErrors({
           email: data.error || 'Something went wrong. Please try again.',
@@ -115,15 +115,7 @@ export function WaitlistForm({
     }
   };
 
-  const copyReferralLink = () => {
-    if (result?.referralLink) {
-      navigator.clipboard.writeText(result.referralLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  if (isSuccess && result) {
+  if (isSuccess) {
     return (
       <div className="rounded-2xl border border-success/20 bg-success-bg/50 p-8 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
@@ -133,39 +125,8 @@ export function WaitlistForm({
           You&apos;re on the list!
         </h3>
         <p className="mt-2 text-neutral-600">
-          Thank you for joining our waitlist. We&apos;ll notify you as soon as
-          we launch!
+          {successMessage}
         </p>
-        <div className="mt-6 rounded-xl bg-white p-4 text-left">
-          <p className="text-sm font-medium text-neutral-900">
-            Your position:{' '}
-            <span className="text-brand-600">#{result.position}</span>
-          </p>
-          <p className="mt-1 text-xs text-neutral-500">
-            Share your referral link to move up the list!
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <input
-              type="text"
-              readOnly
-              value={result.referralLink}
-              className="flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={copyReferralLink}
-              className="shrink-0"
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-success" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
         <p className="mt-4 text-xs text-neutral-500">
           Check your email for a confirmation message.
         </p>

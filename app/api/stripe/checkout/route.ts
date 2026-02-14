@@ -14,6 +14,7 @@ import { prisma } from '@/src/lib/db/client';
 import { logger } from '@/src/lib/logging/logger';
 import { getMyUserOrThrow } from '@/src/lib/auth/session';
 import { ApiError } from '@/src/lib/errors/api-error';
+import { resolveStripeRedirectUrl } from '@/src/lib/stripe/redirect-url';
 
 const log = logger.child({ module: 'stripe-checkout' });
 
@@ -31,10 +32,27 @@ export async function POST(request: NextRequest) {
       throw ApiError.validationError('Request body must be a JSON object');
     }
 
-    const { priceId, successUrl, cancelUrl } = body as Record<
-      string,
-      string | undefined
-    >;
+    const priceId = typeof body.priceId === 'string' ? body.priceId : undefined;
+    const successUrl =
+      typeof body.successUrl === 'string' ? body.successUrl : undefined;
+    const cancelUrl =
+      typeof body.cancelUrl === 'string' ? body.cancelUrl : undefined;
+
+    if (
+      body.successUrl !== undefined &&
+      body.successUrl !== null &&
+      typeof body.successUrl !== 'string'
+    ) {
+      throw ApiError.validationError('successUrl must be a string');
+    }
+
+    if (
+      body.cancelUrl !== undefined &&
+      body.cancelUrl !== null &&
+      typeof body.cancelUrl !== 'string'
+    ) {
+      throw ApiError.validationError('cancelUrl must be a string');
+    }
 
     if (!priceId) {
       throw ApiError.validationError('Price ID is required');
@@ -48,6 +66,19 @@ export async function POST(request: NextRequest) {
     if (!validPriceIds.includes(priceId)) {
       throw ApiError.validationError('Invalid price ID');
     }
+
+    const safeSuccessUrl = resolveStripeRedirectUrl({
+      requestUrl: request.url,
+      value: successUrl,
+      defaultPath: '/dashboard?checkout=success',
+      fieldName: 'successUrl',
+    });
+    const safeCancelUrl = resolveStripeRedirectUrl({
+      requestUrl: request.url,
+      value: cancelUrl,
+      defaultPath: '/pricing?checkout=canceled',
+      fieldName: 'cancelUrl',
+    });
 
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -96,12 +127,8 @@ export async function POST(request: NextRequest) {
           userId: dbUser.id,
         },
       },
-      success_url:
-        successUrl ||
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?checkout=success`,
-      cancel_url:
-        cancelUrl ||
-        `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?checkout=canceled`,
+      success_url: safeSuccessUrl,
+      cancel_url: safeCancelUrl,
       metadata: {
         userId: dbUser.id,
         priceId: priceId,

@@ -3,33 +3,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const joinSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  company: z.string().optional(),
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  company: z.string().trim().max(120).optional(),
   tier: z.enum(['pro', 'business']),
-  referredBy: z.string().optional(),
+  referredBy: z.preprocess(
+    (value) => (value === null ? undefined : value),
+    z.string().trim().min(1).max(100).optional()
+  ),
 });
+
+const WAITLIST_SUCCESS_MESSAGE =
+  "Thanks! If your signup is valid, you'll receive a confirmation email shortly.";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validated = joinSchema.parse(body);
 
-    // Check if email already exists
+    // Return a generic success response for existing emails to avoid account enumeration.
     const existing = await prisma.waitlistEntry.findUnique({
       where: { email: validated.email },
     });
 
     if (existing) {
-      return NextResponse.json(
-        {
-          error: 'This email is already on the waitlist.',
-          referralCode: existing.referralCode,
-          referralLink: `${process.env.NEXT_PUBLIC_SITE_URL}/?ref=${existing.referralCode}`,
-          position: await getPosition(existing.id),
-        },
-        { status: 409 }
-      );
+      return NextResponse.json({
+        success: true,
+        message: WAITLIST_SUCCESS_MESSAGE,
+      });
     }
 
     // Verify referral code if provided
@@ -58,17 +59,12 @@ export async function POST(request: NextRequest) {
     // Generate referral link
     const referralLink = `${process.env.NEXT_PUBLIC_SITE_URL}/?ref=${entry.referralCode}`;
 
-    // Get position
-    const position = await getPosition(entry.id);
-
     // Send confirmation email (async, don't block)
     sendConfirmationEmail(entry, referralLink).catch(console.error);
 
     return NextResponse.json({
       success: true,
-      referralCode: entry.referralCode,
-      referralLink,
-      position,
+      message: WAITLIST_SUCCESS_MESSAGE,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -84,25 +80,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-async function getPosition(entryId: string): Promise<number> {
-  const entry = await prisma.waitlistEntry.findUnique({
-    where: { id: entryId },
-    select: { createdAt: true },
-  });
-
-  if (!entry) return 0;
-
-  const count = await prisma.waitlistEntry.count({
-    where: {
-      createdAt: {
-        lt: entry.createdAt,
-      },
-    },
-  });
-
-  return count + 1;
 }
 
 async function sendConfirmationEmail(
@@ -145,14 +122,21 @@ async function sendConfirmationEmail(
         },
       });
     } else {
-      console.error('Failed to send email:', await response.text());
+      console.error('Failed to send waitlist confirmation email', {
+        status: response.status,
+      });
     }
   } catch (error) {
-    console.error('Error sending confirmation email:', error);
+    console.error('Error sending waitlist confirmation email', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
 function generateEmailHtml(name: string, referralLink: string): string {
+  const safeName = escapeHtml(name);
+  const safeReferralLink = escapeHtml(referralLink);
+
   return `
 <!DOCTYPE html>
 <html>
@@ -179,7 +163,7 @@ function generateEmailHtml(name: string, referralLink: string): string {
     </div>
     
     <div class="content">
-      <h2>Hi ${name},</h2>
+      <h2>Hi ${safeName},</h2>
       
       <p>Thank you for joining the E-Rechnung waitlist! We're excited to have you on board.</p>
       
@@ -194,7 +178,7 @@ function generateEmailHtml(name: string, referralLink: string): string {
       <div class="referral-box">
         <h3>📈 Move up the list!</h3>
         <p>Share your unique referral link with friends and colleagues to move up the waitlist:</p>
-        <div class="referral-link">${referralLink}</div>
+        <div class="referral-link">${safeReferralLink}</div>
         <p style="margin-top: 15px; font-size: 14px; color: #6b7280;">
           Each referral moves you up one position!
         </p>
@@ -215,4 +199,13 @@ function generateEmailHtml(name: string, referralLink: string): string {
 </body>
 </html>
   `;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
