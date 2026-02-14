@@ -1,11 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMyOrganizationIdOrThrow } from '@/src/lib/auth/session';
-import { Button } from '@/src/components/ui/button';
 import { prisma } from '@/src/lib/db/client';
 import { coerceGrossAmountToNumber } from '@/src/lib/dashboard/invoices';
 import { InvoiceProcessingWait } from '@/src/components/invoices/invoice-processing-wait';
 import { InvoiceReviewForm } from '@/src/components/invoices/invoice-review-form';
+import { InvoiceExportActions } from '@/src/components/invoices/invoice-export-actions';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object'
@@ -136,7 +135,6 @@ export default async function InvoiceDetailPage({
       : coerceGrossAmountToNumber(invoice.grossAmount)) ??
     asNumber(ocrTotals?.grossAmount) ??
     0;
-  const exportHref = `/exports?invoiceId=${encodeURIComponent(invoice.id)}&openExport=1`;
 
   return (
     <section className="mx-auto w-full max-w-5xl space-y-6">
@@ -149,9 +147,10 @@ export default async function InvoiceDetailPage({
             Status: <span className="font-medium">{invoice.status}</span>
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={exportHref}>Exportieren</Link>
-        </Button>
+        <InvoiceExportActions
+          invoiceId={invoice.id}
+          invoiceNumber={invoice.number}
+        />
       </header>
 
       <InvoiceReviewForm
