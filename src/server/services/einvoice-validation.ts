@@ -47,12 +47,12 @@ export async function validateXRechnungExport(
 ): Promise<EInvoiceValidationResult> {
   const issues: EInvoiceValidationIssue[] = [];
 
-  const builtin =
-    input.builtinValidation ??
-    (await validateXRechnungXML(input.xml).then((result) => ({
-      valid: result.valid,
-      errors: result.errors,
-    })));
+  const builtin: BuiltinXRechnungValidation = input.builtinValidation
+    ? input.builtinValidation
+    : await validateXRechnungXML(input.xml).then((result) => ({
+        valid: result.valid,
+        errors: result.errors,
+      }));
 
   if (!builtin.valid) {
     for (const error of builtin.errors) {
@@ -148,9 +148,7 @@ export async function validateZugferdExport(
         message: 'Generated PDF is missing pdfaid:part=3 metadata marker.',
       });
     }
-    if (
-      !metadataXml.includes('<pdfaid:conformance>B</pdfaid:conformance>')
-    ) {
+    if (!metadataXml.includes('<pdfaid:conformance>B</pdfaid:conformance>')) {
       issues.push({
         severity: 'error',
         source: 'builtin',

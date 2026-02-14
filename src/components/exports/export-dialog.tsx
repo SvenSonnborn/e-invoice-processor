@@ -48,8 +48,7 @@ export const ExportDialog = ({
     'CSV' | 'DATEV' | 'XRECHNUNG' | 'ZUGFERD'
   >('DATEV');
   const [isPending, startTransition] = useTransition();
-  const requiresSingleInvoice =
-    format === 'XRECHNUNG' || format === 'ZUGFERD';
+  const requiresSingleInvoice = format === 'XRECHNUNG' || format === 'ZUGFERD';
 
   // DATEV options state
   const [consultantNumber, setConsultantNumber] = useState('');
@@ -138,7 +137,8 @@ export const ExportDialog = ({
             Neuer Export
           </DialogTitle>
           <DialogDescription>
-            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? 'en' : ''} exportieren
+            {invoiceIds.length} Rechnung{invoiceIds.length !== 1 ? 'en' : ''}{' '}
+            exportieren
           </DialogDescription>
         </DialogHeader>
 

@@ -125,7 +125,11 @@ export async function generateExport(
 
   const finalFilename =
     input.filename ??
-    generateExportFilename(format, datevOptions, invoices[0]?.number || undefined);
+    generateExportFilename(
+      format,
+      datevOptions,
+      invoices[0]?.number || undefined
+    );
 
   // Create export record
   const exportRecord = await createExport(
@@ -200,7 +204,9 @@ export async function generateExport(
           builtinValidation: generatedXml.validation,
         });
         if (!xmlValidation.valid) {
-          throw new Error(formatValidationErrorMessage('XRECHNUNG', xmlValidation));
+          throw new Error(
+            formatValidationErrorMessage('XRECHNUNG', xmlValidation)
+          );
         }
 
         const generatedPdf = await generateZugferdPDF({

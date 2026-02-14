@@ -105,6 +105,15 @@ POST /api/process-invoice/[fileId]
 
 Erfordert Authentifizierung und Organisation-Zugehörigkeit. Die Route unterstützt auch Re-Processing, sofern der aktuelle Status nach `PARSED` überführt werden darf.
 
+Direkter E-Rechnungs-Export ist ebenfalls über die API möglich:
+
+```
+GET /api/export/[invoiceId]?format=xrechnung
+GET /api/export/[invoiceId]?format=zugferd
+```
+
+Bei erfolgreichem Export wird die generierte Datei gespeichert und der Status auf `EXPORTED` gesetzt.
+
 ## Status-Details
 
 ### 1. CREATED
@@ -195,6 +204,7 @@ Erfordert Authentifizierung und Organisation-Zugehörigkeit. Die Route unterstü
 - CSV-Export wurde erstellt
 - DATEV-Export wurde erstellt
 - Export-Datensatz existiert in `Export` Tabelle
+- oder direkter Einzel-Export über `/api/export/[invoiceId]` war erfolgreich
 
 **Nächster Schritt:** Terminal State (Verarbeitung abgeschlossen)
 

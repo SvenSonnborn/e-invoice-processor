@@ -27,3 +27,12 @@ export {
   type VatValidationStatus,
   type VatValidationReason,
 } from './vat';
+
+export {
+  generateInvoiceExport,
+  InvoiceExportServiceError,
+  type GenerateInvoiceExportInput,
+  type GenerateInvoiceExportResult,
+  type InvoiceExportFormat,
+  type InvoiceExportServiceErrorCode,
+} from './invoice-export';

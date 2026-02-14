@@ -41,6 +41,7 @@ Mapping:
 - `GET /api/exports` - List exports for the current organization
 - `POST /api/exports` - Create a new export (`CSV`, `DATEV`, `XRECHNUNG`, `ZUGFERD`)
 - `GET /api/exports/[exportId]/download` - Download a completed export file
+- `GET /api/export/[invoiceId]?format=xrechnung|zugferd` - Generate, store, and download a single invoice as XRechnung or ZUGFeRD
 
 ### Invoice Upload & Processing
 
@@ -299,6 +300,26 @@ Download a completed export file. The export must have status `READY`.
 
 **Error (400):** Export not ready.
 **Error (404):** Export not found.
+
+---
+
+**GET /api/export/[invoiceId]?format=xrechnung|zugferd**
+
+Generate a single e-invoice file directly from a DB invoice record, persist it to Supabase Storage, and stream it as an attachment.
+
+Behavior:
+
+- Requires authenticated user + organization membership
+- Enforces strict organization scoping on invoice lookup (`invoiceId` + `organizationId`)
+- Supports only `format=xrechnung` or `format=zugferd`
+- Stores generated files under `invoices/exports/<organizationId>/<invoiceId>/...`
+- Updates invoice status to `EXPORTED` after successful generation/upload
+
+Responses:
+
+- `200`: File stream (`application/xml` for XRechnung, `application/pdf` for ZUGFeRD) with `Content-Disposition: attachment`
+- `400`: Invalid `format`, invoice in invalid status, missing review data, or validation failure
+- `404`: Invoice not found
 
 ## Authentication
 

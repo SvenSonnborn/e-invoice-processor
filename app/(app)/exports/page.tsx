@@ -101,7 +101,8 @@ export default function ExportsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Exporte</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Rechnungen als CSV, DATEV, XRechnung XML oder ZUGFeRD PDF/A-3 exportieren
+            Rechnungen als CSV, DATEV, XRechnung XML oder ZUGFeRD PDF/A-3
+            exportieren
           </p>
         </div>
         <Button

@@ -87,6 +87,22 @@ CREATE INDEX "Export_createdBy_idx" ON "Export"("createdBy");
 
 Hinweis: Für `XRECHNUNG` und `ZUGFERD` wird aktuell genau **eine** Rechnung pro Export unterstützt.
 
+### Direkter Einzel-Export (`/api/export/[invoiceId]`)
+
+Zusätzlich zum Export-Job-Flow (`/api/exports`) gibt es einen direkten Download-Flow für eine einzelne Rechnung:
+
+- `GET /api/export/[invoiceId]?format=xrechnung` erzeugt XRechnung-XML
+- `GET /api/export/[invoiceId]?format=zugferd` erzeugt ZUGFeRD-PDF/A-3
+
+Ablauf:
+
+1. Rechnung wird mit `invoiceId + organizationId` geladen (striktes Tenant-Scoping).
+2. Format wird validiert (`xrechnung | zugferd`).
+3. Datei wird generiert und validiert.
+4. Datei wird in Supabase Storage unter `invoices/exports/<organizationId>/<invoiceId>/...` abgelegt.
+5. Datei wird als `attachment` gestreamt (direkter Download).
+6. Rechnungsstatus wird bei Erfolg auf `EXPORTED` gesetzt.
+
 ### Automatische Validierung
 
 Nach der Generierung läuft für `XRECHNUNG`/`ZUGFERD` automatisch eine Validierung:
