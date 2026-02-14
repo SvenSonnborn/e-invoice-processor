@@ -23,6 +23,10 @@ try {
 }
 
 const SCHEMA_URLS: Record<string, string> = {
+  'zugferd-2.4-extended':
+    'https://www.zugferd.org/schemas/ZF23/FACTUR-X_EXTENDED.xsd',
+  'zugferd-2.4-en16931':
+    'https://www.zugferd.org/schemas/ZF23/FACTUR-X_EN16931.xsd',
   'zugferd-2.3-extended':
     'https://www.zugferd.org/schemas/ZF23/FACTUR-X_EXTENDED.xsd',
   'zugferd-2.3-en16931':
@@ -32,6 +36,10 @@ const SCHEMA_URLS: Record<string, string> = {
   'xrechnung-ubl':
     'https://www.xrechnung-bund.de/de/leitweg/validation/XRechnung-UBL.xsd',
 };
+
+const DEFAULT_ZUGFERD_VERSION = '2.4';
+const DEFAULT_ZUGFERD_PROFILE = 'en16931';
+const FALLBACK_ZUGFERD_VERSION = '2.3';
 
 const schemaCache = new Map<string, string>();
 
@@ -357,11 +365,58 @@ function getSchemaUrl(
 ): string | undefined {
   if (flavor === 'XRechnung') return SCHEMA_URLS['xrechnung-cii'];
   if (flavor === 'ZUGFeRD') {
-    const normalizedProfile = profile?.toLowerCase() || 'en16931';
-    const key = `zugferd-${version || '2.3'}-${normalizedProfile}`;
-    return SCHEMA_URLS[key] || SCHEMA_URLS['zugferd-2.3-en16931'];
+    const normalizedProfile = normalizeZugferdProfile(profile);
+    const normalizedVersion = normalizeZugferdVersion(version);
+    const preferredKey = `zugferd-${normalizedVersion}-${normalizedProfile}`;
+    const fallbackProfileKey = `zugferd-${FALLBACK_ZUGFERD_VERSION}-${normalizedProfile}`;
+    const preferredDefaultProfileKey = `zugferd-${normalizedVersion}-${DEFAULT_ZUGFERD_PROFILE}`;
+
+    return (
+      SCHEMA_URLS[preferredKey] ||
+      SCHEMA_URLS[fallbackProfileKey] ||
+      SCHEMA_URLS[preferredDefaultProfileKey] ||
+      SCHEMA_URLS[
+        `zugferd-${FALLBACK_ZUGFERD_VERSION}-${DEFAULT_ZUGFERD_PROFILE}`
+      ]
+    );
   }
   return undefined;
+}
+
+function normalizeZugferdVersion(version?: string): string {
+  if (!version?.trim()) {
+    return DEFAULT_ZUGFERD_VERSION;
+  }
+
+  const normalized = version.toLowerCase();
+  const compactMatch = normalized.match(/ver(\d+)p(\d+)/);
+  if (compactMatch) {
+    return `${compactMatch[1]}.${compactMatch[2]}`;
+  }
+
+  const semverLikeMatch = normalized.match(/(\d+\.\d+)/);
+  if (semverLikeMatch) {
+    return semverLikeMatch[1];
+  }
+
+  return DEFAULT_ZUGFERD_VERSION;
+}
+
+function normalizeZugferdProfile(profile?: string): string {
+  const normalized = profile?.toLowerCase();
+  if (!normalized) {
+    return DEFAULT_ZUGFERD_PROFILE;
+  }
+
+  if (normalized.includes('extended')) {
+    return 'extended';
+  }
+
+  if (normalized.includes('en16931') || normalized.includes('xrechnung')) {
+    return 'en16931';
+  }
+
+  return DEFAULT_ZUGFERD_PROFILE;
 }
 
 function isCIIFormat(parsed: Record<string, unknown>): boolean {
@@ -394,26 +449,28 @@ export function getValidationInfo(xmlContent: string): {
         context?.['ram:GuidelineSpecifiedDocumentContextParameter']?.[
           'ram:ID'
         ] || context?.GuidelineSpecifiedDocumentContextParameter?.ID;
+      const profileId = getTextContent(guid);
       return {
         flavor: 'ZUGFeRD',
-        version: '2.3',
-        profile: typeof guid === 'string' ? guid : guid?.['#text'],
+        version: extractVersionFromGuidelineId(profileId),
+        profile: profileId,
       };
     }
 
     if (isUBLFormat(parsed)) {
       const invoice = parsed['ubl:Invoice'] || parsed.Invoice;
+      const versionId = getTextContent(
+        invoice?.['cbc:VersionID'] || invoice?.VersionID
+      );
       const customizationId =
         invoice?.['cbc:CustomizationID'] || invoice?.CustomizationID;
-      const idText =
-        typeof customizationId === 'string'
-          ? customizationId
-          : customizationId?.['#text'];
+      const idText = getTextContent(customizationId);
+      const inferredVersion = extractVersionFromCustomizationId(idText);
       return {
         flavor: idText?.toLowerCase().includes('xrechnung')
           ? 'XRechnung'
           : 'ZUGFeRD',
-        version: '2.1',
+        version: versionId || inferredVersion,
         profile: idText,
       };
     }
@@ -422,6 +479,48 @@ export function getValidationInfo(xmlContent: string): {
   } catch {
     return { flavor: 'Unknown' };
   }
+}
+
+function extractVersionFromGuidelineId(
+  guidelineId?: string
+): string | undefined {
+  if (!guidelineId) {
+    return undefined;
+  }
+
+  const compactMatch = guidelineId.match(/ver(\d+)p(\d+)/i);
+  if (compactMatch) {
+    return `${compactMatch[1]}.${compactMatch[2]}`;
+  }
+
+  const semverLikeMatch = guidelineId.match(/(\d+\.\d+)/);
+  if (semverLikeMatch) {
+    return semverLikeMatch[1];
+  }
+
+  return undefined;
+}
+
+function extractVersionFromCustomizationId(
+  customizationId?: string
+): string | undefined {
+  if (!customizationId) {
+    return undefined;
+  }
+
+  const xrechnungVersion = customizationId
+    .toLowerCase()
+    .match(/xrechnung_(\d+\.\d+(?:\.\d+)?)/);
+  if (xrechnungVersion) {
+    return xrechnungVersion[1];
+  }
+
+  const semverLikeMatch = customizationId.match(/(\d+\.\d+)/);
+  if (semverLikeMatch) {
+    return semverLikeMatch[1];
+  }
+
+  return undefined;
 }
 
 function getTextContent(value: unknown): string | undefined {

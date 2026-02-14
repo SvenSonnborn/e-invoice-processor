@@ -154,7 +154,7 @@ describe('XRechnung Parser', () => {
       const detection = detectInvoiceFlavor(validCiiXml);
       expect(detection.flavor).toBe('ZUGFeRD');
       expect(
-        detection.version === undefined || detection.version === '2.3'
+        detection.version === undefined || detection.version === '2.4'
       ).toBe(true);
     });
 

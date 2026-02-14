@@ -99,7 +99,7 @@ describe('ZUGFeRD Parser Integration', () => {
     'zugferd-invoice.pdf'
   );
 
-  it('should parse ZUGFeRD 2.3 PDF with embedded CII XML when fixture is present', async () => {
+  it('should parse ZUGFeRD PDF with embedded CII XML when fixture is present', async () => {
     if (!existsSync(fixturePath)) {
       console.warn(
         'Skipping: place a ZUGFeRD sample PDF at tests/fixtures/zugferd-invoice.pdf (e.g. from https://github.com/ZUGFeRD/corpus) to run this test.'

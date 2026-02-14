@@ -75,7 +75,7 @@ Returns API metadata and supported formats.
   "name": "ZUGFeRD/XRechnung Import API",
   "version": "1.0.0",
   "supportedFormats": [
-    "ZUGFeRD 2.3",
+    "ZUGFeRD 2.4",
     "XRechnung CII",
     "XRechnung UBL",
     "Factur-X"
@@ -114,7 +114,7 @@ When `save=true`:
   "extendedData": { ... },
   "rawData": { ... },
   "validation": { "valid": true, "errors": [], "warnings": [] },
-  "detection": { "flavor": "ZUGFeRD", "version": "2.3" },
+  "detection": { "flavor": "ZUGFeRD", "version": "2.4" },
   "warnings": []
 }
 ```

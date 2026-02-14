@@ -3,7 +3,7 @@ import {
   type Invoice as EInvoiceData,
 } from '@e-invoice-eu/core';
 import { execFile } from 'node:child_process';
-import { constants as fsConstants } from 'node:fs';
+import { constants as fsConstants, readdirSync } from 'node:fs';
 import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -20,12 +20,15 @@ const DEFAULT_FORMAT = 'XRECHNUNG-CII';
 const DEFAULT_LANG = 'de';
 const DEFAULT_UNIT_CODE = 'C62';
 const DEFAULT_COUNTRY_CODE = 'DE';
-const DEFAULT_XSD_FILE = 'Factur-X_1.07.3_EN16931.xsd';
-const DEFAULT_XSD_PATH = path.resolve(
+const XSD_SCHEMAS_DIR = path.resolve(
   process.cwd(),
-  'src/lib/generators/schemas/xrechnung',
-  DEFAULT_XSD_FILE
+  'src/lib/generators/schemas/xrechnung'
 );
+const DEFAULT_XSD_FILE = 'Factur-X_1.07.3_EN16931.xsd';
+const FACTUR_X_EN16931_SCHEMA_PATTERN =
+  /^Factur-X_(\d+)\.(\d+)\.(\d+)_EN16931\.xsd$/;
+const XRECHNUNG_PROFILE_PATTERN = /xrechnung_3\.0(\.\d+)?/i;
+const DEFAULT_XSD_PATH = resolveLatestBundledSchemaPath();
 
 interface InvoiceRawJsonAddress {
   line1?: string;
@@ -619,9 +622,9 @@ function validateXRechnungProfile(xml: string): string[] {
     );
     const profileId = normalizeString(guideline?.['ram:ID'] || guideline?.ID);
 
-    if (!profileId || !profileId.toLowerCase().includes('xrechnung_3.0')) {
+    if (!profileId || !XRECHNUNG_PROFILE_PATTERN.test(profileId)) {
       return [
-        'Generated XML is not marked as XRechnung 3.0 (missing guideline ID containing "xrechnung_3.0").',
+        'Generated XML is not marked as XRechnung 3.0.x (missing guideline ID containing "xrechnung_3.0").',
       ];
     }
 
@@ -631,6 +634,50 @@ function validateXRechnungProfile(xml: string): string[] {
       `Profile detection failed: ${error instanceof Error ? error.message : 'Unknown parser error'}`,
     ];
   }
+}
+
+function resolveLatestBundledSchemaPath(): string {
+  try {
+    const candidates = readdirSync(XSD_SCHEMAS_DIR)
+      .map((filename) => {
+        const match = FACTUR_X_EN16931_SCHEMA_PATTERN.exec(filename);
+        if (!match) {
+          return null;
+        }
+
+        return {
+          filename,
+          version: [Number(match[1]), Number(match[2]), Number(match[3])] as [
+            number,
+            number,
+            number,
+          ],
+        };
+      })
+      .filter(
+        (
+          candidate
+        ): candidate is {
+          filename: string;
+          version: [number, number, number];
+        } => Boolean(candidate)
+      )
+      .sort((a, b) => compareSchemaVersion(a.version, b.version));
+
+    const latestSchema = candidates[candidates.length - 1]?.filename;
+    return path.resolve(XSD_SCHEMAS_DIR, latestSchema || DEFAULT_XSD_FILE);
+  } catch {
+    return path.resolve(XSD_SCHEMAS_DIR, DEFAULT_XSD_FILE);
+  }
+}
+
+function compareSchemaVersion(
+  left: [number, number, number],
+  right: [number, number, number]
+): number {
+  if (left[0] !== right[0]) return left[0] - right[0];
+  if (left[1] !== right[1]) return left[1] - right[1];
+  return left[2] - right[2];
 }
 
 function resolveSchemaPath(xsdPath?: string): string {

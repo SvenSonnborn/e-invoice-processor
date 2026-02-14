@@ -175,7 +175,7 @@ function parseCIIStructure(
   );
 
   const metadata: ZUGFeRDMetaData = {
-    xmlVersion: '2.3',
+    xmlVersion: extractVersion(cii, 'cii'),
     profile: extractProfile(cii, 'cii'),
     flavor: 'EXTENDED',
   };
