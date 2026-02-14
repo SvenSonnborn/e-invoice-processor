@@ -109,6 +109,9 @@ All API routes require authentication except:
 
 - XRechnung CII generator in `src/lib/generators/xrechnungGenerator.ts`
   (based on `@e-invoice-eu/core`)
+- ZUGFeRD PDF generator in `src/lib/generators/zugferdGenerator.ts`
+  (renders PDF from validated invoice form data, embeds XRechnung XML, applies
+  PDF/A-3 metadata)
 - Offline CII/EN16931 XSD files for generator validation in
   `src/lib/generators/schemas/xrechnung/`
 
@@ -116,9 +119,11 @@ All API routes require authentication except:
 
 1. User uploads invoice file
 2. File is stored via storage abstraction
-3. Parser extracts invoice data (ZUGFeRD/XRechnung)
-4. Data is validated and stored in database
-5. User can view, edit, and export invoices
+3. OCR/Parser extracts draft data (`extractedInvoiceDraft`)
+4. User validates/edits invoice via review form (`validatedInvoice`)
+5. XRechnung XML is generated (`xrechnungXml`)
+6. ZUGFeRD PDF/A-3 is generated from `validatedInvoice + xrechnungXml`
+7. User can view, edit, and export invoices
 
 ## Technology Stack
 

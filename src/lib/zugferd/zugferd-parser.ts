@@ -1,5 +1,5 @@
 /**
- * ZUGFeRD 2.3 Parser - Extracts XML from PDF/A-3 attachments
+ * ZUGFeRD 2.x Parser - Extracts XML from PDF/A-3 attachments
  */
 
 import {
@@ -11,6 +11,7 @@ import {
   PDFRef,
   PDFString,
 } from 'pdf-lib';
+import { inflateRawSync, inflateSync } from 'node:zlib';
 
 export class ZUGFeRDParserError extends Error {
   constructor(
@@ -157,13 +158,40 @@ async function findZUGFeRDXML(
           const bytes = await (
             fStream as unknown as { getContents(): Uint8Array }
           ).getContents();
-          return new TextDecoder('utf-8').decode(bytes);
+          return decodeEmbeddedXml(bytes);
         }
       }
     }
   }
 
   return null;
+}
+
+function decodeEmbeddedXml(bytes: Uint8Array): string {
+  const decoded = new TextDecoder('utf-8').decode(bytes);
+  if (looksLikeXml(decoded)) {
+    return decoded;
+  }
+
+  const inflateAttempts = [inflateSync, inflateRawSync];
+  for (const inflateAttempt of inflateAttempts) {
+    try {
+      const inflated = inflateAttempt(Buffer.from(bytes));
+      const inflatedDecoded = new TextDecoder('utf-8').decode(inflated);
+      if (looksLikeXml(inflatedDecoded)) {
+        return inflatedDecoded;
+      }
+    } catch {
+      // Ignore and try the next strategy.
+    }
+  }
+
+  return decoded;
+}
+
+function looksLikeXml(value: string): boolean {
+  const trimmed = value.trimStart();
+  return trimmed.startsWith('<?xml') || trimmed.startsWith('<');
 }
 
 /**

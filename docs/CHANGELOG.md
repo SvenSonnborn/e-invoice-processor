@@ -2,6 +2,40 @@
 
 Übersicht über alle Änderungen und Features.
 
+## 2026-02-14: ZUGFeRD PDF Generator (PDF/A-3)
+
+### Changes
+
+#### New: ZUGFeRD PDF generator
+
+- Added `src/lib/generators/zugferdGenerator.ts` to generate the visual PDF
+  from validated invoice form data (`reviewData`) and combine it with an
+  existing XRechnung XML payload into one hybrid ZUGFeRD-style PDF.
+- XML attachment is embedded as either `factur-x.xml` (default) or
+  `zugferd-invoice.xml`, using `AFRelationship=Alternative`.
+- Generator sets PDF/A-3 relevant metadata/XMP entries, including
+  `pdfaid:part=3`, `pdfaid:conformance=B`, `fx:Version`, and
+  `fx:ConformanceLevel`.
+- Updated default ZUGFeRD metadata version from `2.3` to `2.4`.
+- Output filename now follows `[invoiceNumber]-zugferd.pdf` by default
+  (override via explicit `outputBaseFilename`).
+- Updated `src/lib/zugferd/zugferd-parser.ts` XML extraction with
+  decompression fallback (`inflate` / `inflateRaw`) so attached XML can be
+  read from both compressed and uncompressed embedded-file streams.
+
+#### New: Root shim export
+
+- Added `lib/generators/zugferdGenerator.ts` as root-level re-export to match
+  existing generator import patterns.
+
+#### Tests
+
+- Added `tests/zugferd/zugferdGenerator.test.ts` covering:
+  - workflow input `validatedInvoice + xrechnungXml` (without source upload PDF)
+  - XML embedding and extraction from the generated PDF
+  - PDF metadata markers for PDF/A-3 + ZUGFeRD profile fields
+  - output filename convention
+
 ## 2026-02-14: XRechnung CII Generator + XSD Validation
 
 ### Changes
@@ -24,6 +58,9 @@
   reporting.
 - Added explicit profile check for XRechnung 3.0 guideline id
   (`xrechnung_3.0`) before returning generated XML.
+- Extended profile validation to accept `xrechnung_3.0.x` patch versions.
+- Default XSD resolution now auto-selects the highest bundled
+  `Factur-X_*_EN16931.xsd` version, instead of one hard-coded filename.
 
 ## 2026-02-14: Supabase RLS alignment with current schema
 
@@ -226,7 +263,7 @@ All API routes now use the `try/catch` + `ApiError` pattern with consistent stru
 
 #### Integration test
 
-- **ZUGFeRD PDF fixture** – Integration test “should parse ZUGFeRD 2.3 PDF with embedded CII XML when fixture is present” runs when `tests/fixtures/zugferd-invoice.pdf` exists; otherwise skipped with a short note. `tests/fixtures/README.md` describes how to obtain a sample PDF (e.g. ZUGFeRD/corpus).
+- **ZUGFeRD PDF fixture** – Integration test “should parse ZUGFeRD PDF with embedded CII XML when fixture is present” runs when `tests/fixtures/zugferd-invoice.pdf` exists; otherwise skipped with a short note. `tests/fixtures/README.md` describes how to obtain a sample PDF (e.g. ZUGFeRD/corpus).
 
 #### Documentation
 

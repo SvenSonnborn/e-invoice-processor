@@ -8,7 +8,7 @@ import {
 describe('Format detection and validation', () => {
   const ciiXml = `<?xml version="1.0"?>
 <CrossIndustryInvoice xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">
-  <ExchangedDocumentContext><GuidelineSpecifiedDocumentContextParameter><ID>urn:ferd:CrossIndustryInvoice:ver2p3:basic</ID></GuidelineSpecifiedDocumentContextParameter></ExchangedDocumentContext>
+  <ExchangedDocumentContext><GuidelineSpecifiedDocumentContextParameter><ID>urn:ferd:CrossIndustryInvoice:ver2p4:basic</ID></GuidelineSpecifiedDocumentContextParameter></ExchangedDocumentContext>
   <ExchangedDocument><ID>X</ID><TypeCode>380</TypeCode><IssueDateTime><DateTimeString format="102">20240101</DateTimeString></IssueDateTime></ExchangedDocument>
   <SupplyChainTradeTransaction>
     <ApplicableHeaderTradeAgreement>
@@ -39,7 +39,7 @@ describe('Format detection and validation', () => {
   describe('detectInvoiceFlavor', () => {
     it('should detect CII format', () => {
       expect(detectInvoiceFlavor(ciiXml).flavor).toBe('ZUGFeRD');
-      expect(detectInvoiceFlavor(ciiXml).version).toBe('2.3');
+      expect(detectInvoiceFlavor(ciiXml).version).toBe('2.4');
     });
 
     it('should detect UBL format', () => {
@@ -56,7 +56,7 @@ describe('Format detection and validation', () => {
     it('should return flavor and version for CII', () => {
       const info = getValidationInfo(ciiXml);
       expect(info.flavor).toBe('ZUGFeRD');
-      expect(info.version).toBe('2.3');
+      expect(info.version).toBe('2.4');
     });
 
     it('should return flavor for UBL', () => {
